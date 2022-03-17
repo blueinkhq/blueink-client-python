@@ -10,8 +10,31 @@ bundles = Munch(
     list_data="/bundles/{bundle_id}/data/"
 )
 
+persons = Munch(
+    create="/persons/",
+    list="/persons/",
+    retrieve="/persons/{person_id}/",
+    update="/persons/{person_id}/",
+    partial_update="/persons/{person_id}/",
+    delete="/persons/{person_id}/"
+)
+
+packets = Munch(
+    update="/packets/{packet_id}/",
+    remind="/packets/{packet_id}/remind/",
+    retrieve_coe="/packets/{packet_id}/coe/"
+)
+
+templates = Munch(
+    list="/templates/",
+    retrieve="/templates/{template_id}/"
+)
+
 interpolations = Munch(
-    bundle_id="{bundle_id}"
+    bundle_id="{bundle_id}",
+    person_id="{person_id}",
+    packet_id="{packet_id}",
+    template_id="{template_id}"
 )
 
 
