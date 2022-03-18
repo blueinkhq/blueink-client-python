@@ -40,12 +40,12 @@ interpolations = Munch(
 
 class URLBuilder:
     def __init__(self, base_url, endpoint: str):
-        self.base_url = base_url
-        self.endpoint = endpoint
+        self._base_url = base_url
+        self._endpoint = endpoint
 
     def interpolate(self, variable: str, value):
-        self.endpoint = self.endpoint.replace(variable, str(value))
+        self._endpoint = self._endpoint.replace(variable, str(value))
         return self
 
     def build(self):
-        return self.base_url + self.endpoint
+        return self._base_url + self._endpoint
