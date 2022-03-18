@@ -1,4 +1,4 @@
-from BlueInkClient import Client
+from blueinkclient import Client
 from requests import Response
 
 # This will pull from environment vars
