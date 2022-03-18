@@ -27,7 +27,7 @@ class Client:
             url = Endpoints.URLBuilder(self.__base_url__, Endpoints.bundles.create) \
                 .build()
 
-            return tpost(url, self.__api_key__, data)
+            return tpost(url, self.__api_key__, data, "application/json")
 
         def list(self) -> Response:
             url = Endpoints.URLBuilder(self.__base_url__, Endpoints.bundles.list)\
@@ -77,7 +77,7 @@ class Client:
         def create(self, data):
             url = Endpoints.URLBuilder(self.__base_url__, Endpoints.persons.create)\
                 .build()
-            return tpost(url, self.__api_key__, data)
+            return tpost(url, self.__api_key__, data, "application/json")
 
         def list(self):
             url = Endpoints.URLBuilder(self.__base_url__, Endpoints.persons.list) \
@@ -94,13 +94,13 @@ class Client:
             url = Endpoints.URLBuilder(self.__base_url__, Endpoints.persons.update) \
                 .interpolate(Endpoints.interpolations.person_id, person_id) \
                 .build()
-            return tput(url, self.__api_key__, data)
+            return tput(url, self.__api_key__, data, "application/json")
 
         def partial_update(self, person_id, data):
             url = Endpoints.URLBuilder(self.__base_url__, Endpoints.persons.partial_update) \
                 .interpolate(Endpoints.interpolations.person_id, person_id) \
                 .build()
-            return tpatch(url, self.__api_key__, data)
+            return tpatch(url, self.__api_key__, data, "application/json")
 
         def delete(self, person_id):
             url = Endpoints.URLBuilder(self.__base_url__, Endpoints.persons.delete) \
@@ -116,7 +116,7 @@ class Client:
             url = Endpoints.URLBuilder(self.__base_url__, Endpoints.packets.update) \
                 .interpolate(Endpoints.interpolations.packet_id, packet_id) \
                 .build()
-            return tpatch(url, self.__api_key__, data)
+            return tpatch(url, self.__api_key__, data, "application/json")
 
         def remind(self, packet_id):
             url = Endpoints.URLBuilder(self.__base_url__, Endpoints.packets.remind) \
