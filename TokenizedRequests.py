@@ -6,12 +6,14 @@ Helper functions to add header with user's token.txt
 
 
 def build_header(token):
-    return {'Authorization': token}
+    return {'Authorization': f"Token {token}"}
 
 
 def tget(url, token) -> Response:
     response = get(url=url,
                    headers=build_header(token))
+
+
     return response
 
 
