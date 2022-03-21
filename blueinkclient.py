@@ -1,7 +1,7 @@
 from os import environ
 from tokenizedrequests import (tget, tpost, tput, tpatch, tdelete, MunchedResult, build_pagination_params)
 import endpoints
-from paginator import PagedAPICall
+from paginator import PaginatedIterator
 
 
 class Client:
@@ -29,19 +29,19 @@ class Client:
 
             return tpost(url, self._api_key, data, "application/json")
 
-        def list_iter(self, start_page=0, per_page=50) -> PagedAPICall:
+        def list_iter(self, start_page=0, per_page=50) -> PaginatedIterator:
             '''
-            Unfinished -- to return an iterable object such that you can do
+            returns an iterable object such that you can do
 
             for page in client.bundles.list_iter():
-                page.api_result.body -> munch of json
+                page.body -> munch of json
 
             :param start_page:
             :param per_page:
             :return:
             '''
             params = [start_page, per_page]
-            paged_call = PagedAPICall(self.list, params, 0)
+            paged_call = PaginatedIterator(self.list, params, 0)
             return paged_call
 
         def list(self, page=None, per_page=None) -> MunchedResult:

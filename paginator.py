@@ -2,14 +2,17 @@ from copy import deepcopy
 from tokenizedrequests import MunchedResult
 
 
-class PagedAPICall:
+class PaginatedIterator:
     def __init__(self, paged_api_function, params, page_number_idx):
         '''
 
         Iterator to run client functions such as client.bundles.list() in a pythonic way
         eg.
 
-        for api_call in client.bundles.list_iter(start_page=1, per_page=2):
+        params = [start_page, per_page]
+        paged_call = PaginatedIterator(self.list, params, 0)
+
+        for api_call in paged_call:
             print(f"API CALL: {api_call.body}")
 
         :param paged_api_function: function passed by reference (eg client.bundles.list())
