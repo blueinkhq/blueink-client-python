@@ -24,10 +24,10 @@ class MunchedResult:
         if "X-Blueink-Pagination" in response.headers:
             self.paginated = True
             pagination = response.headers.get("X-Blueink-Pagination").split(",")
-            self.page_number = pagination[0]
-            self.total_pages = pagination[1]
-            self.items_on_page = pagination[2]
-            self.total_results = pagination[3]
+            self.page_number = int(pagination[0])
+            self.total_pages = int(pagination[1])
+            self.items_on_page = int(pagination[2])
+            self.total_results = int(pagination[3])
 
 
 def build_header(token, content_type=None):

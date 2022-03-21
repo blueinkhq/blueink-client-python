@@ -42,7 +42,7 @@ class Client:
             '''
             params = [start_page, per_page]
             paged_call = PagedAPICall(self.list, params, 0)
-            return iter(paged_call)
+            return paged_call
 
         def list(self, page=None, per_page=None) -> MunchedResult:
             response = None
