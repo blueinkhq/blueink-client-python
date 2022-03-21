@@ -103,10 +103,36 @@ class Client:
                 .build()
             return tpost(url, self._api_key, data, "application/json")
 
-        def list(self) -> MunchedResult:
-            url = endpoints.URLBuilder(self._base_url, endpoints.persons.list) \
-                .build()
-            return tget(url, self._api_key)
+        def list_iter(self, start_page=0, per_page=50) -> PaginatedIterator:
+            '''
+            returns an iterable object such that you can do
+
+            for page in client.persons.list_iter():
+                page.body -> munch of json
+
+            :param start_page:
+            :param per_page:
+            :return:
+            '''
+            params = [start_page, per_page]
+            paged_call = PaginatedIterator(self.list, params, 0)
+            return paged_call
+
+        def list(self, page=None, per_page=None) -> MunchedResult:
+            response = None
+            if page is None and per_page is None:
+                url = endpoints.URLBuilder(self._base_url, endpoints.persons.list) \
+                    .build()
+                response = tget(url, self._api_key)
+
+            else:
+                url = endpoints.URLBuilder(self._base_url, endpoints.persons.list) \
+                    .build()
+                url_params = build_pagination_params(page, per_page)
+
+                response = tget(url, self._api_key, url_params)
+
+            return response
 
         def retrieve(self, person_id) -> MunchedResult:
             url = endpoints.URLBuilder(self._base_url, endpoints.persons.retrieve) \
@@ -158,10 +184,36 @@ class Client:
         def __init__(self, base_url, api_key):
             super().__init__(base_url, api_key)
 
-        def list(self) -> MunchedResult:
-            url = endpoints.URLBuilder(self._base_url, endpoints.templates.list) \
-                .build()
-            return tget(url, self._api_key)
+        def list_iter(self, start_page=0, per_page=50) -> PaginatedIterator:
+            '''
+            returns an iterable object such that you can do
+
+            for page in client.bundles.list_iter():
+                page.body -> munch of json
+
+            :param start_page:
+            :param per_page:
+            :return:
+            '''
+            params = [start_page, per_page]
+            paged_call = PaginatedIterator(self.list, params, 0)
+            return paged_call
+
+        def list(self, page=None, per_page=None) -> MunchedResult:
+            response = None
+            if page is None and per_page is None:
+                url = endpoints.URLBuilder(self._base_url, endpoints.templates.list) \
+                    .build()
+                response = tget(url, self._api_key)
+
+            else:
+                url = endpoints.URLBuilder(self._base_url, endpoints.templates.list) \
+                    .build()
+                url_params = build_pagination_params(page, per_page)
+
+                response = tget(url, self._api_key, url_params)
+
+            return response
 
         def retrieve(self, template_id) -> MunchedResult:
             url = endpoints.URLBuilder(self._base_url, endpoints.templates.retrieve) \
