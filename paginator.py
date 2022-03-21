@@ -20,24 +20,16 @@ class PagedAPICall:
         self._params = params
         self._page_number_idx = page_number_idx
 
-        self._page_number = params[page_number_idx]
-        self._total_pages = None
-
     def __iter__(self):
         return self
 
     def __next__(self):
         api_response: MunchedResult = self._paged_func(*self._params)
 
-        # set fields based on API call
-        if api_response.success:
-            self._total_pages = api_response.total_pages
-
         if not api_response.success:
             raise StopIteration
 
-        next_page_number = self._page_number + 1
-
+        next_page_number = api_response.page_number + 1
         if next_page_number > api_response.total_pages + 1:
             raise StopIteration
 
