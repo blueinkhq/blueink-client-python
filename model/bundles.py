@@ -16,6 +16,9 @@ class FieldSchema(Schema):
     v_max = mmfields.Int()
     editors: mmfields.List(mmfields.Str())
 
+    class Meta:
+        ordered = True
+
 
 class PacketSchema(Schema):
     name = mmfields.Str()
@@ -27,11 +30,17 @@ class PacketSchema(Schema):
     key = mmfields.Str()
     deliver_via = mmfields.Str()
 
+    class Meta:
+        ordered = True
+
 
 class DocumentSchema(Schema):
     key = mmfields.Str()
     file_url = mmfields.URL()
     fields = mmfields.List(mmfields.Nested(FieldSchema))
+
+    class Meta:
+        ordered = True
 
 
 class BundleSchema(Schema):
@@ -45,6 +54,9 @@ class BundleSchema(Schema):
     is_test = mmfields.Bool()
     packets = mmfields.List(mmfields.Nested(PacketSchema))
     documents = mmfields.List(mmfields.Nested(DocumentSchema))
+
+    class Meta:
+        ordered = True
 
 
 class Field:

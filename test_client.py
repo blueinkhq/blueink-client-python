@@ -32,5 +32,5 @@ bundle = BundleBuilder(label="label",
 # client.bundles.create(bundle_json)
 print(f" BundleJSON: {bundle}")
 
-# jsonfile = open(file="bundle.json",mode='w')
-# jsonfile.write(str(bundle_json))
+jsonfile = open(file="bundle.json",mode='w')
+jsonfile.write(str(bundle))
