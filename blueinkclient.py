@@ -1,3 +1,4 @@
+import sys
 from os import environ
 from tokenizedrequests import (tget, tpost, tput, tpatch, tdelete, MunchedResult, build_pagination_params)
 import endpoints
@@ -6,8 +7,15 @@ from paginator import PaginatedIterator
 
 class Client:
     def __init__(self, override_base_url=None, override_api_key=None):
-        base_url = override_base_url if override_base_url is not None else environ['BLUEINK_API_URI']
-        api_key = override_api_key if override_api_key is not None else environ['BLUEINK_API_KEY']
+        api_key = override_api_key if override_api_key is not None else environ['BLUEINK_PRIVATE_API_KEY']
+        base_url = None
+        try:
+            base_url = override_base_url if override_base_url is not None else environ['BLUEINK_API_URL']
+        except KeyError:
+            base_url = "https://api.blueink.com/api/v2"
+            print(f"Environment variable 'BLUEINK_API_URL' not supplied -- defaulting to {base_url}", file=sys.stderr)
+
+
 
         self.bundles = self._Bundles(base_url, api_key)
         self.persons = self._Persons(base_url, api_key)
