@@ -1,5 +1,5 @@
 from copy import deepcopy
-from tokenizedrequests import MunchedResult
+from tokenizedrequests import MunchedResponse
 
 
 class PaginatedIterator:
@@ -27,13 +27,16 @@ class PaginatedIterator:
         return self
 
     def __next__(self):
-        api_response: MunchedResult = self._paged_func(*self._params)
+        api_response: MunchedResponse = self._paged_func(*self._params)
 
-        if not api_response.success:
+        if api_response.status != 200:
             raise StopIteration
 
-        next_page_number = api_response.page_number + 1
-        if next_page_number > api_response.total_pages + 1:
+        if api_response.pagination is None:
+            raise StopIteration
+
+        next_page_number = api_response.pagination.page_number + 1
+        if next_page_number > api_response.pagination.total_pages + 1:
             raise StopIteration
 
         self._params[self._page_number_idx] = next_page_number
