@@ -229,18 +229,12 @@ class BundleBuilder:
             raise RuntimeError(f"No document found with key {document_key}!")
         if type(self._documents[document_key]) is not TemplateRef:
             raise RuntimeError(f"Document found with key {document_key} is not a Template!")
+        if signer_id not in self._packets:
+            raise RuntimeError(f"Signer {signer_id} does not have a corresponding packet")
 
         assignment = TemplateRefAssignment(role, signer_id)
         self._documents[document_key].assignments.append(assignment)
-
-    def assign_signer(self, document_key:str, role, signer_id):
-        if document_key not in self._documents:
-            raise RuntimeError(f"No document found with key {document_key}!")
-        if type(self._documents[document_key]) is not TemplateRef:
-            raise RuntimeError(f"Document found with key {document_key} is not a Template!")
-
-        assignment = TemplateRefAssignment(role, signer_id)
-        self._documents[document_key].assignments.append(assignment)
+        print(f"Assigned {signer_id} to role {role} in document {document_key}")
 
     def set_value(self, document_key, key, value):
         if document_key not in self._documents:
