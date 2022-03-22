@@ -27,8 +27,8 @@ class MunchedResponse:
             self.pagination = Pagination(response.headers.get("X-Blueink-Pagination"))
 
 
-def build_header(token, content_type=None):
-    hdr = {'Authorization': f"Token {token}"}
+def build_header(private_api_key, content_type=None):
+    hdr = {'Authorization': f"Token {private_api_key}"}
 
     if content_type is not None:
         hdr['Content-Type'] = content_type
@@ -45,39 +45,39 @@ def build_pagination_params(page_number, per_page=None):
     return params
 
 
-def tget(url, token, params=None) -> MunchedResponse:
+def tget(url, private_api_key, params=None) -> MunchedResponse:
     response = get(url=url,
-                   headers=build_header(token),
+                   headers=build_header(private_api_key),
                    params=params)
 
     return MunchedResponse(response)
 
 
-def tpost(url, token, data=None, content_type=None) -> MunchedResponse:
+def tpost(url, private_api_key, data=None, content_type=None) -> MunchedResponse:
     response = post(url=url,
                     data=data,
-                    headers=build_header(token, content_type))
+                    headers=build_header(private_api_key, content_type))
     return MunchedResponse(response)
 
 
-def tput(url, token, data=None, content_type=None) -> MunchedResponse:
+def tput(url, private_api_key, data=None, content_type=None) -> MunchedResponse:
     response = put(url=url,
                    data=data,
-                   headers=build_header(token, content_type))
+                   headers=build_header(private_api_key, content_type))
     return MunchedResponse(response)
 
 
-def tdelete(url, token, data=None, content_type=None) -> MunchedResponse:
+def tdelete(url, private_api_key, data=None, content_type=None) -> MunchedResponse:
     response = delete(url=url,
                       data=data,
-                      headers=build_header(token, content_type))
+                      headers=build_header(private_api_key, content_type))
     return MunchedResponse(response)
 
 
-def tpatch(url, token, data=None, content_type=None) -> MunchedResponse:
+def tpatch(url, private_api_key, data=None, content_type=None) -> MunchedResponse:
     response = patch(url=url,
                      data=data,
-                     headers=build_header(token, content_type))
+                     headers=build_header(private_api_key, content_type))
     return MunchedResponse(response)
 
 
