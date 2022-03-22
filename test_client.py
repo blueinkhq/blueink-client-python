@@ -5,17 +5,30 @@ from requests import Response
 # This will pull from environment vars
 client = Client()
 
-# These test pagination
-for api_call in client.bundles.list_iter(start_page=1, per_page=2):
-    print(f"Bundles Call: {api_call.data}")
+# # These test pagination. Collects IDs
+# print("Paged Bundle Listing")
+# ids = []
+# for api_call in client.bundles.list_iter(start_page=1, per_page=5):
+#     print(f"Paged Call: {api_call.data}")
+#     for bundle in api_call.data:
+#         ids.append(bundle.id)
+# print(f"Found {len(ids)} bundle ids!")
+# print("")
+# print(f"Single bundle retrieval, id {ids[0]}")
+# if len(ids) > 0:
+#     single_bundle = client.bundles.retrieve(ids[0])
+#     if single_bundle.status == 200:
+#         print(single_bundle.data)
 #
 # for api_call in client.persons.list_iter(start_page=1, per_page=2):
 #     print(f"Persons Call: {api_call.data}")
 #
 # for api_call in client.templates.list_iter(start_page=1, per_page=2):
 #     print(f"Template Call: {api_call.data}")
+# print("")
+# print("")
 
-# Test bundle creation and creation
+print("Bundle Creation")
 bundle = BundleBuilder(label="label",
                        in_order=False,
                        email_subj="Subject",
@@ -31,7 +44,7 @@ bundle = BundleBuilder(label="label",
     .add_signer("Homer Simpson", "Homer.Simpson@example.com", "505-555-5555", False, True, True, "signer-1", "email") \
     .build()
 
-print(f" BundleJSON: {bundle}")
+print(f"BundleJSON: {bundle}")
 result = client.bundles.create(bundle)
 print(f"Result: {result.status}: {result.data}")
 
