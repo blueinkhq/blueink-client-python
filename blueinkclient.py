@@ -15,8 +15,6 @@ class Client:
             base_url = "https://api.blueink.com/api/v2"
             print(f"Environment variable 'BLUEINK_API_URL' not supplied -- defaulting to {base_url}", file=sys.stderr)
 
-
-
         self.bundles = self._Bundles(base_url, private_api_key)
         self.persons = self._Persons(base_url, private_api_key)
         self.packets = self._Packets(base_url, private_api_key)
