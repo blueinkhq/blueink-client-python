@@ -221,7 +221,6 @@ class BundleBuilder:
         key = f"signer-{(len(self._packets) + 1)}"
         packet = Packet(name, email, phone, auth_sms, auth_selfie, auth_id, key, deliver_via)
         self._packets[key] = packet
-        print(f"generated signer with key '{key}'")
         return key
 
     def assign_signer(self, document_key:str, signer_id, role):
@@ -234,7 +233,6 @@ class BundleBuilder:
 
         assignment = TemplateRefAssignment(role, signer_id)
         self._documents[document_key].assignments.append(assignment)
-        print(f"Assigned {signer_id} to role {role} in document {document_key}")
 
     def set_value(self, document_key, key, value):
         if document_key not in self._documents:
