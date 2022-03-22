@@ -103,7 +103,7 @@ class Client:
                 .build()
             return tpost(url, self._api_key, data, "application/json")
 
-        def list_iter(self, start_page=0, per_page=50) -> PaginatedIterator:
+        def pagedlist(self, start_page=0, per_page=50) -> PaginatedIterator:
             '''
             returns an iterable object such that you can do
 
@@ -184,7 +184,7 @@ class Client:
         def __init__(self, base_url, api_key):
             super().__init__(base_url, api_key)
 
-        def list_iter(self, start_page=0, per_page=50) -> PaginatedIterator:
+        def pagedlist(self, start_page=0, per_page=50) -> PaginatedIterator:
             '''
             returns an iterable object such that you can do
 
