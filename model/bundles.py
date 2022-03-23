@@ -34,31 +34,6 @@ class PacketSchema(Schema):
         ordered = True
 
 
-class DocumentSchema(Schema):
-    key = mmfields.Str()
-    file_url = mmfields.URL()
-    fields = mmfields.List(mmfields.Nested(FieldSchema))
-
-    class Meta:
-        ordered = True
-
-
-class BundleSchema(Schema):
-    label = mmfields.Str()
-    in_order = mmfields.Bool()
-    email_subject = mmfields.Str()
-    email_message = mmfields.Str()
-    # requester_name = mmfields.Str()
-    # requester_email = mmfields.Str()
-    cc_emails = mmfields.List(mmfields.Email)
-    is_test = mmfields.Bool()
-    packets = mmfields.List(mmfields.Nested(PacketSchema))
-    documents = mmfields.List(mmfields.Nested(DocumentSchema))
-
-    class Meta:
-        ordered = True
-
-
 class TemplateRefAssignmentSchema(Schema):
     role = mmfields.Str()
     signer = mmfields.Str()
@@ -75,11 +50,42 @@ class TemplateRefFieldValueSchema(Schema):
         ordered = True
 
 
-class TemplateRefSchema(DocumentSchema):
+class DocumentSchema(Schema):
     key = mmfields.Str()
+
+    # document related
+    file_url = mmfields.URL()
+    fields = mmfields.List(mmfields.Nested(FieldSchema))
+
+    # template related, kinda weird but must be here, apparently, for Marshmallow to inherit them for TemplateRefSchema
     template_id = mmfields.Str()
     assignments = mmfields.List(mmfields.Nested(TemplateRefAssignmentSchema))
     field_values = mmfields.List(mmfields.Nested(TemplateRefFieldValueSchema))
+
+    class Meta:
+        ordered = True
+
+
+class TemplateRefSchema(DocumentSchema):
+    template_id = mmfields.Str()
+    assignments = mmfields.List(mmfields.Nested(TemplateRefAssignmentSchema))
+    field_values = mmfields.List(mmfields.Nested(TemplateRefFieldValueSchema))
+
+    class Meta:
+        ordered = True
+
+
+class BundleSchema(Schema):
+    label = mmfields.Str()
+    in_order = mmfields.Bool()
+    email_subject = mmfields.Str()
+    email_message = mmfields.Str()
+    # requester_name = mmfields.Str()
+    # requester_email = mmfields.Str()
+    cc_emails = mmfields.List(mmfields.Email)
+    is_test = mmfields.Bool()
+    packets = mmfields.List(mmfields.Nested(PacketSchema))
+    documents = mmfields.List(mmfields.Nested(DocumentSchema))
 
     class Meta:
         ordered = True
@@ -169,10 +175,10 @@ class BundleBuilder:
                  email_message: str = None,
                  in_order: bool = False,
                  is_test: bool = False):
-        self._label = label,
-        self._in_order = in_order,
-        self._email_subj = email_subject,
-        self._email_msg = email_message,
+        self._label = label
+        self._in_order = in_order
+        self._email_subj = email_subject
+        self._email_msg = email_message
         self._cc_emails = []
         self._is_test = is_test
         self._documents = {}
@@ -198,8 +204,8 @@ class BundleBuilder:
     def add_document_template(self, key, template_id):
         if key in self._documents.keys():
             raise RuntimeError(f"Document with key {key} already added!")
-
-        self._documents[key] = TemplateRef(key, template_id)
+        template = TemplateRef(key, template_id)
+        self._documents[key] = template
         return key
 
     def add_field_to_document(self, document_key:str, kind:str, key:str, label:str, page:int, x:int, y:int, w:int, h:int, v_pattern:int, v_min:int, v_max:int, editors: [str]):

@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from blueinkclient import Client
 from model.bundles import BundleBuilder
 from requests import Response
@@ -31,6 +33,7 @@ client = Client()
 print("Bundle Creation")
 bundleBuilder = BundleBuilder(label="label",
                               email_subject="Subject",
+                              email_message="MessageText",
                               is_test=True)
 bundleBuilder.add_cc("Homer.Simpson@example.com")
 
@@ -40,17 +43,19 @@ signer_id2 = bundleBuilder.add_signer("Marge Simpson", "Marge.Simpson@example.co
 bundleBuilder.add_field_to_document(doc_id, "inp", "inp-name", "label", 1, 15, 60, 20, 3, "email", 2, 30, [signer_id1, signer_id2])
 bundleBuilder.add_field_to_document(doc_id, "sig", "sig-01", "signature", 1, 15, 68, 30, 12, "email", 2, 30, [signer_id1])
 
-template_id = bundleBuilder.add_document_template("doc-02", "template-id000")
-bundleBuilder.assign_signer(template_id, signer_id1, "customer1")
-bundleBuilder.assign_signer(template_id, signer_id2, "customer2")
-bundleBuilder.set_value(template_id, "var1", "val1")
-bundleBuilder.set_value(template_id, "var2", "val2")
+# template_id = bundleBuilder.add_document_template("doc-02", "template-id000")
+# bundleBuilder.assign_signer(template_id, signer_id1, "customer1")
+# bundleBuilder.assign_signer(template_id, signer_id2, "customer2")
+# bundleBuilder.set_value(template_id, "var1", "val1")
+# bundleBuilder.set_value(template_id, "var2", "val2")
 
 json = bundleBuilder.build()
 
-print(f"BundleJSON: {json}")
+pprint(json)
 result = client.bundles.create(json)
 print(f"Result: {result.status}: {result.data}")
+print("")
+print(f"Bundle ID: {result.data.id}")
 
-# jsonfile = open(file="bundle.json",mode='w')
-# jsonfile.write(str(bundle))
+jsonfile = open(file="bundle.json",mode='w')
+jsonfile.write(str(json))
