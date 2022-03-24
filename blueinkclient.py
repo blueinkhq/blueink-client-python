@@ -41,7 +41,7 @@ class Client:
                 response = tpost_formdata(url, self._private_api_key, json_data, files, media_types)
             return response
 
-        def list_iter(self, start_page=0, per_page=50) -> PaginatedIterator:
+        def list_iter(self, start_page=0, per_page=50, getAdditionalData=False) -> PaginatedIterator:
             '''
             returns an iterable object such that you can do
 
@@ -52,11 +52,11 @@ class Client:
             :param per_page:
             :return:
             '''
-            params = [start_page, per_page]
+            params = [start_page, per_page, getAdditionalData]
             paged_call = PaginatedIterator(self.list, params, 0)
             return paged_call
 
-        def list(self, page=None, per_page=None) -> MunchedResponse:
+        def list(self, page=None, per_page=None, getAdditionalData=False) -> MunchedResponse:
             response = None
             if page is None and per_page is None:
                 url = endpoints.URLBuilder(self._base_url, endpoints.bundles.list) \

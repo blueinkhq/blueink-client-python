@@ -62,18 +62,21 @@ def tpost(url, private_api_key, data=None, content_type="application/json") -> M
 
 def tpost_formdata(url, private_api_key, json_data=None, files=[], content_types=[]) -> MunchedResponse:
 
+    print(json_data)
+    print(type(json_data))
     form_data = {
         'bundle_request': (json_data, "application/json"),
-        'files': []
     }
 
     for file_index, file in enumerate(files):
         formdata_file = (file.name, file, content_types[file_index])
-        form_data['files'].append(formdata_file)
+        form_data[f'files[{file_index}]'] = formdata_file
 
     response = post(url=url,
                     data=form_data,
                     headers=build_header(private_api_key))
+
+    print(response.content)
 
     return MunchedResponse(response)
 
