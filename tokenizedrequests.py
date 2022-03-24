@@ -39,7 +39,7 @@ def build_header(private_api_key, content_type=None):
 def build_pagination_params(page_number, per_page=None):
     params = {
         "page": page_number,
-        "per_page":per_page
+        "per_page": per_page
     }
 
     return params
@@ -53,10 +53,28 @@ def tget(url, private_api_key, params=None) -> MunchedResponse:
     return MunchedResponse(response)
 
 
-def tpost(url, private_api_key, data=None, content_type=None) -> MunchedResponse:
+def tpost(url, private_api_key, data=None, content_type="application/json") -> MunchedResponse:
     response = post(url=url,
                     data=data,
                     headers=build_header(private_api_key, content_type))
+    return MunchedResponse(response)
+
+
+def tpost_formdata(url, private_api_key, json_data=None, files=[], content_types=[]) -> MunchedResponse:
+
+    form_data = {
+        'bundle_request': (json_data, "application/json"),
+        'files': []
+    }
+
+    for file_index, file in enumerate(files):
+        formdata_file = (file.name, file, content_types[file_index])
+        form_data['files'].append(formdata_file)
+
+    response = post(url=url,
+                    data=form_data,
+                    headers=build_header(private_api_key))
+
     return MunchedResponse(response)
 
 
@@ -79,6 +97,3 @@ def tpatch(url, private_api_key, data=None, content_type=None) -> MunchedRespons
                      data=data,
                      headers=build_header(private_api_key, content_type))
     return MunchedResponse(response)
-
-
-

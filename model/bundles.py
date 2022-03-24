@@ -55,6 +55,7 @@ class DocumentSchema(Schema):
 
     # document related
     file_url = mmfields.URL()
+    file_index = mmfields.Int()
     fields = mmfields.List(mmfields.Nested(FieldSchema))
 
     # template related, kinda weird but must be here, apparently, for Marshmallow to inherit them for TemplateRefSchema
@@ -111,9 +112,10 @@ class Field:
 
 
 class Document:
-    def __init__(self, key, url):
+    def __init__(self, key, url=None, file_index=None):
         self.key = key
         self.file_url = url
+        self.file_index = file_index
         self.fields = []
 
     def add_field(self, field: Field):
@@ -184,6 +186,11 @@ class BundleBuilder:
         self._documents = {}
         self._packets = {}
 
+        # for file uploads, index should match those in the document "file_index" field
+        self.file_names = []
+        self.file_types = []
+        self.files = []
+
     def add_cc(self, email):
         self._cc_emails.append(email)
         return self
@@ -198,7 +205,31 @@ class BundleBuilder:
         if key in self._documents.keys():
             raise RuntimeError(f"Document with key {key} already added!")
 
-        self._documents[key] = Document(key, url)
+        self._documents[key] = Document(key, url=url)
+        return key
+
+    def add_document_by_path(self, key, file_path, mime_type) -> str:
+        '''
+        Add a document via url, with unique key.
+        :param key:
+        :param url:
+        :return:
+        '''
+        if key in self._documents.keys():
+            raise RuntimeError(f"Document with key {key} already added!")
+
+        file_index = len(self.files)
+        file = open(file_path, 'rb')
+
+        if file.readable():
+            self.files.append(file)
+            self.file_names.append(file.name)
+            self.file_types.append(mime_type)
+            print(f"Attaching file {file_index}: {file.name}")
+        else:
+            raise RuntimeError(f"File with path '{file_path}' unreadable.")
+
+        self._documents[key] = Document(key, file_index=file_index)
         return key
 
     def add_document_template(self, key, template_id):
