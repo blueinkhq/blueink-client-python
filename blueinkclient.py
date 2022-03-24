@@ -1,5 +1,8 @@
 import sys
 from os import environ
+
+from munch import Munch
+
 from tokenizedrequests import (tget, tpost, tpost_formdata, tput, tpatch, tdelete, MunchedResponse, build_pagination_params)
 import endpoints
 from paginator import PaginatedIterator
@@ -69,14 +72,40 @@ class Client:
 
                 response = tget(url, self._private_api_key, url_params)
 
+            if getAdditionalData:
+                for bundle in response.data:
+                    self._attach_additional_data(bundle)
+
+
             return response
 
-        def retrieve(self, bundle_id) -> MunchedResponse:
+        def _attach_additional_data(self, bundle):
+            if type(bundle) == Munch and bundle.id is not None:
+                bundle_id = bundle.id
+
+                events_response = self.list_events(bundle_id)
+                if events_response.status == 200:
+                    bundle.events = events_response.data
+
+                if bundle.status == "co":
+                    files_response = self.list_files(bundle_id)
+                    bundle.files = files_response.data
+
+                    data_response = self.list_data(bundle_id)
+                    bundle.data = data_response.data
+
+        def retrieve(self, bundle_id, getAdditionalData=False) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.retrieve)\
                 .interpolate(endpoints.interpolations.bundle_id, bundle_id)\
                 .build()
 
-            return tget(url, self._private_api_key)
+            response = tget(url, self._private_api_key)
+
+            if getAdditionalData:
+                bundle = response.data
+                self._attach_additional_data(bundle)
+
+            return response
 
         def cancel(self, bundle_id) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.cancel) \
