@@ -1,6 +1,7 @@
 import json
 from munch import munchify
 from requests import (Response, get, post, put, patch, delete)
+from requests import (Request, Session)
 
 """
 Helper functions to add header with user's token.txt
@@ -62,23 +63,17 @@ def tpost(url, private_api_key, data=None, content_type="application/json") -> M
 
 def tpost_formdata(url, private_api_key, json_data=None, files=[], content_types=[]) -> MunchedResponse:
 
-    print(f"json_data type {type(json_data)}")
+    # construct form_data dict
     form_data = {
-        'bundle_request': (json_data, "application/json")
-        # 'bundle_request': json_data
+        'bundle_request': (None, json_data, "application/json") # 'None' filename is a must or server 500's out
     }
-
-    print(form_data)
-
     for file_index, file in enumerate(files):
         formdata_file = (file.name, file, content_types[file_index])
         form_data[f'files[{file_index}]'] = formdata_file
 
     response = post(url=url,
-                    data=form_data,
+                    files=form_data,
                     headers=build_header(private_api_key))
-
-    print(response.content)
 
     return MunchedResponse(response)
 

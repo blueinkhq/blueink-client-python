@@ -44,7 +44,7 @@ class Client:
                 response = tpost_formdata(url, self._private_api_key, json_data, files, media_types)
             return response
 
-        def list_iter(self, start_page=0, per_page=50, getAdditionalData=False) -> PaginatedIterator:
+        def pagedlist(self, start_page=0, per_page=50, getAdditionalData=False) -> PaginatedIterator:
             '''
             returns an iterable object such that you can do
 
