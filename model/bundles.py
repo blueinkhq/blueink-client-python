@@ -1,4 +1,4 @@
-from marshmallow import Schema
+from marshmallow import Schema, post_dump
 from marshmallow import fields as mmfields
 
 
@@ -66,6 +66,19 @@ class DocumentSchema(Schema):
     class Meta:
         ordered = True
 
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        """
+        Removes null values from the JSON
+        :param data:
+        :param kwargs:
+        :return:
+        """
+        return {
+            key: value for key, value in data.items()
+            if value is not None
+        }
+
 
 class TemplateRefSchema(DocumentSchema):
     template_id = mmfields.Str()
@@ -90,6 +103,8 @@ class BundleSchema(Schema):
 
     class Meta:
         ordered = True
+
+
 
 
 class Field:
