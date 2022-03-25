@@ -11,6 +11,13 @@ from paginator import PaginatedIterator
 
 class Client:
     def __init__(self, override_base_url=None, override_private_api_key=None):
+        """
+
+        :param override_base_url: Provide or override value provided by environmental variable. If none supplied, will
+        use default "https://api.blueink.com/api/v2" if no env var BLUEINK_API_URL found.
+        :param override_private_api_key: Provide or override value provided by environmental variable. If none supplied,
+        will use env var BLUEINK_PRIVATE_API_KEY
+        """
         private_api_key = override_private_api_key if override_private_api_key is not None else environ['BLUEINK_PRIVATE_API_KEY']
         base_url = None
         try:
@@ -33,28 +40,21 @@ class Client:
         def __init__(self, base_url, private_api_key):
             super().__init__(base_url, private_api_key)
 
-        def create(self, json_data, files=[], file_names=[], media_types=[]) -> MunchedResponse:
+        def create(self, bundle_builder:BundleBuilder) -> MunchedResponse:
+            """
+            Post a Bundle to the BlueInk application.
+            :param bundle_builder: 
+            :return:
+            """
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.create) \
                 .build()
 
             response = None
-
-            if len(files) == 0:
-                response = tpost(url, self._private_api_key, json_data)
-            else:
-                response = tpost_formdata(url, self._private_api_key, json_data, files, file_names, media_types)
-            return response
-
-        def create(self, bundleBuilder:BundleBuilder) -> MunchedResponse:
-            url = endpoints.URLBuilder(self._base_url, endpoints.bundles.create) \
-                .build()
-
-            response = None
-            json = bundleBuilder.build_json()
-            if len(bundleBuilder.files) == 0:
+            json = bundle_builder.build_json()
+            if len(bundle_builder.files) == 0:
                 response = tpost(url, self._private_api_key, json)
             else:
-                response = tpost_formdata(url, self._private_api_key, json, bundleBuilder.files, bundleBuilder.file_names, bundleBuilder.file_types)
+                response = tpost_formdata(url, self._private_api_key, json, bundle_builder.files, bundle_builder.file_names, bundle_builder.file_types)
             return response
 
         def pagedlist(self, start_page=0, per_page=50, getAdditionalData=False) -> PaginatedIterator:
@@ -73,6 +73,13 @@ class Client:
             return paged_call
 
         def list(self, page=None, per_page=None, getAdditionalData=False) -> MunchedResponse:
+            """
+            Returns a list of bundles
+            :param page: (optional)
+            :param per_page: (optional)
+            :param getAdditionalData: (default false), returns events, files, data if true
+            :return:
+            """
             response = None
             if page is None and per_page is None:
                 url = endpoints.URLBuilder(self._base_url, endpoints.bundles.list) \
@@ -88,7 +95,6 @@ class Client:
             if getAdditionalData:
                 for bundle in response.data:
                     self._attach_additional_data(bundle)
-
 
             return response
 
@@ -108,6 +114,12 @@ class Client:
                     bundle.data = data_response.data
 
         def retrieve(self, bundle_id, getAdditionalData=False) -> MunchedResponse:
+            """
+            Requests a single bundle
+            :param bundle_id: bundle slug
+            :param getAdditionalData: (default false), returns events, files, data if true
+            :return:
+            """
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.retrieve)\
                 .interpolate(endpoints.interpolations.bundle_id, bundle_id)\
                 .build_json()
@@ -121,6 +133,11 @@ class Client:
             return response
 
         def cancel(self, bundle_id) -> MunchedResponse:
+            """
+            Cancels a bundle given bundle slug
+            :param bundle_id:
+            :return:
+            """
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.cancel) \
                 .interpolate(endpoints.interpolations.bundle_id, bundle_id)\
                 .build_json()
@@ -153,6 +170,11 @@ class Client:
             super().__init__(base_url, api_key)
 
         def create(self, data) -> MunchedResponse:
+            """
+            Creates a person.
+            :param data: JSON string for a person
+            :return:
+            """
             url = endpoints.URLBuilder(self._base_url, endpoints.persons.create)\
                 .build()
             return tpost(url, self._private_api_key, data)
@@ -188,25 +210,37 @@ class Client:
 
             return response
 
-        def retrieve(self, person_id) -> MunchedResponse:
+        def retrieve(self, person_id:str) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.persons.retrieve) \
                 .interpolate(endpoints.interpolations.person_id, person_id) \
                 .build_json()
             return tget(url, self._private_api_key)
 
-        def update(self, person_id, data) -> MunchedResponse:
+        def update(self, person_id:str, data:str) -> MunchedResponse:
+            """
+
+            :param person_id:
+            :param data: JSON string of person
+            :return:
+            """
             url = endpoints.URLBuilder(self._base_url, endpoints.persons.update) \
                 .interpolate(endpoints.interpolations.person_id, person_id) \
                 .build_json()
             return tput(url, self._private_api_key, data)
 
-        def partial_update(self, person_id, data) -> MunchedResponse:
+        def partial_update(self, person_id:str, data:str) -> MunchedResponse:
+            """
+
+            :param person_id:
+            :param data: JSON string of person
+            :return:
+            """
             url = endpoints.URLBuilder(self._base_url, endpoints.persons.partial_update) \
                 .interpolate(endpoints.interpolations.person_id, person_id) \
                 .build_json()
             return tpatch(url, self._private_api_key, data)
 
-        def delete(self, person_id) -> MunchedResponse:
+        def delete(self, person_id:str) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.persons.delete) \
                 .interpolate(endpoints.interpolations.person_id, person_id) \
                 .build_json()
@@ -216,19 +250,25 @@ class Client:
         def __init__(self, base_url, private_api_key):
             super().__init__(base_url, private_api_key)
 
-        def update(self, packet_id, data) -> MunchedResponse:
+        def update(self, packet_id:str, data:str) -> MunchedResponse:
+            """
+
+            :param packet_id:
+            :param data: JSON of packet
+            :return:
+            """
             url = endpoints.URLBuilder(self._base_url, endpoints.packets.update) \
                 .interpolate(endpoints.interpolations.packet_id, packet_id) \
                 .build_json()
             return tpatch(url, self._private_api_key, data)
 
-        def remind(self, packet_id) -> MunchedResponse:
+        def remind(self, packet_id:str) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.packets.remind) \
                 .interpolate(endpoints.interpolations.packet_id, packet_id) \
                 .build_json()
             return tput(url, self._private_api_key)
 
-        def retrieve_coe(self, packet_id) -> MunchedResponse:
+        def retrieve_coe(self, packet_id:str) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.packets.retrieve_coe) \
                 .interpolate(endpoints.interpolations.packet_id, packet_id) \
                 .build_json()
@@ -269,7 +309,7 @@ class Client:
 
             return response
 
-        def retrieve(self, template_id) -> MunchedResponse:
+        def retrieve(self, template_id:str) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.templates.retrieve) \
                 .interpolate(endpoints.interpolations.template_id, template_id) \
                 .build_json()

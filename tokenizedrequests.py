@@ -11,6 +11,10 @@ Helper functions to add header with user's token.txt
 
 class Pagination:
     def __init__(self, pagination_header: str):
+        """
+        Pagination fields parsed out for BlueInk paged responses
+        :param pagination_header: from header 'X-Blueink-Pagination'
+        """
         pagination_split = pagination_header.split(",")
         self.page_number = int(pagination_split[0])
         self.total_pages = int(pagination_split[1])
@@ -20,6 +24,13 @@ class Pagination:
 
 class MunchedResponse:
     def __init__(self, response: Response):
+        """
+        Encapsulates the response from a BlueInk REST endpoint in a "Munch" of the JSON body.
+        Status code and pagination also included.
+
+        This will error out if JSON is not returned.
+        :param response:
+        """
         self.data = munchify(json.loads(response.content))
         self.status = response.status_code
 
@@ -30,6 +41,15 @@ class MunchedResponse:
 
 
 def build_header(private_api_key, content_type=None):
+    """
+    Builds header with API key, optional content-type.
+    :param private_api_key:
+    :param content_type:
+    :return:
+    """
+    if private_api_key is None:
+        raise RuntimeError("Private API key must be supplied.")
+
     hdr = {'Authorization': f"Token {private_api_key}"}
 
     if content_type is not None:
@@ -39,6 +59,12 @@ def build_header(private_api_key, content_type=None):
 
 
 def build_pagination_params(page_number, per_page=None):
+    """
+    Builds pagination URL params dict for requests' params field.
+    :param page_number:
+    :param per_page:
+    :return:
+    """
     params = {
         "page": page_number,
         "per_page": per_page
@@ -48,6 +74,13 @@ def build_pagination_params(page_number, per_page=None):
 
 
 def tget(url, private_api_key, params=None) -> MunchedResponse:
+    """
+    Wrapped requests get request with proper header
+    :param url:
+    :param private_api_key:
+    :param params:
+    :return:
+    """
     response = get(url=url,
                    headers=build_header(private_api_key),
                    params=params)
@@ -56,6 +89,14 @@ def tget(url, private_api_key, params=None) -> MunchedResponse:
 
 
 def tpost(url, private_api_key, data=None, content_type="application/json") -> MunchedResponse:
+    """
+    Wrapped requests post request with proper header, taking json data
+    :param url:
+    :param private_api_key:
+    :param data: json data
+    :param content_type:
+    :return:
+    """
     response = post(url=url,
                     data=data,
                     headers=build_header(private_api_key, content_type))
@@ -63,7 +104,16 @@ def tpost(url, private_api_key, data=None, content_type="application/json") -> M
 
 
 def tpost_formdata(url, private_api_key, json_data=None, files=[io.BufferedReader], file_names=[str], content_types=[str]) -> MunchedResponse:
-
+    """
+    Wrapped requests post request with proper header
+    :param url:
+    :param private_api_key:
+    :param json_data:
+    :param files: array of file like objects (io.BufferedReader)
+    :param file_names: array of filenames
+    :param content_types: array of content types (eg 'application/pdf')
+    :return:
+    """
     # construct form_data dict
     form_data = {
         'bundle_request': (None, json_data, "application/json") # 'None' filename is a must or server 500's out
@@ -83,6 +133,14 @@ def tpost_formdata(url, private_api_key, json_data=None, files=[io.BufferedReade
 
 
 def tput(url, private_api_key, data=None, content_type=None) -> MunchedResponse:
+    """
+    Wrapped requests put request with proper header
+    :param url:
+    :param private_api_key:
+    :param data:
+    :param content_type:
+    :return:
+    """
     response = put(url=url,
                    data=data,
                    headers=build_header(private_api_key, content_type))
@@ -90,6 +148,14 @@ def tput(url, private_api_key, data=None, content_type=None) -> MunchedResponse:
 
 
 def tdelete(url, private_api_key, data=None, content_type=None) -> MunchedResponse:
+    """
+    Wrapped requests delete request with proper header
+    :param url:
+    :param private_api_key:
+    :param data:
+    :param content_type:
+    :return:
+    """
     response = delete(url=url,
                       data=data,
                       headers=build_header(private_api_key, content_type))
@@ -97,6 +163,14 @@ def tdelete(url, private_api_key, data=None, content_type=None) -> MunchedRespon
 
 
 def tpatch(url, private_api_key, data=None, content_type=None) -> MunchedResponse:
+    """
+    Wrapped requests patch request with proper header
+    :param url:
+    :param private_api_key:
+    :param data:
+    :param content_type:
+    :return:
+    """
     response = patch(url=url,
                      data=data,
                      headers=build_header(private_api_key, content_type))

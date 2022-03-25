@@ -1,9 +1,6 @@
 from blueinkclient import Client
 from model.bundles import BundleBuilder
 
-# This will pull from environment vars
-client = Client()
-
 print("\n*********************")
 print("Bundle Creation via URL")
 bundleBuilder = BundleBuilder(label="label2022",
@@ -25,10 +22,7 @@ bundleBuilder.add_field_to_document(doc_id1, "sig", "sig-01", "signature", 1, 15
 # bundleBuilder.set_value(template_id, "var1", "val1")
 # bundleBuilder.set_value(template_id, "var2", "val2")
 
-json = bundleBuilder.build_json()
 
-result = client.bundles.create(json)
+client = Client()
+result = client.bundles.create(bundleBuilder)
 print(f"Result: {result.status}: {result.data}")
-
-jsonfile = open(file="bundle.json",mode='w')
-jsonfile.write(json)

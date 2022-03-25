@@ -3,16 +3,28 @@ import io
 from marshmallow import Schema, post_dump
 from marshmallow import fields as mmfields
 
+"""
+Developer Note:
+
+Schema classes are for the Marshmallow serializer. 
+Validation is being done through these as well.
+"""
+
+
+class ValidationError(RuntimeError):
+    def __init__(self, error_text:str):
+        super(ValidationError, self).__init__(error_text)
+
 
 class FieldSchema(Schema):
-    kind = mmfields.Str()
+    kind = mmfields.Str(required=True)
     key = mmfields.Str()
     label = mmfields.Str()
     page = mmfields.Int()
-    x = mmfields.Int()
-    y = mmfields.Int()
-    w = mmfields.Int()
-    h = mmfields.Int()
+    x = mmfields.Int(required=True)
+    y = mmfields.Int(required=True)
+    w = mmfields.Int(required=True)
+    h = mmfields.Int(required=True)
     v_pattern = mmfields.Str()
     v_min = mmfields.Int()
     v_max = mmfields.Int()
@@ -29,7 +41,7 @@ class PacketSchema(Schema):
     auth_sms = mmfields.Bool()
     auth_selfie = mmfields.Bool()
     auth_id = mmfields.Bool()
-    key = mmfields.Str()
+    key = mmfields.Str(required=True)
     deliver_via = mmfields.Str()
 
     class Meta:
@@ -37,15 +49,15 @@ class PacketSchema(Schema):
 
 
 class TemplateRefAssignmentSchema(Schema):
-    role = mmfields.Str()
-    signer = mmfields.Str()
+    role = mmfields.Str(required=True)
+    signer = mmfields.Str(required=True)
 
     class Meta:
         ordered = True
 
 
 class TemplateRefFieldValueSchema(Schema):
-    key = mmfields.Str()
+    key = mmfields.Str(required=True)
     initial_value = mmfields.Str()
 
     class Meta:
@@ -60,9 +72,12 @@ class DocumentSchema(Schema):
     file_index = mmfields.Int()
     fields = mmfields.List(mmfields.Nested(FieldSchema))
 
-    # template related, kinda weird but must be here, apparently, for Marshmallow to inherit them for TemplateRefSchema
-    template_id = mmfields.Str()
-    assignments = mmfields.List(mmfields.Nested(TemplateRefAssignmentSchema))
+    # template related. kinda weird but must be here, but
+    # having a separate "TemplateRefSchema", child of DocumentSchema did not work out.
+    # Perhaps a Marshmallow bug? Coded around this by including Template schema fields in Document
+    # and the post_dump should clean up anythhing unused/null.
+    template_id = mmfields.Str() # UUID to a valid template, required for Template
+    assignments = mmfields.List(mmfields.Nested(TemplateRefAssignmentSchema)) # required for a template
     field_values = mmfields.List(mmfields.Nested(TemplateRefFieldValueSchema))
 
     class Meta:
@@ -71,7 +86,7 @@ class DocumentSchema(Schema):
     @post_dump
     def remove_skip_values(self, data, **kwargs):
         """
-        Removes null values from the JSON
+        Removes null values from the JSON.
         :param data:
         :param kwargs:
         :return:
@@ -82,13 +97,14 @@ class DocumentSchema(Schema):
         }
 
 
-class TemplateRefSchema(DocumentSchema):
-    template_id = mmfields.Str()
-    assignments = mmfields.List(mmfields.Nested(TemplateRefAssignmentSchema))
-    field_values = mmfields.List(mmfields.Nested(TemplateRefFieldValueSchema))
-
-    class Meta:
-        ordered = True
+# This did not work out. Check DocumentSchema for explanation
+# class TemplateRefSchema(DocumentSchema):
+#     template_id = mmfields.Str()
+#     assignments = mmfields.List(mmfields.Nested(TemplateRefAssignmentSchema))
+#     field_values = mmfields.List(mmfields.Nested(TemplateRefFieldValueSchema))
+#
+#     class Meta:
+#         ordered = True
 
 
 class BundleSchema(Schema):
@@ -96,17 +112,13 @@ class BundleSchema(Schema):
     in_order = mmfields.Bool()
     email_subject = mmfields.Str()
     email_message = mmfields.Str()
-    # requester_name = mmfields.Str()
-    # requester_email = mmfields.Str()
     cc_emails = mmfields.List(mmfields.Email)
     is_test = mmfields.Bool()
-    packets = mmfields.List(mmfields.Nested(PacketSchema))
-    documents = mmfields.List(mmfields.Nested(DocumentSchema))
+    packets = mmfields.List(mmfields.Nested(PacketSchema), required=True)
+    documents = mmfields.List(mmfields.Nested(DocumentSchema), required=True)
 
     class Meta:
         ordered = True
-
-
 
 
 class Field:
@@ -124,6 +136,14 @@ class Field:
         self.v_max = v_max
         self.editors: [str] = []
 
+        required_fields = [kind, x, y, w, h]
+        if None in required_fields:
+            raise ValidationError(f"kind, x, y, w, h attributes are required for '{type(self).__name__}' object")
+
+        allowed_kinds = ["att", "cbx", "chk", "dat", "ini", "inp", "sdt", "sel", "sig", "snm", "txt"]
+        if kind not in allowed_kinds:
+            raise ValidationError(f"kind '{kind}' is invalid. Kind must be one of the following: {allowed_kinds}")
+
     def add_editor(self, editor:str):
         self.editors.append(editor)
 
@@ -135,6 +155,10 @@ class Document:
         self.file_index = file_index
         self.fields = []
 
+        required_fields = [key]
+        if None in required_fields:
+            raise ValidationError(f"key attribute is required for '{type(self).__name__}' object")
+
     def add_field(self, field: Field):
         self.fields.append(field)
 
@@ -144,11 +168,19 @@ class TemplateRefAssignment:
         self.role = role
         self.signer = signer
 
+        required_fields = [role, signer]
+        if None in required_fields:
+            raise ValidationError(f"role and signer attributes are required for '{type(self).__name__}' object")
+
 
 class TemplateRefFieldValue:
     def __init__(self, key:str , initial_value:str ):
         self.key = key
         self.initial_value=initial_value
+
+        required_fields = [key, initial_value]
+        if None in required_fields:
+            raise ValidationError(f"key and initial_value attributes are required for '{type(self).__name__}' object")
 
 
 class TemplateRef(Document):
@@ -157,6 +189,14 @@ class TemplateRef(Document):
         self.template_id = template_id
         self.assignments = assignments
         self.field_values = field_values
+
+        required_fields = [assignments, field_values]
+        if None in required_fields:
+            raise ValidationError(f"kind, x, y, w, h attributes are required for '{type(self).__name__}' object")
+        # for field in required_fields:
+        #     if type(field) == list:
+        #         if len(field) == 0:
+        #             raise ValidationError(f"One or more of required list fields (assignments, field_values) is empty.")
 
 
 class Packet:
@@ -170,6 +210,10 @@ class Packet:
         self.auth_id = auth_id
         self.key = key
         self.deliver_via = deliver_via
+
+        required_fields = [key]
+        if None in required_fields:
+            raise ValidationError(f"key attribute is required for '{type(self).__name__}' object")
 
 
 class Bundle:
@@ -185,6 +229,14 @@ class Bundle:
         self.is_test = is_test
         self.packets = packets
         self.documents = documents
+
+        required_fields = [packets, documents]
+        if None in required_fields:
+            raise ValidationError(f"kind, x, y, w, h attributes are required for '{type(self).__name__}' object")
+        for field in required_fields:
+            if type(field) == list:
+                if len(field) == 0:
+                    raise ValidationError(f"One or more of required list fields (packets, documents) is empty.")
 
 
 class BundleBuilder:
