@@ -25,7 +25,7 @@ bundleBuilder.add_field_to_document(doc_id1, "sig", "sig-01", "signature", 1, 15
 # bundleBuilder.set_value(template_id, "var1", "val1")
 # bundleBuilder.set_value(template_id, "var2", "val2")
 
-json = bundleBuilder.build()
+json = bundleBuilder.build_json()
 
 result = client.bundles.create(json)
 print(f"Result: {result.status}: {result.data}")

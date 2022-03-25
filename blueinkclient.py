@@ -4,6 +4,7 @@ from os import environ
 from munch import Munch
 
 from tokenizedrequests import (tget, tpost, tpost_formdata, tput, tpatch, tdelete, MunchedResponse, build_pagination_params)
+from model.bundles import BundleBuilder
 import endpoints
 from paginator import PaginatedIterator
 
@@ -32,7 +33,7 @@ class Client:
         def __init__(self, base_url, private_api_key):
             super().__init__(base_url, private_api_key)
 
-        def create(self, json_data, files=[], media_types=[]) -> MunchedResponse:
+        def create(self, json_data, files=[], file_names=[], media_types=[]) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.create) \
                 .build()
 
@@ -41,7 +42,19 @@ class Client:
             if len(files) == 0:
                 response = tpost(url, self._private_api_key, json_data)
             else:
-                response = tpost_formdata(url, self._private_api_key, json_data, files, media_types)
+                response = tpost_formdata(url, self._private_api_key, json_data, files, file_names, media_types)
+            return response
+
+        def create(self, bundleBuilder:BundleBuilder) -> MunchedResponse:
+            url = endpoints.URLBuilder(self._base_url, endpoints.bundles.create) \
+                .build()
+
+            response = None
+            json = bundleBuilder.build_json()
+            if len(bundleBuilder.files) == 0:
+                response = tpost(url, self._private_api_key, json)
+            else:
+                response = tpost_formdata(url, self._private_api_key, json, bundleBuilder.files, bundleBuilder.file_names, bundleBuilder.file_types)
             return response
 
         def pagedlist(self, start_page=0, per_page=50, getAdditionalData=False) -> PaginatedIterator:
@@ -97,7 +110,7 @@ class Client:
         def retrieve(self, bundle_id, getAdditionalData=False) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.retrieve)\
                 .interpolate(endpoints.interpolations.bundle_id, bundle_id)\
-                .build()
+                .build_json()
 
             response = tget(url, self._private_api_key)
 
@@ -110,28 +123,28 @@ class Client:
         def cancel(self, bundle_id) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.cancel) \
                 .interpolate(endpoints.interpolations.bundle_id, bundle_id)\
-                .build()
+                .build_json()
 
             return tput(url, self._private_api_key)
 
         def list_events(self, bundle_id) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.list_events) \
                 .interpolate(endpoints.interpolations.bundle_id, bundle_id)\
-                .build()
+                .build_json()
 
             return tget(url, self._private_api_key)
 
         def list_files(self, bundle_id) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.list_files) \
                 .interpolate(endpoints.interpolations.bundle_id, bundle_id)\
-                .build()
+                .build_json()
 
             return tget(url, self._private_api_key)
 
         def list_data(self, bundle_id) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.list_data) \
                 .interpolate(endpoints.interpolations.bundle_id, bundle_id)\
-                .build()
+                .build_json()
 
             return tget(url, self._private_api_key)
 
@@ -178,25 +191,25 @@ class Client:
         def retrieve(self, person_id) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.persons.retrieve) \
                 .interpolate(endpoints.interpolations.person_id, person_id) \
-                .build()
+                .build_json()
             return tget(url, self._private_api_key)
 
         def update(self, person_id, data) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.persons.update) \
                 .interpolate(endpoints.interpolations.person_id, person_id) \
-                .build()
+                .build_json()
             return tput(url, self._private_api_key, data)
 
         def partial_update(self, person_id, data) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.persons.partial_update) \
                 .interpolate(endpoints.interpolations.person_id, person_id) \
-                .build()
+                .build_json()
             return tpatch(url, self._private_api_key, data)
 
         def delete(self, person_id) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.persons.delete) \
                 .interpolate(endpoints.interpolations.person_id, person_id) \
-                .build()
+                .build_json()
             return tdelete(url, self._private_api_key)
 
     class _Packets(_SubClient):
@@ -206,19 +219,19 @@ class Client:
         def update(self, packet_id, data) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.packets.update) \
                 .interpolate(endpoints.interpolations.packet_id, packet_id) \
-                .build()
+                .build_json()
             return tpatch(url, self._private_api_key, data)
 
         def remind(self, packet_id) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.packets.remind) \
                 .interpolate(endpoints.interpolations.packet_id, packet_id) \
-                .build()
+                .build_json()
             return tput(url, self._private_api_key)
 
         def retrieve_coe(self, packet_id) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.packets.retrieve_coe) \
                 .interpolate(endpoints.interpolations.packet_id, packet_id) \
-                .build()
+                .build_json()
             return tget(url, self._private_api_key)
 
     class _Templates(_SubClient):
@@ -259,6 +272,6 @@ class Client:
         def retrieve(self, template_id) -> MunchedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.templates.retrieve) \
                 .interpolate(endpoints.interpolations.template_id, template_id) \
-                .build()
+                .build_json()
             return tget(url, self._private_api_key)
 

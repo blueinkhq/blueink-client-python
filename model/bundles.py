@@ -1,3 +1,5 @@
+import io
+
 from marshmallow import Schema, post_dump
 from marshmallow import fields as mmfields
 
@@ -206,11 +208,11 @@ class BundleBuilder:
         self.file_types = []
         self.files = []
 
-    def add_cc(self, email):
+    def add_cc(self, email:str):
         self._cc_emails.append(email)
         return self
 
-    def add_document(self, key, url) -> str:
+    def add_document(self, key:str, url:str) -> str:
         '''
         Add a document via url, with unique key.
         :param key:
@@ -223,9 +225,10 @@ class BundleBuilder:
         self._documents[key] = Document(key, url=url)
         return key
 
-    def add_document_by_path(self, key, file_path, mime_type) -> str:
+    def add_document_by_file(self, key:str, file:io.BufferedReader, file_name:str, mime_type:str) -> str:
         '''
         Add a document via url, with unique key.
+        :param file:
         :param key:
         :param url:
         :return:
@@ -234,20 +237,43 @@ class BundleBuilder:
             raise RuntimeError(f"Document with key {key} already added!")
 
         file_index = len(self.files)
-        file = open(file_path, 'rb')
 
-        if file.readable():
+        if type(file) == io.BufferedReader and file.readable():
             self.files.append(file)
-            self.file_names.append(file.name)
+            self.file_names.append(file_name)
             self.file_types.append(mime_type)
-            print(f"Attaching file {file_index}: {file.name}")
+            print(f"Attaching file {file_index}: {file_name}")
         else:
-            raise RuntimeError(f"File with path '{file_path}' unreadable.")
+            raise RuntimeError(f"File unreadable.")
 
         self._documents[key] = Document(key, file_index=file_index)
         return key
 
-    def add_document_template(self, key, template_id):
+    def add_document_by_path(self, key:str, file_path:str, mime_type:str) -> str:
+        '''
+        Add a document via url, with unique key.
+        :param file_path:
+        :param key:
+        :return:
+        '''
+
+        file = open(file_path, 'rb')
+        return self.add_document_by_file(key, file, file.name, mime_type)
+
+    def add_document_by_bytearray(self, key:str, byte_array:bytearray, file_name:str,  mime_type:str) -> str:
+        '''
+        Add a document via url, with unique key.
+        :param key:
+        :param url:
+        :return:
+        '''
+
+        bytes = io.BytesIO(byte_array)
+        file = io.BufferedReader(bytes, len(byte_array))
+
+        return self.add_document_by_file(key, file,file_name, mime_type)
+
+    def add_document_template(self, key:str, template_id:str):
         if key in self._documents.keys():
             raise RuntimeError(f"Document with key {key} already added!")
         template = TemplateRef(key, template_id)
@@ -275,7 +301,7 @@ class BundleBuilder:
         self._packets[key] = packet
         return key
 
-    def assign_signer(self, document_key:str, signer_id, role):
+    def assign_signer(self, document_key:str, signer_id:str, role:str):
         if document_key not in self._documents:
             raise RuntimeError(f"No document found with key {document_key}!")
         if type(self._documents[document_key]) is not TemplateRef:
@@ -286,7 +312,7 @@ class BundleBuilder:
         assignment = TemplateRefAssignment(role, signer_id)
         self._documents[document_key].assignments.append(assignment)
 
-    def set_value(self, document_key, key, value):
+    def set_value(self, document_key:str, key:str, value:str):
         if document_key not in self._documents:
             raise RuntimeError(f"No document found with key {document_key}!")
         if type(self._documents[document_key]) is not TemplateRef:
@@ -295,7 +321,7 @@ class BundleBuilder:
         field_val = TemplateRefFieldValue(key, value)
         self._documents[document_key].field_values.append(field_val)
 
-    def build(self):
+    def build_json(self):
         bundle_out = Bundle(self._label,
                             self._in_order,
                             self._email_subj,

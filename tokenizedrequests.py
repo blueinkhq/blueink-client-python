@@ -1,3 +1,4 @@
+import io
 import json
 from munch import munchify
 from requests import (Response, get, post, put, patch, delete)
@@ -61,15 +62,18 @@ def tpost(url, private_api_key, data=None, content_type="application/json") -> M
     return MunchedResponse(response)
 
 
-def tpost_formdata(url, private_api_key, json_data=None, files=[], content_types=[]) -> MunchedResponse:
+def tpost_formdata(url, private_api_key, json_data=None, files=[io.BufferedReader], file_names=[str], content_types=[str]) -> MunchedResponse:
 
     # construct form_data dict
     form_data = {
         'bundle_request': (None, json_data, "application/json") # 'None' filename is a must or server 500's out
     }
     for file_index, file in enumerate(files):
-        formdata_file = (file.name, file, content_types[file_index])
-        form_data[f'files[{file_index}]'] = formdata_file
+        if type(file) == io.BufferedReader:
+            formdata_file = (file_names[file_index], file, content_types[file_index])
+            form_data[f'files[{file_index}]'] = formdata_file
+        else:
+            raise RuntimeError("File is not of io.BufferedReader type!")
 
     response = post(url=url,
                     files=form_data,
