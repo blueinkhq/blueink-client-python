@@ -2,7 +2,6 @@ import io
 import json
 from munch import munchify
 from requests import (Response, get, post, put, patch, delete)
-from requests import (Request, Session)
 
 """
 Helper functions to add header with user's token.txt

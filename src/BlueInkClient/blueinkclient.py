@@ -1,11 +1,9 @@
 import sys
+import endpoints
 from os import environ
-
 from munch import Munch
-
 from tokenizedrequests import (tget, tpost, tpost_formdata, tput, tpatch, tdelete, MunchedResponse, build_pagination_params)
 from model.bundles import BundleBuilder
-import endpoints
 from paginator import PaginatedIterator
 
 
@@ -64,6 +62,7 @@ class Client:
             for page in client.bundles.list_iter():
                 page.body -> munch of json
 
+            :param getAdditionalData:
             :param start_page:
             :param per_page:
             :return:

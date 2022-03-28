@@ -31,9 +31,10 @@ client = Client(override_private_api_key="YOUR_PRIVATE_API_KEY")
 Bundles can be easily created using the ```BundleBuilder``` class. Using the BundleBuilder class you can either specify a URL for documents, include a file for document upload, or include a bytearray for your document.
 
 Below is an example of using a URL for a document:
+
 ```python
-from blueinkclient import Client
-from model.bundles import BundleBuilder
+from src.BlueInkClient.blueinkclient import Client
+from src.BlueInkClient.model import BundleBuilder
 
 bundleBuilder = BundleBuilder(label="label2022",
                               email_subject="Subject",
@@ -41,10 +42,14 @@ bundleBuilder = BundleBuilder(label="label2022",
                               is_test=True)
 bundleBuilder.add_cc("Homer.Simpson@example.com")
 doc_id1 = bundleBuilder.add_document("w9", "https://www.irs.gov/pub/irs-pdf/fw9.pdf")
-signer_id1 = bundleBuilder.add_signer("Homer Simpson", "Homer.Simpson@example.com", "505-555-5555", False, True, True, "email")
-signer_id2 = bundleBuilder.add_signer("Marge Simpson", "Marge.Simpson@example.com", "505-555-5556", False, True, True, "email")
-bundleBuilder.add_field_to_document(doc_id1, "inp", "inp-name", "label", 1, 15, 60, 20, 3, "email", 2, 30, [signer_id1, signer_id2])
-bundleBuilder.add_field_to_document(doc_id1, "sig", "sig-01", "signature", 1, 15, 68, 30, 12, "email", 2, 30, [signer_id1])
+signer_id1 = bundleBuilder.add_signer("Homer Simpson", "Homer.Simpson@example.com", "505-555-5555", False, True, True,
+                                      "email")
+signer_id2 = bundleBuilder.add_signer("Marge Simpson", "Marge.Simpson@example.com", "505-555-5556", False, True, True,
+                                      "email")
+bundleBuilder.add_field_to_document(doc_id1, "inp", "inp-name", "label", 1, 15, 60, 20, 3, "email", 2, 30,
+                                    [signer_id1, signer_id2])
+bundleBuilder.add_field_to_document(doc_id1, "sig", "sig-01", "signature", 1, 15, 68, 30, 12, "email", 2, 30,
+                                    [signer_id1])
 
 client = Client()
 result = client.bundles.create(bundleBuilder)
@@ -61,22 +66,26 @@ doc_id1 = bundleBuilder.add_document_by_bytearray("fw9-1",pdf_bytearray, "fw9.pd
 ```
 #### Retrieval
 Getting a single bundle is fairly easy. They can be accessed with a single call. To get the additional data (events, files, data), set the getAdditionalData flag to True.
+
 ```python
-from blueinkclient import Client
+from src.BlueInkClient.blueinkclient import Client
+
 response = client.bundles.retrieve(bundle_id, getAdditionalData=True)
 bundle = response.data
 bundleid = bundle.id
-    
+
 # additional data fields
 events = bundleta.events
 files = bundle.files
 data = bundle.data
-    
+
 ```
 #### Listing
 Listing has several options regarding pagination. You can also choose to append the additional data on each retrieved bundle as you can with single fetches. ```client.bundles.pagedList()``` returns an iterator object that lazy loads subsequent pages. If no parameters are set, it will start at page 0 and have up to 50 bundles per page.
+
 ```python
-from blueinkclient import Client
+from src.BlueInkClient.blueinkclient import Client
+
 client = Client()
 
 # EXAMPLE: Collecting all bundle IDs

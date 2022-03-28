@@ -1,7 +1,6 @@
 import io
-
 from marshmallow import Schema, post_dump
-from marshmallow import fields as mmfields
+from marshmallow import fields as mmf
 
 """
 Developer Note:
@@ -17,68 +16,68 @@ class ValidationError(RuntimeError):
 
 
 class FieldSchema(Schema):
-    kind = mmfields.Str(required=True)
-    key = mmfields.Str()
-    label = mmfields.Str()
-    page = mmfields.Int()
-    x = mmfields.Int(required=True)
-    y = mmfields.Int(required=True)
-    w = mmfields.Int(required=True)
-    h = mmfields.Int(required=True)
-    v_pattern = mmfields.Str()
-    v_min = mmfields.Int()
-    v_max = mmfields.Int()
-    editors: mmfields.List(mmfields.Str())
+    kind = mmf.Str(required=True)
+    key = mmf.Str()
+    label = mmf.Str()
+    page = mmf.Int()
+    x = mmf.Int(required=True)
+    y = mmf.Int(required=True)
+    w = mmf.Int(required=True)
+    h = mmf.Int(required=True)
+    v_pattern = mmf.Str()
+    v_min = mmf.Int()
+    v_max = mmf.Int()
+    editors: mmf.List(mmf.Str())
 
     class Meta:
         ordered = True
 
 
 class PacketSchema(Schema):
-    name = mmfields.Str()
-    email = mmfields.Email()
-    phone = mmfields.Str()
-    auth_sms = mmfields.Bool()
-    auth_selfie = mmfields.Bool()
-    auth_id = mmfields.Bool()
-    key = mmfields.Str(required=True)
-    deliver_via = mmfields.Str()
+    name = mmf.Str()
+    email = mmf.Email()
+    phone = mmf.Str()
+    auth_sms = mmf.Bool()
+    auth_selfie = mmf.Bool()
+    auth_id = mmf.Bool()
+    key = mmf.Str(required=True)
+    deliver_via = mmf.Str()
 
     class Meta:
         ordered = True
 
 
 class TemplateRefAssignmentSchema(Schema):
-    role = mmfields.Str(required=True)
-    signer = mmfields.Str(required=True)
+    role = mmf.Str(required=True)
+    signer = mmf.Str(required=True)
 
     class Meta:
         ordered = True
 
 
 class TemplateRefFieldValueSchema(Schema):
-    key = mmfields.Str(required=True)
-    initial_value = mmfields.Str()
+    key = mmf.Str(required=True)
+    initial_value = mmf.Str()
 
     class Meta:
         ordered = True
 
 
 class DocumentSchema(Schema):
-    key = mmfields.Str()
+    key = mmf.Str()
 
     # document related
-    file_url = mmfields.URL()
-    file_index = mmfields.Int()
-    fields = mmfields.List(mmfields.Nested(FieldSchema))
+    file_url = mmf.URL()
+    file_index = mmf.Int()
+    fields = mmf.List(mmf.Nested(FieldSchema))
 
     # template related. kinda weird but must be here, but
     # having a separate "TemplateRefSchema", child of DocumentSchema did not work out.
     # Perhaps a Marshmallow bug? Coded around this by including Template schema fields in Document
     # and the post_dump should clean up anythhing unused/null.
-    template_id = mmfields.Str() # UUID to a valid template, required for Template
-    assignments = mmfields.List(mmfields.Nested(TemplateRefAssignmentSchema)) # required for a template
-    field_values = mmfields.List(mmfields.Nested(TemplateRefFieldValueSchema))
+    template_id = mmf.Str() # UUID to a valid template, required for Template
+    assignments = mmf.List(mmf.Nested(TemplateRefAssignmentSchema)) # required for a template
+    field_values = mmf.List(mmf.Nested(TemplateRefFieldValueSchema))
 
     class Meta:
         ordered = True
@@ -108,14 +107,14 @@ class DocumentSchema(Schema):
 
 
 class BundleSchema(Schema):
-    label = mmfields.Str()
-    in_order = mmfields.Bool()
-    email_subject = mmfields.Str()
-    email_message = mmfields.Str()
-    cc_emails = mmfields.List(mmfields.Email)
-    is_test = mmfields.Bool()
-    packets = mmfields.List(mmfields.Nested(PacketSchema), required=True)
-    documents = mmfields.List(mmfields.Nested(DocumentSchema), required=True)
+    label = mmf.Str()
+    in_order = mmf.Bool()
+    email_subject = mmf.Str()
+    email_message = mmf.Str()
+    cc_emails = mmf.List(mmf.Email)
+    is_test = mmf.Bool()
+    packets = mmf.List(mmf.Nested(PacketSchema), required=True)
+    documents = mmf.List(mmf.Nested(DocumentSchema), required=True)
 
     class Meta:
         ordered = True
