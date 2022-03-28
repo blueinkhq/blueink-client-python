@@ -6,7 +6,7 @@ client = Client()
 print("\n*********************")
 print("Paged Bundle Listing")
 ids = []
-for api_call in client.bundles.pagedlist(start_page=1, per_page=5, getAdditionalData=False):
+for api_call in client.bundles.pagedlist(start_page=1, per_page=5, getAdditionalData=True):
     print(f"Paged Call: {api_call.data}")
     for bundle in api_call.data:
         ids.append(bundle.id)
