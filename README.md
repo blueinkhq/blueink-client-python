@@ -33,7 +33,7 @@ Bundles can be easily created using the ```BundleBuilder``` class. Using the Bun
 Below is an example of using a URL for a document:
 
 ```python
-from src.BlueInkClient.blueinkclient import Client
+from src.BlueInkClient.client import Client
 from src.BlueInkClient.model import BundleBuilder
 
 bundleBuilder = BundleBuilder(label="label2022",
@@ -68,7 +68,7 @@ doc_id1 = bundleBuilder.add_document_by_bytearray("fw9-1",pdf_bytearray, "fw9.pd
 Getting a single bundle is fairly easy. They can be accessed with a single call. To get the additional data (events, files, data), set the getAdditionalData flag to True.
 
 ```python
-from src.BlueInkClient.blueinkclient import Client
+from src.BlueInkClient.client import Client
 
 response = client.bundles.retrieve(bundle_id, getAdditionalData=True)
 bundle = response.data
@@ -84,7 +84,7 @@ data = bundle.data
 Listing has several options regarding pagination. You can also choose to append the additional data on each retrieved bundle as you can with single fetches. ```client.bundles.pagedList()``` returns an iterator object that lazy loads subsequent pages. If no parameters are set, it will start at page 0 and have up to 50 bundles per page.
 
 ```python
-from src.BlueInkClient.blueinkclient import Client
+from src.BlueInkClient.client import Client
 
 client = Client()
 
