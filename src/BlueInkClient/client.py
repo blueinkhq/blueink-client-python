@@ -1,10 +1,10 @@
 import sys
-import endpoints
+from . import endpoints
 from os import environ
 from munch import Munch
-from tokenizedrequests import (tget, tpost, tpost_formdata, tput, tpatch, tdelete, MunchedResponse, build_pagination_params)
-from model.bundles import BundleBuilder
-from paginator import PaginatedIterator
+from .tokenizedrequests import (tget, tpost, tpost_formdata, tput, tpatch, tdelete, MunchedResponse, build_pagination_params)
+from .model.bundles import BundleBuilder
+from .paginator import PaginatedIterator
 
 
 class Client:

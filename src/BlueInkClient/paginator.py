@@ -1,4 +1,4 @@
-from tokenizedrequests import MunchedResponse
+from .tokenizedrequests import MunchedResponse
 
 
 class PaginatedIterator:
