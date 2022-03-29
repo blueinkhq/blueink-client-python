@@ -59,7 +59,7 @@ class Client:
             '''
             returns an iterable object such that you can do
 
-            for page in client.bundles.list_iter():
+            for page in client.bundles.pagedlist():
                 page.body -> munch of json
 
             :param getAdditionalData:
@@ -182,7 +182,7 @@ class Client:
             '''
             returns an iterable object such that you can do
 
-            for page in client.persons.list_iter():
+            for page in client.persons.pagedlist():
                 page.body -> munch of json
 
             :param start_page:
@@ -281,7 +281,7 @@ class Client:
             '''
             returns an iterable object such that you can do
 
-            for page in client.bundles.list_iter():
+            for page in client.bundles.pagedlist():
                 page.body -> munch of json
 
             :param start_page:

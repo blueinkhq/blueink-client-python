@@ -25,6 +25,29 @@ client = Client("https://example.com/api", "YOUR_PRIVATE_API_KEY")
 client = Client(override_private_api_key="YOUR_PRIVATE_API_KEY")
 ```
 
+Client calls all return a "MunchedResult" where any data from the HTTP response is dot-accessible. 
+
+For a call: 
+```python
+response = client.example.retrieve(0)
+```
+
+Say for instance you get back JSON:
+```json
+{
+  "title": "This is a title",
+  "text": "This is body text"
+}
+```
+
+This json would be accessible similarly to a dot-dict, eg:
+```python
+title = response.data.title
+print(title)
+##OUT: "This is a title"
+```
+
+
 
 ### Bundles
 #### Creation
@@ -72,7 +95,7 @@ response = client.bundles.retrieve(bundle_id, getAdditionalData=True)
 bundle = response.data
 bundleid = bundle.id
 
-# additional data fields
+# additional data fields (only exist if getAdditionalData==True)
 events = bundleta.events
 files = bundle.files
 data = bundle.data
@@ -90,7 +113,39 @@ for api_call in client.bundles.pagedlist(start_page=1, per_page=5, getAdditional
         ids.append(bundle.id)
 ```
 ### Persons
+Creating a person record is simpler than creating or updating a bundle. There is no current 'builder' for this record. Instead, pass in the raw JSON data to the following client calls:
+```python
+client.persons.create(json_string)
+client.persons.update(json_string)
+client.persons.partial_update(json_string)
+```
+
+To delete a person record, one only needs the ID from the record:
+```python
+client.persons.delete(person_id)
+```
 
 ### Packets
+Packets can be updated. Reminders may be triggered, and COEs can be retrieve using the client:
+```python
+# Retrieval
+client.packets.update(packet_id, packet_json)
+# Remind
+client.packets.remind(packet_id)
+# Get COE
+client.packets.retrieve_coe(packet_id)
+```
 
 ### Templates
+Templates can be listed (non-paged), listed (paged) or retrieved singly:
+```python
+# non paged
+templates_list_response = client.templates.list()
+# paged
+for page in client.templates.pagedlist():
+    page.data # templates in page
+# single
+template_response = client.templates.retrieve(template_id)
+
+
+```
