@@ -1,6 +1,10 @@
 import io
+from copy import deepcopy
+
 from marshmallow import Schema, post_dump
 from marshmallow import fields as mmf
+
+from src.BlueInkClient.model.constants import PacketDeliverVias, BundleStatuses, FieldKinds
 
 """
 Developer Note:
@@ -13,6 +17,17 @@ Validation is being done through these as well.
 class ValidationError(RuntimeError):
     def __init__(self, error_text:str):
         super(ValidationError, self).__init__(error_text)
+
+
+class HiddenEmptyFieldsSchemaMixin:
+    @post_dump
+    def remove_empties(self, data, many):
+        new_data = deepcopy(data)
+        for key, value in data.items():
+            if value is None:
+                new_data.pop(key)
+
+        return new_data
 
 
 class FieldSchema(Schema):
@@ -33,7 +48,7 @@ class FieldSchema(Schema):
         ordered = True
 
 
-class PacketSchema(Schema):
+class PacketSchema(Schema, HiddenEmptyFieldsSchemaMixin):
     name = mmf.Str()
     email = mmf.Email()
     phone = mmf.Str()
@@ -42,6 +57,8 @@ class PacketSchema(Schema):
     auth_id = mmf.Bool()
     key = mmf.Str(required=True)
     deliver_via = mmf.Str()
+    person_id = mmf.Str(required=False)
+    order = mmf.Int(required=False)
 
     class Meta:
         ordered = True
@@ -106,7 +123,7 @@ class DocumentSchema(Schema):
 #         ordered = True
 
 
-class BundleSchema(Schema):
+class BundleSchema(Schema, HiddenEmptyFieldsSchemaMixin):
     label = mmf.Str()
     in_order = mmf.Bool()
     email_subject = mmf.Str()
@@ -115,12 +132,16 @@ class BundleSchema(Schema):
     is_test = mmf.Bool()
     packets = mmf.List(mmf.Nested(PacketSchema), required=True)
     documents = mmf.List(mmf.Nested(DocumentSchema), required=True)
+    custom_key = mmf.Str()
+    team = mmf.Str()
 
     class Meta:
         ordered = True
 
 
 class Field:
+    KIND = FieldKinds
+
     def __init__(self, kind:str, key:str, label:str, page:int, x:int, y:int, w:int, h:int, v_pattern:int, v_min:int, v_max:int):
         self.kind = kind
         self.key = key
@@ -199,8 +220,10 @@ class TemplateRef(Document):
 
 
 class Packet:
+    DELIVER_VIA = PacketDeliverVias
+
     def __init__(self, name:str, email:str, phone:str, auth_sms:bool, auth_selfie:bool, auth_id:bool, key:str,
-                 deliver_via:str):
+                 deliver_via:str, person_id: str, order: int):
         self.name = name
         self.email = email
         self.phone = phone
@@ -209,6 +232,8 @@ class Packet:
         self.auth_id = auth_id
         self.key = key
         self.deliver_via = deliver_via
+        self.person_id = person_id
+        self.order = order
 
         required_fields = [key]
         if None in required_fields:
@@ -216,7 +241,10 @@ class Packet:
 
 
 class Bundle:
-    def __init__(self, label: str, in_order: bool, email_subject: str, email_message: str, is_test: bool, cc_emails: [str], packets: [Packet], documents: [Document]):
+    STATUS = BundleStatuses
+
+    def __init__(self, label: str, in_order: bool, email_subject: str, email_message: str, is_test: bool,
+                 cc_emails: [str], packets: [Packet], documents: [Document], custom_key: str, team: str):
 
         self.label = label
         self.in_order = in_order
@@ -228,6 +256,8 @@ class Bundle:
         self.is_test = is_test
         self.packets = packets
         self.documents = documents
+        self.custom_key = custom_key
+        self.team = team
 
         required_fields = [packets, documents]
         if None in required_fields:
@@ -237,14 +267,34 @@ class Bundle:
                 if len(field) == 0:
                     raise ValidationError(f"One or more of required list fields (packets, documents) is empty.")
 
+        if self.in_order:
+            order_indices = []
+            for packet in self.packets:
+                if packet.order is None:
+                    raise ValidationError(f'Bundle is set to be ordered but one or more packets (of {len(self.packets)})'
+                                          f' do not have an order index: {packet.name}')
+                if packet.order in order_indices:
+                    raise ValidationError('Two or more packets cannot have the same order index.')
+                order_indices.append(packet.order)
 
-class BundleBuilder:
+            for i in [i for i in range(0, len(self.packets))]:
+                if i not in order_indices:
+                    raise ValidationError('Malformed packet ordering. Check that packets have '
+                                          'sensible indices (eg. no skipped index)')
+
+
+
+
+
+class BundleHelper:
     def __init__(self,
                  label: str = None,
                  email_subject: str = None,
                  email_message: str = None,
                  in_order: bool = False,
-                 is_test: bool = False):
+                 is_test: bool = False,
+                 custom_key: str = None,
+                 team: str = None):
         self._label = label
         self._in_order = in_order
         self._email_subj = email_subject
@@ -253,6 +303,8 @@ class BundleBuilder:
         self._is_test = is_test
         self._documents = {}
         self._packets = {}
+        self._custom_key = custom_key
+        self._team = team
 
         # for file uploads, index should match those in the document "file_index" field
         self.file_names = []
@@ -263,7 +315,7 @@ class BundleBuilder:
         self._cc_emails.append(email)
         return self
 
-    def add_document(self, key:str, url:str) -> str:
+    def add_document_by_url(self, key:str, url:str) -> str:
         '''
         Add a document via url, with unique key.
         :param key:
@@ -331,7 +383,7 @@ class BundleBuilder:
         self._documents[key] = template
         return key
 
-    def add_field_to_document(self, document_key:str, kind:str, key:str, label:str, page:int, x:int, y:int, w:int, h:int, v_pattern:int, v_min:int, v_max:int, editors: [str]):
+    def add_field(self, document_key:str, kind:str, key:str, label:str, page:int, x:int, y:int, w:int, h:int, v_pattern:int, v_min:int, v_max:int, editors: [str]):
         if document_key not in self._documents:
             raise RuntimeError(f"No document found with key {document_key}!")
 
@@ -346,13 +398,14 @@ class BundleBuilder:
         self._documents[document_key].fields.append(field)
         return key
 
-    def add_signer(self, name: str, email: str, phone: str, auth_sms:bool, auth_selfie: bool, auth_id: bool, deliver_via: str):
+    def add_signer(self, name: str, email: str, phone: str, auth_sms:bool, auth_selfie: bool, auth_id: bool,
+                   deliver_via: str, person_id: str = None, order: int = None):
         key = f"signer-{(len(self._packets) + 1)}"
-        packet = Packet(name, email, phone, auth_sms, auth_selfie, auth_id, key, deliver_via)
+        packet = Packet(name, email, phone, auth_sms, auth_selfie, auth_id, key, deliver_via, person_id, order)
         self._packets[key] = packet
         return key
 
-    def assign_signer(self, document_key:str, signer_id:str, role:str):
+    def assign_role(self, document_key:str, signer_id:str, role:str):
         if document_key not in self._documents:
             raise RuntimeError(f"No document found with key {document_key}!")
         if type(self._documents[document_key]) is not TemplateRef:
@@ -372,7 +425,7 @@ class BundleBuilder:
         field_val = TemplateRefFieldValue(key, value)
         self._documents[document_key].field_values.append(field_val)
 
-    def build_json(self):
+    def as_data(self):
         bundle_out = Bundle(self._label,
                             self._in_order,
                             self._email_subj,
@@ -380,7 +433,9 @@ class BundleBuilder:
                             self._is_test,
                             self._cc_emails,
                             self._packets.values(),
-                            self._documents.values())
+                            self._documents.values(),
+                            self._custom_key,
+                            self._team)
 
         schema = BundleSchema()
 

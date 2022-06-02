@@ -3,7 +3,7 @@ from . import endpoints
 from os import environ
 from munch import Munch
 from .tokenizedrequests import (tget, tpost, tpost_formdata, tput, tpatch, tdelete, MunchedResponse, build_pagination_params)
-from .model.bundles import BundleBuilder
+from .model.bundles import BundleHelper
 from .paginator import PaginatedIterator
 
 
@@ -38,22 +38,40 @@ class Client:
         def __init__(self, base_url, private_api_key):
             super().__init__(base_url, private_api_key)
 
-        def create(self, bundle_builder:BundleBuilder) -> MunchedResponse:
+        def create(self, json: str, files=[], file_names=[], file_types=[]) -> MunchedResponse:
             """
             Post a Bundle to the BlueInk application.
-            :param bundle_builder: 
+            :param json: json string
+            :param files: list of file-like streams (optional)
+            :param file_names: - list of file names, ordered same as files (optional)
+            :param file_types: - list of file types, ordered same as files (optional)
             :return:
             """
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.create) \
                 .build()
 
-            response = None
-            json = bundle_builder.build_json()
-            if len(bundle_builder.files) == 0:
+            if len(files) == 0:
                 response = tpost(url, self._private_api_key, json)
             else:
-                response = tpost_formdata(url, self._private_api_key, json, bundle_builder.files, bundle_builder.file_names, bundle_builder.file_types)
+                response = tpost_formdata(url, self._private_api_key, json, files, file_names, file_types)
+
             return response
+
+        def create_from_bundle_helper(self, bundle_helper: BundleHelper) -> MunchedResponse:
+            """
+            Post a Bundle to the BlueInk application. Convenience method as bundle_helper has files/filenames if
+            creating a Bundle that way
+            :param bundle_helper: 
+            :return:
+            """
+            json = bundle_helper.as_data()
+            files = bundle_helper.files
+            file_names = bundle_helper.file_names
+            file_types = bundle_helper.file_types
+            return self.create(json=json,
+                               files=files,
+                               file_names=file_names,
+                               file_types=file_types)
 
         def pagedlist(self, start_page=0, per_page=50, getAdditionalData=False) -> PaginatedIterator:
             '''

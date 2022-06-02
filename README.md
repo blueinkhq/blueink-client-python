@@ -57,35 +57,35 @@ Below is an example of using a URL for a document:
 
 ```python
 from BlueInkClient.client import Client
-from BlueInkClient.model.bundles import BundleBuilder
+from BlueInkClient.model.bundles import BundleHelper
 
-bundleBuilder = BundleBuilder(label="label2022",
-                              email_subject="Subject",
-                              email_message="MessageText",
-                              is_test=True)
-bundleBuilder.add_cc("Homer.Simpson@example.com")
-doc_id1 = bundleBuilder.add_document("w9", "https://www.irs.gov/pub/irs-pdf/fw9.pdf")
-signer_id1 = bundleBuilder.add_signer("Homer Simpson", "Homer.Simpson@example.com", "505-555-5555", False, True, True,
-                                      "email")
-signer_id2 = bundleBuilder.add_signer("Marge Simpson", "Marge.Simpson@example.com", "505-555-5556", False, True, True,
-                                      "email")
-bundleBuilder.add_field_to_document(doc_id1, "inp", "inp-name", "label", 1, 15, 60, 20, 3, "email", 2, 30,
-                                    [signer_id1, signer_id2])
-bundleBuilder.add_field_to_document(doc_id1, "sig", "sig-01", "signature", 1, 15, 68, 30, 12, "email", 2, 30,
-                                    [signer_id1])
+bh = BundleHelper(label="label2022",
+                  email_subject="Subject",
+                  email_message="MessageText",
+                  is_test=True)
+bh.add_cc("Homer.Simpson@example.com")
+doc_id1 = bh.add_document_by_url("w9", "https://www.irs.gov/pub/irs-pdf/fw9.pdf")
+signer_id1 = bh.add_signer("Homer Simpson", "Homer.Simpson@example.com", "505-555-5555", False, True, True,
+                           "email")
+signer_id2 = bh.add_signer("Marge Simpson", "Marge.Simpson@example.com", "505-555-5556", False, True, True,
+                           "email")
+bh.add_field(doc_id1, "inp", "inp-name", "label", 1, 15, 60, 20, 3, "email", 2, 30,
+             [signer_id1, signer_id2])
+bh.add_field(doc_id1, "sig", "sig-01", "signature", 1, 15, 68, 30, 12, "email", 2, 30,
+             [signer_id1])
 
 client = Client()
-result = client.bundles.create(bundleBuilder)
+result = client.bundles.create_from_bundle_helper(bh)
 ```
 
 If you were to use a file, you supply a path and content type instead of a URL:
 ```python
-doc_id1 = bundleBuilder.add_document_by_path("fw9-1","fw9.pdf","application/pdf")
+doc_id1 = bh.add_document_by_path("fw9-1","fw9.pdf","application/pdf")
 ```
 
 If you are not coming from a filesystem (perhaps you're pulling from a DB client), you might have a bytearray object. Below, you have the bytearray and filename ```fw9.pdf```
 ```python
-doc_id1 = bundleBuilder.add_document_by_bytearray("fw9-1",pdf_bytearray, "fw9.pdf", "application/pdf")
+doc_id1 = bh.add_document_by_bytearray("fw9-1",pdf_bytearray, "fw9.pdf", "application/pdf")
 ```
 #### Retrieval
 Getting a single bundle is fairly easy. They can be accessed with a single call. To get the additional data (events, files, data), set the getAdditionalData flag to True.
@@ -96,7 +96,7 @@ bundle = response.data
 bundleid = bundle.id
 
 # additional data fields (only exist if getAdditionalData==True)
-events = bundleta.events
+events = bundle.events
 files = bundle.files
 data = bundle.data
 
