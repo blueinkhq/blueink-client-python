@@ -3,7 +3,7 @@ from src.BlueInkClient.model.bundles import BundleHelper
 
 
 pdf_bytearray = bytearray()
-with open("../fw9.pdf", 'rb') as pdf_file:
+with open("fw4.pdf", 'rb') as pdf_file:
     byte = pdf_file.read(1)
     while byte:
         pdf_bytearray += byte
