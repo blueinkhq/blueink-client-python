@@ -214,24 +214,25 @@ class BundleHelper:
     PACKET_STATUS = PACKET_STATUS
     V_PATTERN = V_PATTERN
 
-    def __init__(self,
-                 label: str = None,
-                 email_subject: str = None,
-                 email_message: str = None,
-                 in_order: bool = False,
-                 is_test: bool = False,
-                 custom_key: str = None,
-                 team: str = None):
+    def __init__(
+        self,
+        label: str = None,
+        email_subject: str = None,
+        email_message: str = None,
+        in_order: bool = False,
+        is_test: bool = False,
+        custom_key: str = None,
+        team: str = None,
+    ):
         self._label = label
         self._in_order = in_order
         self._email_subj = email_subject
         self._email_msg = email_message
-        self._custom_key = custom_key
         self._is_test = is_test
         self._cc_emails = []
         self._documents = {}
-        self._documents = {}
         self._packets = {}
+        self._custom_key = custom_key
         self._team = team
 
         # for file uploads, index should match those in the document "file_index" field
@@ -246,7 +247,6 @@ class BundleHelper:
     def add_document_by_url(self, url: str) -> Document:
         """
         Add a document via url.
-        :param key:
         :param url:
         :return: Document instance
         """
@@ -254,14 +254,20 @@ class BundleHelper:
         self._documents[document.key] = document
         return document
 
-    def add_document_by_file(self, file: io.BufferedReader, file_name: str, mime_type: str) -> Document:
-        """
-        Add a document via url, returns generated unique key.
+        self._documents[key] = Document(key, url=url)
+        return key
+
+    def add_document_by_file(self, key:str, file:io.BufferedReader, file_name:str, mime_type:str) -> str:
+        '''
+        Add a document via url, with unique key.
         :param file:
-        :param file_name:
-        :param mime_type:
-        :return: Document instance
-        """
+        :param key:
+        :param url:
+        :return:
+        '''
+        if key in self._documents.keys():
+            raise RuntimeError(f"Document with key {key} already added!")
+
         file_index = len(self.files)
 
         if type(file) == io.BufferedReader and file.readable():
