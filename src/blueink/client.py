@@ -274,7 +274,7 @@ class Client:
             :return:
             """
             url = (
-                endpoints.URLBuilder(self._base_url, endpoints.persons.update)
+                endpoints.URLBuilder(self._base_url, endpoints.persons.full_update)
                 .interpolate(endpoints.interpolations.person_id, person_id)
                 .build()
             )

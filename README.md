@@ -113,16 +113,70 @@ for api_call in client.bundles.pagedlist(start_page=1, per_page=5, getAdditional
         ids.append(bundle.id)
 ```
 ### Persons
-Creating a person record is simpler than creating or updating a bundle. There is no current 'builder' for this record. Instead, pass in the raw JSON data to the following client calls:
+Creating a person is similar to a creating a Bundle. There is a PersonHelper to help create a person
 ```python
-client.persons.create(json_string)
-client.persons.update(json_string)
-client.persons.partial_update(json_string)
-```
+import json
 
-To delete a person record, one only needs the ID from the record:
-```python
-client.persons.delete(person_id)
+from blueink.client import Client
+from blueink.model.persons import PersonHelper
+
+client = Client()
+
+ph = PersonHelper()
+
+# Make up some metadata to add to the person
+metadata = {}
+metadata["number"] = 1
+metadata["string"] = "stringy"
+metadata["dict"] = {}
+metadata["dict"]["number"] = 2
+
+# Set the metadata of the person
+ph.set_metadata(metadata)
+
+# Set the persons name
+ph.set_name("New Name")
+
+# Add email contacts for the person
+ph.add_email("test@email.com")
+ph.add_email("test2@email.com")
+ph.add_email("test3@email.com")
+
+# Get all of the emails for the person
+all_current_emails = ph.get_emails()
+
+# Remove an email from the list
+all_current_emails.remove("test@email.com")
+
+# Overwrite the existing email list with this new list
+#   Effectively removing test@email.com list
+ph.set_emails(all_current_emails)
+
+# Add phone number contact for the person
+ph.add_phone("5055551212")
+ph.add_phone("5055551213")
+ph.add_phone("5055551214")
+
+# Get all of the phone numbers for the person
+all_current_phones = ph.get_phones()
+
+# Remove a phone number from the list
+all_current_phones.pop()
+
+# Overwrite the existing email list with this new list
+#   Effectively removing last phone number
+ph.set_phones(all_current_phones)
+
+# Create the person and check the result
+result = client.persons.create_from_person_helper(ph)
+print(f"Result Create: {result.status}: {result.data}")
+
+# Delete the person from your account and check the result
+result = client.persons.delete(result.data.id)
+
+print(f"Result Delete: {result.status}: {result.data}")
+
+
 ```
 
 ### Packets
