@@ -8,6 +8,7 @@ from src.blueink.constants import (
     FIELD_KIND, ATTACHMENT_TYPE, BUNDLE_ORDER, BUNDLE_STATUS, PACKET_STATUS, V_PATTERN,
 )
 
+
 class ValidationError(RuntimeError):
     def __init__(self, error_text: str):
         super(ValidationError, self).__init__(error_text)
@@ -229,14 +230,14 @@ class BundleHelper:
     V_PATTERN = V_PATTERN
 
     def __init__(
-        self,
-        label: str = None,
-        email_subject: str = None,
-        email_message: str = None,
-        in_order: bool = False,
-        is_test: bool = False,
-        custom_key: str = None,
-        team: str = None,
+            self,
+            label: str = None,
+            email_subject: str = None,
+            email_message: str = None,
+            in_order: bool = False,
+            is_test: bool = False,
+            custom_key: str = None,
+            team: str = None,
     ):
         self._label = label
         self._in_order = in_order
@@ -268,14 +269,14 @@ class BundleHelper:
         self._documents[document.key] = document
         return document
 
-    def add_document_by_file(self, file:io.BufferedReader, file_name:str, mime_type:str, **additional_data) -> str:
-        '''
+    def add_document_by_file(self, file: io.BufferedReader, file_name: str, mime_type: str, **additional_data) -> str:
+        """
         Add a document via url, with unique key.
+        :param mime_type:
+        :param file_name:
         :param file:
-        :param key:
-        :param url:
         :return:
-        '''
+        """
 
         file_index = len(self.files)
 
@@ -294,6 +295,7 @@ class BundleHelper:
     def add_document_by_path(self, file_path: str, mime_type: str, **additional_data) -> Document:
         """
         Add a document via url, returns generated unique key.
+        :param mime_type:
         :param file_path:
         :return: Document instance
         """
@@ -303,7 +305,8 @@ class BundleHelper:
 
         return self.add_document_by_file(file, file.name, mime_type, **additional_data)
 
-    def add_document_by_bytearray(self, byte_array: bytearray, file_name: str, mime_type: str, **additional_data) -> Document:
+    def add_document_by_bytearray(self, byte_array: bytearray, file_name: str, mime_type: str,
+                                  **additional_data) -> Document:
         '''
         Add a document via url, with unique key.
         :param byte_array:
@@ -334,7 +337,7 @@ class BundleHelper:
                   v_max: int = None, editors: [Packet] = None, override_key=None, **additional_data):
         """
         Create and add a field
-        :param document_key:
+        :param document:
         :param x:
         :param y:
         :param w:
@@ -347,6 +350,7 @@ class BundleHelper:
         :param v_min: Optional
         :param v_max: Optional
         :param editors: Optional
+        :param override_key: Optional
         :return: Field object
         """
         if document.key not in self._documents:
@@ -359,8 +363,8 @@ class BundleHelper:
         self._documents[document.key].add_field(field)
         return field
 
-    def add_signer(self, name: str, email: str=None, phone: str=None, deliver_via: str=None,
-                   person_id=None, auth_sms: bool=False, auth_selfie: bool=False, auth_id: bool=False,
+    def add_signer(self, name: str, email: str = None, phone: str = None, deliver_via: str = None,
+                   person_id=None, auth_sms: bool = False, auth_selfie: bool = False, auth_id: bool = False,
                    order: int = None, override_key=None, **additional_data):
         """
         Create and add a signer.
@@ -447,4 +451,3 @@ class BundleHelper:
         """
         bundle = self._compile_bundle(**additional_data)
         return bundle.json(exclude_unset=True, exclude_none=True)
-
