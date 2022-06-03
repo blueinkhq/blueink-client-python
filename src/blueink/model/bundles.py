@@ -3,7 +3,7 @@ import random
 import string
 import uuid
 from typing import List, Optional
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, EmailStr
 from src.blueink.constants import (
     DELIVER_VIA,
     FIELD_KIND, ATTACHMENT_TYPE, BUNDLE_ORDER, BUNDLE_STATUS, PACKET_STATUS, V_PATTERN,
@@ -67,7 +67,7 @@ class Field(BaseModel):
 class Packet(BaseModel):
     key: str = ...
     name: str = ...
-    email: Optional[str]
+    email: Optional[EmailStr]
     phone: Optional[str]
     auth_sms: Optional[bool]
     auth_selfie: Optional[bool]
@@ -182,7 +182,7 @@ class Bundle(BaseModel):
     in_order: Optional[bool]
     email_subject: Optional[str]
     email_message: Optional[str]
-    cc_emails: Optional[List[str]]
+    cc_emails: Optional[List[EmailStr]]
     is_test: Optional[bool]
     custom_key: Optional[str]
     team: Optional[str]
