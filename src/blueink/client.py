@@ -92,8 +92,6 @@ class Client:
             file_names = bundle_helper.file_names
             file_types = bundle_helper.file_types
 
-            print(json.dumps(data))
-
             return self.create(data=data,
                                files=files,
                                file_names=file_names,

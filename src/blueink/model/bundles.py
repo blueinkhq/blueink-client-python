@@ -257,7 +257,7 @@ class BundleHelper:
         self._documents[key] = Document(key, url=url)
         return key
 
-    def add_document_by_file(self, key:str, file:io.BufferedReader, file_name:str, mime_type:str) -> str:
+    def add_document_by_file(self, file:io.BufferedReader, file_name:str, mime_type:str) -> str:
         '''
         Add a document via url, with unique key.
         :param file:
@@ -265,8 +265,6 @@ class BundleHelper:
         :param url:
         :return:
         '''
-        if key in self._documents.keys():
-            raise RuntimeError(f"Document with key {key} already added!")
 
         file_index = len(self.files)
 
