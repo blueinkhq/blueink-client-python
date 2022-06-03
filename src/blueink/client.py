@@ -3,7 +3,7 @@ from os import environ
 from munch import Munch
 
 from . import endpoints
-from .constants import DEFAULT_BASE_URL, ENV_BLUEINK_API_URL, ENV_BLUEINK_PRIVATE_API_KEY
+from .constants import BUNDLE_STATUS, DEFAULT_BASE_URL, ENV_BLUEINK_API_URL, ENV_BLUEINK_PRIVATE_API_KEY
 from .model.bundles import BundleHelper
 from .paginator import PaginatedIterator
 from .tokenizedrequests import (
@@ -142,7 +142,7 @@ class Client:
                 if events_response.status == 200:
                     bundle.events = events_response.data
 
-                if bundle.status == "co":
+                if bundle.status == BUNDLE_STATUS.COMPLETE:
                     files_response = self.list_files(bundle_id)
                     bundle.files = files_response.data
 
