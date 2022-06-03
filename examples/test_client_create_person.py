@@ -77,12 +77,12 @@ for channel in result.data.channels:
 # Set the channels to the recreated channels without the invalid keys
 result.data.channels = new_channels
 
-result = client.persons.update(result.data.id, json.dumps(result.data))
+result = client.persons.update(result.data.id, result.data)
 pprint(f"Result Update: {result.status}: {result.data}")
 
 # Perform a partial update to change the name again
 third_name = {"name": "Third Name"}
-result = client.persons.partial_update(result.data.id, json.dumps(third_name))
+result = client.persons.partial_update(result.data.id, third_name)
 pprint(f"Result Partial Update: {result.status}: {result.data}")
 
 
