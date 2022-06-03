@@ -92,11 +92,11 @@ class Client:
                                file_names=file_names,
                                file_types=file_types)
 
-        def pagedlist(self, start_page=0, per_page=50, getAdditionalData=False) -> PaginatedIterator:
+        def paged_list(self, start_page=0, per_page=50, getAdditionalData=False) -> PaginatedIterator:
             '''
             returns an iterable object such that you can do
 
-            for page in client.bundles.pagedlist():
+            for page in client.bundles.paged_list():
                 page.body -> munch of json
 
             :param getAdditionalData:
@@ -215,11 +215,11 @@ class Client:
                 .build()
             return tpost(url, self._private_api_key, data)
 
-        def pagedlist(self, start_page=0, per_page=50) -> PaginatedIterator:
+        def paged_list(self, start_page=0, per_page=50) -> PaginatedIterator:
             '''
             returns an iterable object such that you can do
 
-            for page in client.persons.pagedlist():
+            for page in client.persons.paged_list():
                 page.body -> munch of json
 
             :param start_page:
@@ -314,11 +314,11 @@ class Client:
         def __init__(self, base_url, private_api_key):
             super().__init__(base_url, private_api_key)
 
-        def pagedlist(self, start_page=0, per_page=50) -> PaginatedIterator:
+        def paged_list(self, start_page=0, per_page=50) -> PaginatedIterator:
             '''
             returns an iterable object such that you can do
 
-            for page in client.bundles.pagedlist():
+            for page in client.bundles.paged_list():
                 page.body -> munch of json
 
             :param start_page:
