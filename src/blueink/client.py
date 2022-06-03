@@ -182,6 +182,11 @@ class Client:
             return tput(url, self._private_api_key)
 
         def list_events(self, bundle_id) -> MunchedResponse:
+            """
+            Returns a list of events for the supplied bundle corresponding to the id
+            :param bundle_id:
+            :return:
+            """
             url = (
                 endpoints.URLBuilder(self._base_url, endpoints.bundles.list_events)
                 .interpolate(endpoints.interpolations.bundle_id, bundle_id)
@@ -191,6 +196,11 @@ class Client:
             return tget(url, self._private_api_key)
 
         def list_files(self, bundle_id) -> MunchedResponse:
+            """
+            Returns a list of files for the supplied bundle corresponding to the id
+            :param bundle_id:
+            :return:
+            """
             url = (
                 endpoints.URLBuilder(self._base_url, endpoints.bundles.list_files)
                 .interpolate(endpoints.interpolations.bundle_id, bundle_id)
@@ -200,6 +210,11 @@ class Client:
             return tget(url, self._private_api_key)
 
         def list_data(self, bundle_id) -> MunchedResponse:
+            """
+            Returns a list of data fields for the supplied bundle corresponding to the id
+            :param bundle_id:
+            :return:
+            """
             url = (
                 endpoints.URLBuilder(self._base_url, endpoints.bundles.list_data)
                 .interpolate(endpoints.interpolations.bundle_id, bundle_id)
@@ -246,6 +261,12 @@ class Client:
             return paged_call
 
         def list(self, page=None, per_page=None) -> MunchedResponse:
+            """
+            Returns a list of persons. Optionally supply the page number and results per page.
+            :param page:
+            :param per_page:
+            :return:
+            """
             response = None
             if page is None and per_page is None:
                 url = endpoints.URLBuilder(self._base_url, endpoints.persons.list).build()
@@ -260,6 +281,11 @@ class Client:
             return response
 
         def retrieve(self, person_id: str) -> MunchedResponse:
+            """
+            Retrieves details on a singular person
+            :param person_id:
+            :return:
+            """
             url = (
                 endpoints.URLBuilder(self._base_url, endpoints.persons.retrieve)
                 .interpolate(endpoints.interpolations.person_id, person_id)
@@ -296,6 +322,11 @@ class Client:
             return tpatch(url, self._private_api_key, json.dumps(data))
 
         def delete(self, person_id: str) -> MunchedResponse:
+            """
+            Deletes a person
+            :param person_id:
+            :return:
+            """
             url = (
                 endpoints.URLBuilder(self._base_url, endpoints.persons.delete)
                 .interpolate(endpoints.interpolations.person_id, person_id)
@@ -322,6 +353,11 @@ class Client:
             return tpatch(url, self._private_api_key, data)
 
         def remind(self, packet_id: str) -> MunchedResponse:
+            """
+            Sends a reminder to the contact channel on this packet
+            :param packet_id:
+            :return:
+            """
             url = (
                 endpoints.URLBuilder(self._base_url, endpoints.packets.remind)
                 .interpolate(endpoints.interpolations.packet_id, packet_id)
@@ -330,6 +366,11 @@ class Client:
             return tput(url, self._private_api_key)
 
         def retrieve_coe(self, packet_id: str) -> MunchedResponse:
+            """
+            Retrieves the COE for this particular packet
+            :param packet_id:
+            :return:
+            """
             url = (
                 endpoints.URLBuilder(self._base_url, endpoints.packets.retrieve_coe)
                 .interpolate(endpoints.interpolations.packet_id, packet_id)
@@ -357,6 +398,12 @@ class Client:
             return paged_call
 
         def list(self, page=None, per_page=None) -> MunchedResponse:
+            """
+            Retrieves a list of templates, optionally for a page and # of results per page
+            :param page:
+            :param per_page:
+            :return:
+            """
             response = None
             if page is None and per_page is None:
                 url = endpoints.URLBuilder(self._base_url, endpoints.templates.list).build()
@@ -371,6 +418,11 @@ class Client:
             return response
 
         def retrieve(self, template_id: str) -> MunchedResponse:
+            """
+            Retrieves a singular template with this id
+            :param template_id:
+            :return:
+            """
             url = (
                 endpoints.URLBuilder(self._base_url, endpoints.templates.retrieve)
                 .interpolate(endpoints.interpolations.template_id, template_id)

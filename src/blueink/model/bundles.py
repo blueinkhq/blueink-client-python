@@ -263,6 +263,7 @@ class BundleHelper:
         """
         Add a document via url.
         :param url:
+            :param additional_data: Optional and will append any additional kwargs to the json of the document
         :return: Document instance
         """
         document = Document.create(file_url=url, **additional_data)
@@ -275,6 +276,7 @@ class BundleHelper:
         :param mime_type:
         :param file_name:
         :param file:
+        :param additional_data: Optional and will append any additional kwargs to the json of the document
         :return:
         """
 
@@ -297,6 +299,7 @@ class BundleHelper:
         Add a document via url, returns generated unique key.
         :param mime_type:
         :param file_path:
+        :param additional_data: Optional and will append any additional kwargs to the json of the document
         :return: Document instance
         """
 
@@ -312,6 +315,7 @@ class BundleHelper:
         :param byte_array:
         :param file_name:
         :param mime_type:
+        :param additional_data: Optional and will append any additional kwargs to the json of the document
         :return:
         '''
 
@@ -323,6 +327,7 @@ class BundleHelper:
         """
         Create and add a template reference
         :param template_id:
+        :param additional_data: Optional and will append any additional kwargs to the json of the template
         :return:Template object
         """
         if template_id in self._documents.keys():
@@ -351,6 +356,7 @@ class BundleHelper:
         :param v_max: Optional
         :param editors: Optional
         :param override_key: Optional
+        :param additional_data: Optional and will append any additional kwargs to the json of the field
         :return: Field object
         """
         if document.key not in self._documents:
@@ -380,7 +386,8 @@ class BundleHelper:
         :param auth_id: Optional
         :param deliver_via: Optional
         :param order: Optional
-        :return:
+        :param additional_data: Optional and will append any additional kwargs to the json of the signer
+        :return: Packet instance
         """
         if phone is None and email is None:
             raise ValidationError('Packet must have either an email or phone number')
@@ -401,6 +408,14 @@ class BundleHelper:
         return packet
 
     def assign_role(self, document_key: str, signer_id: str, role: str, **additional_data):
+        """
+        Assigns a signer to a particular role in a template
+        :param document_key:
+        :param signer_id:
+        :param role:
+        :param additional_data: Optional and will append any additional kwargs to the json of the ref assignment
+        :return:
+        """
         if document_key not in self._documents:
             raise RuntimeError(f"No document found with key {document_key}!")
         if type(self._documents[document_key]) is not TemplateRef:
@@ -412,6 +427,14 @@ class BundleHelper:
         self._documents[document_key].assignments.append(assignment)
 
     def set_value(self, document_key: str, key: str, value: str, **additional_data):
+        """
+        Sets a field's value in a document.
+        :param document_key:
+        :param key:
+        :param value:
+        :param additional_data: Optional and will append any additional kwargs to the json of the field value
+        :return:
+        """
         if document_key not in self._documents:
             raise RuntimeError(f"No document found with key {document_key}!")
         if type(self._documents[document_key]) is not TemplateRef:
@@ -421,6 +444,13 @@ class BundleHelper:
         self._documents[document_key].field_values.append(field_val)
 
     def _compile_bundle(self, **additional_data) -> Bundle:
+        """
+        Builds a Bundle object complete with all the packets (signers) and documents added through the course
+        of this BundleHelper's usage cycle.
+
+        :param additional_data: Optional and will append any additional kwargs to the json of the bundle
+        :return:
+        """
         packets = list(self._packets.values())
         documents = list(self._documents.values())
         bundle_out = Bundle.create(packets,
