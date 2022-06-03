@@ -1,21 +1,12 @@
 import io
 import random
 import string
-import uuid
 from typing import List, Optional
 from pydantic import BaseModel, validator, EmailStr
 from src.blueink.constants import (
     DELIVER_VIA,
     FIELD_KIND, ATTACHMENT_TYPE, BUNDLE_ORDER, BUNDLE_STATUS, PACKET_STATUS, V_PATTERN,
 )
-
-"""
-Developer Note:
-
-Schema classes are for the Marshmallow serializer. 
-Validation is being done through these as well.
-"""
-
 
 class ValidationError(RuntimeError):
     def __init__(self, error_text: str):
@@ -40,6 +31,9 @@ class Field(BaseModel):
     v_min: Optional[int]
     v_max: Optional[int]
     editors: Optional[List[str]]
+
+    class Config:
+        extra = 'allow'
 
     @classmethod
     def create(cls, x, y, w, h, page, kind, *args, **kwargs):
@@ -76,6 +70,9 @@ class Packet(BaseModel):
     person_id: Optional[str]
     order: Optional[str]
 
+    class Config:
+        extra = 'allow'
+
     @validator('deliver_via')
     def deliver_via_is_allowed(cls, v):
         if v is not None:
@@ -96,6 +93,9 @@ class TemplateRefAssignment(BaseModel):
     role: str = ...
     signer: str = ...
 
+    class Config:
+        extra = 'allow'
+
     @classmethod
     def create(cls, role, signer, **kwargs):
         obj = TemplateRefAssignment(role=role,
@@ -107,6 +107,9 @@ class TemplateRefAssignment(BaseModel):
 class TemplateRefFieldValue(BaseModel):
     key: str = ...
     initial_value: str = ...
+
+    class Config:
+        extra = 'allow'
 
     @classmethod
     def create(cls, key, initial_value, **kwargs):
@@ -120,6 +123,9 @@ class TemplateRef(BaseModel):
     template_id: Optional[str]
     assignments: Optional[List[TemplateRefAssignment]]
     field_values: Optional[List[TemplateRefFieldValue]]
+
+    class Config:
+        extra = 'allow'
 
     @classmethod
     def create(cls,
@@ -152,6 +158,9 @@ class Document(BaseModel):
     template_id: Optional[str]  # UUID to a valid template, required for Template
     assignments: Optional[List[TemplateRefAssignment]]
     field_values: Optional[List[TemplateRefFieldValue]]
+
+    class Config:
+        extra = 'allow'
 
     @classmethod
     def create(cls, **kwargs):
@@ -186,6 +195,9 @@ class Bundle(BaseModel):
     is_test: Optional[bool]
     custom_key: Optional[str]
     team: Optional[str]
+
+    class Config:
+        extra = 'allow'
 
     @classmethod
     def create(cls, packets: List[Packet], documents: List[Document], **kwargs):
