@@ -1,5 +1,7 @@
 from src.blueink.client import Client
 
+from pprint import pprint
+
 client = Client()
 
 # # These test pagination. Collects IDs
@@ -21,7 +23,7 @@ if len(ids) > 0:
 print("\n*********************")
 print("Paged Persons Listing")
 for api_call in client.persons.pagedlist(start_page=1, per_page=2):
-    print(f"Persons Call: {api_call.data}")
+    pprint(f"Persons Call: {api_call.data}")
 
 print("\n*********************")
 print("Paged Templates Listing")

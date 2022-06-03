@@ -1,7 +1,7 @@
 import io
 import json
 from munch import munchify
-from requests import (Response, get, post, put, patch, delete)
+from requests import Response, get, post, put, patch, delete
 
 """
 Helper functions to add header with user's token.txt
@@ -49,10 +49,10 @@ def build_header(private_api_key, content_type=None):
     if private_api_key is None:
         raise RuntimeError("Private API key must be supplied.")
 
-    hdr = {'Authorization': f"Token {private_api_key}"}
+    hdr = {"Authorization": f"Token {private_api_key}"}
 
     if content_type is not None:
-        hdr['Content-Type'] = content_type
+        hdr["Content-Type"] = content_type
 
     return hdr
 
@@ -64,10 +64,7 @@ def build_pagination_params(page_number, per_page=None):
     :param per_page:
     :return:
     """
-    params = {
-        "page": page_number,
-        "per_page": per_page
-    }
+    params = {"page": page_number, "per_page": per_page}
 
     return params
 
@@ -80,9 +77,7 @@ def tget(url, private_api_key, params=None) -> MunchedResponse:
     :param params:
     :return:
     """
-    response = get(url=url,
-                   headers=build_header(private_api_key),
-                   params=params)
+    response = get(url=url, headers=build_header(private_api_key), params=params)
 
     return MunchedResponse(response)
 
@@ -96,13 +91,13 @@ def tpost(url, private_api_key, data=None, content_type="application/json") -> M
     :param content_type:
     :return:
     """
-    response = post(url=url,
-                    data=data,
-                    headers=build_header(private_api_key, content_type))
+    response = post(url=url, data=data, headers=build_header(private_api_key, content_type))
     return MunchedResponse(response)
 
 
-def tpost_formdata(url, private_api_key, json_data=None, files=[io.BufferedReader], file_names=[str], content_types=[str]) -> MunchedResponse:
+def tpost_formdata(
+    url, private_api_key, json_data=None, files=[io.BufferedReader], file_names=[str], content_types=[str]
+) -> MunchedResponse:
     """
     Wrapped requests post request with proper header
     :param url:
@@ -115,18 +110,16 @@ def tpost_formdata(url, private_api_key, json_data=None, files=[io.BufferedReade
     """
     # construct form_data dict
     form_data = {
-        'bundle_request': (None, json_data, "application/json") # 'None' filename is a must or server 500's out
+        "bundle_request": (None, json_data, "application/json")  # 'None' filename is a must or server 500's out
     }
     for file_index, file in enumerate(files):
         if type(file) == io.BufferedReader:
             formdata_file = (file_names[file_index], file, content_types[file_index])
-            form_data[f'files[{file_index}]'] = formdata_file
+            form_data[f"files[{file_index}]"] = formdata_file
         else:
             raise RuntimeError("File is not of io.BufferedReader type!")
 
-    response = post(url=url,
-                    files=form_data,
-                    headers=build_header(private_api_key))
+    response = post(url=url, files=form_data, headers=build_header(private_api_key))
 
     return MunchedResponse(response)
 
@@ -140,9 +133,7 @@ def tput(url, private_api_key, data=None, content_type=None) -> MunchedResponse:
     :param content_type:
     :return:
     """
-    response = put(url=url,
-                   data=data,
-                   headers=build_header(private_api_key, content_type))
+    response = put(url=url, data=data, headers=build_header(private_api_key, content_type))
     return MunchedResponse(response)
 
 
@@ -155,10 +146,10 @@ def tdelete(url, private_api_key, data=None, content_type=None) -> MunchedRespon
     :param content_type:
     :return:
     """
-    response = delete(url=url,
-                      data=data,
-                      headers=build_header(private_api_key, content_type))
-    return MunchedResponse(response)
+    response = delete(url=url, data=data, headers=build_header(private_api_key, content_type))
+    if response.content:
+        return MunchedResponse(response)
+    return response
 
 
 def tpatch(url, private_api_key, data=None, content_type=None) -> MunchedResponse:
@@ -170,7 +161,5 @@ def tpatch(url, private_api_key, data=None, content_type=None) -> MunchedRespons
     :param content_type:
     :return:
     """
-    response = patch(url=url,
-                     data=data,
-                     headers=build_header(private_api_key, content_type))
+    response = patch(url=url, data=data, headers=build_header(private_api_key, content_type))
     return MunchedResponse(response)
