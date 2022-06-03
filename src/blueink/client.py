@@ -69,7 +69,7 @@ class Client:
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.create).build()
 
             json_data = json.dumps(data)
-
+            print(json_data)
             if len(files) == 0:
                 response = tpost(url, self._private_api_key, json_data)
             else:
@@ -77,14 +77,14 @@ class Client:
 
             return response
 
-        def create_from_bundle_helper(self, bundle_helper: BundleHelper) -> MunchedResponse:
+        def create_from_bundle_helper(self, bundle_helper: BundleHelper, **additional_data) -> MunchedResponse:
             """
             Post a Bundle to the BlueInk application. Convenience method as bundle_helper has files/filenames if
             creating a Bundle that way
             :param bundle_helper:
             :return:
             """
-            data = bundle_helper.as_data()
+            data = bundle_helper.as_data(**additional_data)
             files = bundle_helper.files
             file_names = bundle_helper.file_names
             file_types = bundle_helper.file_types

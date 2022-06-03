@@ -36,8 +36,9 @@ class Field(BaseModel):
         extra = 'allow'
 
     @classmethod
-    def create(cls, x, y, w, h, page, kind, *args, **kwargs):
-        obj = Field(key=generate_key('field', 5),
+    def create(cls, x, y, w, h, page, kind, override_key=None, *args, **kwargs):
+        key = override_key if override_key else generate_key('field', 5)
+        obj = Field(key=key,
                     x=x,
                     y=y,
                     w=w,
@@ -81,9 +82,9 @@ class Packet(BaseModel):
         return v
 
     @classmethod
-    def create(cls, name, **kwargs):
-        obj = Packet(key=generate_key('packet', 5),
-                     # person_id=str(uuid.uuid4()),
+    def create(cls, name, override_key=None, **kwargs):
+        key = override_key if override_key else generate_key('packet', 5)
+        obj = Packet(key=key,
                      name=name,
                      **kwargs)
         return obj
@@ -163,8 +164,9 @@ class Document(BaseModel):
         extra = 'allow'
 
     @classmethod
-    def create(cls, **kwargs):
-        obj = Document(key=generate_key('doc', 5),
+    def create(cls, override_key=None, **kwargs):
+        key = override_key if override_key else generate_key('dock', 5)
+        obj = Document(key=key,
                        **kwargs)
         return obj
 
@@ -314,7 +316,7 @@ class BundleHelper:
         file = io.BufferedReader(bytes, len(byte_array))
         return self.add_document_by_file(file, file_name, mime_type)
 
-    def add_document_template(self, template_id: str):
+    def add_document_template(self, template_id: str, **additional_data):
         """
         Create and add a template reference
         :param template_id:
@@ -323,13 +325,13 @@ class BundleHelper:
         if template_id in self._documents.keys():
             raise RuntimeError(f'Document/Template with id {template_id} already added.')
 
-        template = TemplateRef(template_id=template_id)
+        template = TemplateRef(template_id=template_id, **additional_data)
         self._documents[template_id] = template
         return template
 
     def add_field(self, document: Document, x: int, y: int, w: int, h: int, p: int, kind: str,
                   label: str = None, v_pattern: int = None, v_min: int = None,
-                  v_max: int = None, editors: [Packet] = None):
+                  v_max: int = None, editors: [Packet] = None, override_key=None, **additional_data):
         """
         Create and add a field
         :param document_key:
@@ -350,7 +352,7 @@ class BundleHelper:
         if document.key not in self._documents:
             raise RuntimeError(f"No document found with key {document.key}!")
 
-        field = Field.create(x, y, w, h, p, kind, label, v_pattern, v_min, v_max)
+        field = Field.create(x, y, w, h, p, kind, label, v_pattern, v_min, v_max, **additional_data)
         for editor in editors:
             field.add_editor(editor.key)
 
@@ -359,11 +361,12 @@ class BundleHelper:
 
     def add_signer(self, name: str, email: str=None, phone: str=None, deliver_via: str=None,
                    person_id=None, auth_sms: bool=False, auth_selfie: bool=False, auth_id: bool=False,
-                   order: int = None):
+                   order: int = None, override_key=None, **additional_data):
         """
         Create and add a signer.
         This should have at least an email xor phone number.
 
+        :param override_key:
         :param person_id: Optional
         :param name: Optional
         :param email: Optional
@@ -378,6 +381,7 @@ class BundleHelper:
         if phone is None and email is None:
             raise ValidationError('Packet must have either an email or phone number')
 
+        print('sign', additional_data)
         packet = Packet.create(name=name,
                                person_id=person_id,
                                email=email,
@@ -386,11 +390,13 @@ class BundleHelper:
                                auth_selfie=auth_selfie,
                                auth_id=auth_id,
                                deliver_via=deliver_via,
-                               order=order)
+                               order=order,
+                               override_key=override_key,
+                               **additional_data)
         self._packets[packet.key] = packet
         return packet
 
-    def assign_role(self, document_key: str, signer_id: str, role: str):
+    def assign_role(self, document_key: str, signer_id: str, role: str, **additional_data):
         if document_key not in self._documents:
             raise RuntimeError(f"No document found with key {document_key}!")
         if type(self._documents[document_key]) is not TemplateRef:
@@ -398,19 +404,19 @@ class BundleHelper:
         if signer_id not in self._packets:
             raise RuntimeError(f"Signer {signer_id} does not have a corresponding packet")
 
-        assignment = TemplateRefAssignment.create(role, signer_id)
+        assignment = TemplateRefAssignment.create(role, signer_id, **additional_data)
         self._documents[document_key].assignments.append(assignment)
 
-    def set_value(self, document_key: str, key: str, value: str):
+    def set_value(self, document_key: str, key: str, value: str, **additional_data):
         if document_key not in self._documents:
             raise RuntimeError(f"No document found with key {document_key}!")
         if type(self._documents[document_key]) is not TemplateRef:
             raise RuntimeError(f"Document found with key {document_key} is not a Template!")
 
-        field_val = TemplateRefFieldValue.create(key, value)
+        field_val = TemplateRefFieldValue.create(key, value, **additional_data)
         self._documents[document_key].field_values.append(field_val)
 
-    def _compile_bundle(self) -> Bundle:
+    def _compile_bundle(self, **additional_data) -> Bundle:
         packets = list(self._packets.values())
         documents = list(self._documents.values())
         bundle_out = Bundle.create(packets,
@@ -422,22 +428,23 @@ class BundleHelper:
                                    is_test=self._is_test,
                                    cc_emails=self._cc_emails,
                                    custom_key=self._custom_key,
-                                   team=self._team)
+                                   team=self._team,
+                                   **additional_data)
         return bundle_out
 
-    def as_data(self):
+    def as_data(self, **additional_data):
         """
         Returns a Bundle as a python dictionary
         :return:
         """
-        bundle = self._compile_bundle()
+        bundle = self._compile_bundle(**additional_data)
         return bundle.dict(exclude_unset=True, exclude_none=True)
 
-    def as_json(self):
+    def as_json(self, **additional_data):
         """
         Returns a Bundle as a python dictionary
         :return:
         """
-        bundle = self._compile_bundle()
+        bundle = self._compile_bundle(**additional_data)
         return bundle.json(exclude_unset=True, exclude_none=True)
 
