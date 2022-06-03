@@ -1,4 +1,6 @@
 import io
+import json
+from copy import deepcopy
 from marshmallow import Schema, post_dump
 from marshmallow import fields as mmf
 
@@ -15,9 +17,20 @@ class ValidationError(RuntimeError):
         super(ValidationError, self).__init__(error_text)
 
 
-class ContactChannelSchema(Schema):
+class HiddenEmptyFieldsSchemaMixin:
+    @post_dump
+    def remove_empties(self, data, many):
+        new_data = deepcopy(data)
+        for key, value in data.items():
+            if value is None:
+                new_data.pop(key)
+
+        return new_data
+
+
+class ContactChannelSchema(Schema, HiddenEmptyFieldsSchemaMixin):
     email = mmf.Email()
-    phone = mmf.Int()
+    phone = mmf.Str()
     kind = mmf.Str()
 
     class Meta:
@@ -37,24 +50,10 @@ class ContactChannel:
     KIND_PHONE = "mp"
     KIND_EMAIL = "em"
 
-    def __init__(self, email: str, phone: str, kind: str):
+    def __init__(self, kind: str, email: str = None, phone: str = None):
         self.email = email
         self.phone = phone
         self.kind = kind
-
-
-class ContactChannelEmail(ContactChannel):
-    def __init__(self, email: str):
-        self.email = email
-        self.phone = None
-        self.kind = "em"
-
-
-class ContactChannelPhone(ContactChannel):
-    def __init__(self, phone: str):
-        self.email = None
-        self.phone = phone
-        self.kind = "mp"
 
 
 class Person:
@@ -75,32 +74,59 @@ class PersonHelper:
         self,
         name: str = None,
         metadata: dict = None,
-        channels: list = [],
+        phones: list = [],
+        emails: list = [],
     ):
         self._name = name
         self._metadata = metadata
-        self._channels = channels
-        self._id = None
+        self._phones = phones
+        self._emails = emails
 
-    def add_channel(self, channel: ContactChannel):
-        self._channels.append(channel)
-        return self
+    def add_phone(self, phone: str) -> list:
+        self._phones.append(phone)
+        return self._phones
 
-    def set_metadata(self, metadata: dict):
+    def set_phones(self, phones: list) -> list:
+        self._phones = phones
+        return self._phones
+
+    def get_phones(self) -> list:
+        return self._phones
+
+    def add_email(self, email: str) -> list:
+        self._emails.append(email)
+        return self._emails
+
+    def set_emails(self, emails: list) -> list:
+        self._emails = emails
+        return self._emails
+
+    def get_emails(self) -> list:
+        return self._emails
+
+    def set_metadata(self, metadata: dict) -> dict:
         self._metadata = metadata
-        return self
+        return self._metadata
 
-    def set_name(self, name: str):
+    def set_name(self, name: str) -> str:
         self._name = name
-        return self
+        return self._name
 
-    def as_data(self):
+    def as_dict(self):
+
+        channels = []
+
+        for email in self._emails:
+            channels.append(ContactChannel(email=email, kind=ContactChannel.KIND_EMAIL))
+        for phone in self._phones:
+            channels.append(ContactChannel(phone=phone, kind=ContactChannel.KIND_PHONE))
+
         person_out = Person(
             self._name,
             self._metadata,
-            self._channels,
+            channels,
         )
 
         schema = PersonSchema()
 
-        return schema.dumps(person_out)
+        return schema.dump(person_out)

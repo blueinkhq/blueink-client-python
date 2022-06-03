@@ -30,7 +30,11 @@ class MunchedResponse:
         This will error out if JSON is not returned.
         :param response:
         """
-        self.data = munchify(json.loads(response.content))
+        try:
+            self.data = munchify(json.loads(response.content))
+        # Some requests have no content or html responses
+        except json.JSONDecodeError:
+            self.data = response.content
         self.status = response.status_code
 
         # Pagination
@@ -147,9 +151,7 @@ def tdelete(url, private_api_key, data=None, content_type=None) -> MunchedRespon
     :return:
     """
     response = delete(url=url, data=data, headers=build_header(private_api_key, content_type))
-    if response.content:
-        return MunchedResponse(response)
-    return response
+    return MunchedResponse(response)
 
 
 def tpatch(url, private_api_key, data=None, content_type=None) -> MunchedResponse:

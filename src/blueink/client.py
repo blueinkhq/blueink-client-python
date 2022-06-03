@@ -1,4 +1,5 @@
 import sys
+import json
 from os import environ
 from munch import Munch
 
@@ -210,14 +211,15 @@ class Client:
         def __init__(self, base_url, api_key):
             super().__init__(base_url, api_key)
 
-        def create(self, data) -> MunchedResponse:
+        def create(self, data: dict) -> MunchedResponse:
             """
             Creates a person.
             :param data: JSON string for a person
             :return:
             """
+            data_json = json.dumps(data)
             url = endpoints.URLBuilder(self._base_url, endpoints.persons.create).build()
-            return tpost(url, self._private_api_key, data)
+            return tpost(url, self._private_api_key, data_json)
 
         def create_from_person_helper(self, person_helper: PersonHelper) -> MunchedResponse:
             """
@@ -225,8 +227,7 @@ class Client:
             :param person_helper: PersonHelper setup of a person
             :return:
             """
-            url = endpoints.URLBuilder(self._base_url, endpoints.persons.create).build()
-            return tpost(url, self._private_api_key, person_helper.as_data())
+            return self.create(person_helper.as_dict())
 
         def pagedlist(self, start_page=0, per_page=50) -> PaginatedIterator:
             """
