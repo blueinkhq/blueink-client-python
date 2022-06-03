@@ -1,9 +1,12 @@
-import sys
+import json
 from os import environ
+from pprint import pprint
+
 from munch import Munch
 
-from . import endpoints, BundleHelper
+from . import endpoints
 from .constants import BUNDLE_STATUS, DEFAULT_BASE_URL, ENV_BLUEINK_API_URL, ENV_BLUEINK_PRIVATE_API_KEY
+from .model.bundles import BundleHelper
 from .paginator import PaginatedIterator
 from .tokenizedrequests import (
     tget,
@@ -56,10 +59,10 @@ class Client:
         def __init__(self, base_url, private_api_key):
             super().__init__(base_url, private_api_key)
 
-        def create(self, json: str, files=[], file_names=[], file_types=[]) -> MunchedResponse:
+        def create(self, data: dict, files=[], file_names=[], file_types=[]) -> MunchedResponse:
             """
             Post a Bundle to the BlueInk application.
-            :param json: json string
+            :param data: python dict, typically from BundleHelper.as_data()
             :param files: list of file-like streams (optional)
             :param file_names: - list of file names, ordered same as files (optional)
             :param file_types: - list of file types, ordered same as files (optional)
@@ -68,10 +71,12 @@ class Client:
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.create) \
                 .build()
 
+            json_data = json.dumps(data)
+
             if len(files) == 0:
-                response = tpost(url, self._private_api_key, json)
+                response = tpost(url, self._private_api_key, json_data)
             else:
-                response = tpost_formdata(url, self._private_api_key, json, files, file_names, file_types)
+                response = tpost_formdata(url, self._private_api_key, json_data, files, file_names, file_types)
 
             return response
 
@@ -82,11 +87,14 @@ class Client:
             :param bundle_helper: 
             :return:
             """
-            json = bundle_helper.as_data()
+            data = bundle_helper.as_data()
             files = bundle_helper.files
             file_names = bundle_helper.file_names
             file_types = bundle_helper.file_types
-            return self.create(json=json,
+
+            print(json.dumps(data))
+
+            return self.create(data=data,
                                files=files,
                                file_names=file_names,
                                file_types=file_types)

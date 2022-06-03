@@ -1,13 +1,12 @@
-from copy import deepcopy
-
-from marshmallow import Schema, post_dump
-from marshmallow import fields as mmf
-
+import io
+import random
+import string
+import uuid
+from typing import List, Optional
+from pydantic import BaseModel, validator
 from src.blueink.constants import (
-    BUNDLE_STATUS,
     DELIVER_VIA,
-    FIELD_KIND,
-    PACKET_STATUS,
+    FIELD_KIND, ATTACHMENT_TYPE, BUNDLE_ORDER, BUNDLE_STATUS, PACKET_STATUS, V_PATTERN,
 )
 
 """
@@ -19,270 +18,410 @@ Validation is being done through these as well.
 
 
 class ValidationError(RuntimeError):
-    def __init__(self, error_text:str):
+    def __init__(self, error_text: str):
         super(ValidationError, self).__init__(error_text)
 
 
-class HiddenEmptyFieldsSchemaMixin:
-    @post_dump
-    def remove_empties(self, data, many):
-        new_data = deepcopy(data)
-        for key, value in data.items():
-            if value is None:
-                new_data.pop(key)
-
-        return new_data
+def generate_key(type, length=5):
+    slug = ''.join(random.choice(string.ascii_letters) for i in range(length))
+    return f'{type}_{slug}'
 
 
-class FieldSchema(Schema):
-    kind = mmf.Str(required=True)
-    key = mmf.Str()
-    label = mmf.Str()
-    page = mmf.Int()
-    x = mmf.Int(required=True)
-    y = mmf.Int(required=True)
-    w = mmf.Int(required=True)
-    h = mmf.Int(required=True)
-    v_pattern = mmf.Str()
-    v_min = mmf.Int()
-    v_max = mmf.Int()
-    editors: mmf.List(mmf.Str())
+class Field(BaseModel):
+    kind: str = ...
+    key: str = ...
+    x: int = ...
+    y: int = ...
+    w: int = ...
+    h: int = ...
+    label: Optional[str]
+    page: Optional[int]
+    v_pattern: Optional[int]
+    v_min: Optional[int]
+    v_max: Optional[int]
+    editors: Optional[List[str]]
 
-    class Meta:
-        ordered = True
+    @classmethod
+    def create(cls, x, y, w, h, page, kind, *args, **kwargs):
+        obj = Field(key=generate_key('field', 5),
+                    x=x,
+                    y=y,
+                    w=w,
+                    h=h,
+                    page=page,
+                    kind=kind,
+                    data=kwargs)
+        return obj
 
+    @validator('kind')
+    def kind_is_allowed(cls, v):
+        assert v in FIELD_KIND.values(), f'Field Kind \'{v}\' not allowed. Must be one of {FIELD_KIND.values()}'
+        return v
 
-class PacketSchema(Schema, HiddenEmptyFieldsSchemaMixin):
-    name = mmf.Str()
-    email = mmf.Email()
-    phone = mmf.Str()
-    auth_sms = mmf.Bool()
-    auth_selfie = mmf.Bool()
-    auth_id = mmf.Bool()
-    key = mmf.Str(required=True)
-    deliver_via = mmf.Str()
-    person_id = mmf.Str(required=False)
-    order = mmf.Int(required=False)
-
-    class Meta:
-        ordered = True
-
-
-class TemplateRefAssignmentSchema(Schema):
-    role = mmf.Str(required=True)
-    signer = mmf.Str(required=True)
-
-    class Meta:
-        ordered = True
-
-
-class TemplateRefFieldValueSchema(Schema):
-    key = mmf.Str(required=True)
-    initial_value = mmf.Str()
-
-    class Meta:
-        ordered = True
-
-
-class DocumentSchema(Schema):
-    key = mmf.Str()
-
-    # document related
-    file_url = mmf.URL()
-    file_index = mmf.Int()
-    fields = mmf.List(mmf.Nested(FieldSchema))
-
-    # template related. kinda weird but must be here, but
-    # having a separate "TemplateRefSchema", child of DocumentSchema did not work out.
-    # Perhaps a Marshmallow bug? Coded around this by including Template schema fields in Document
-    # and the post_dump should clean up anythhing unused/null.
-    template_id = mmf.Str() # UUID to a valid template, required for Template
-    assignments = mmf.List(mmf.Nested(TemplateRefAssignmentSchema)) # required for a template
-    field_values = mmf.List(mmf.Nested(TemplateRefFieldValueSchema))
-
-    class Meta:
-        ordered = True
-
-    @post_dump
-    def remove_skip_values(self, data, **kwargs):
-        """
-        Removes null values from the JSON.
-        :param data:
-        :param kwargs:
-        :return:
-        """
-        return {
-            key: value for key, value in data.items()
-            if value is not None
-        }
-
-
-# This did not work out. Check DocumentSchema for explanation
-# class TemplateRefSchema(DocumentSchema):
-#     template_id = mmfields.Str()
-#     assignments = mmfields.List(mmfields.Nested(TemplateRefAssignmentSchema))
-#     field_values = mmfields.List(mmfields.Nested(TemplateRefFieldValueSchema))
-#
-#     class Meta:
-#         ordered = True
-
-
-class BundleSchema(Schema, HiddenEmptyFieldsSchemaMixin):
-    label = mmf.Str()
-    in_order = mmf.Bool()
-    email_subject = mmf.Str()
-    email_message = mmf.Str()
-    cc_emails = mmf.List(mmf.Email)
-    is_test = mmf.Bool()
-    packets = mmf.List(mmf.Nested(PacketSchema), required=True)
-    documents = mmf.List(mmf.Nested(DocumentSchema), required=True)
-    custom_key = mmf.Str()
-    team = mmf.Str()
-
-    class Meta:
-        ordered = True
-
-
-class Field:
-    KIND = FIELD_KIND
-
-    def __init__(self, kind:str, key:str, label:str, page:int, x:int, y:int, w:int, h:int, v_pattern:int, v_min:int, v_max:int):
-        self.kind = kind
-        self.key = key
-        self.label = label
-        self.page = page
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
-        self.v_pattern = v_pattern
-        self.v_min = v_min
-        self.v_max = v_max
-        self.editors: [str] = []
-
-        required_fields = [kind, x, y, w, h]
-        if None in required_fields:
-            raise ValidationError(f"kind, x, y, w, h attributes are required for '{type(self).__name__}' object")
-
-        allowed_kinds = ["att", "cbx", "chk", "dat", "ini", "inp", "sdt", "sel", "sig", "snm", "txt"]
-        if kind not in allowed_kinds:
-            raise ValidationError(f"kind '{kind}' is invalid. Kind must be one of the following: {allowed_kinds}")
-
-    def add_editor(self, editor:str):
+    def add_editor(self, editor: str):
+        if self.editors is None:
+            self.editors = []
         self.editors.append(editor)
 
 
-class Document:
-    def __init__(self, key, url=None, file_index=None):
-        self.key = key
-        self.file_url = url
-        self.file_index = file_index
-        self.fields = []
+class Packet(BaseModel):
+    key: str = ...
+    name: str = ...
+    email: Optional[str]
+    phone: Optional[str]
+    auth_sms: Optional[bool]
+    auth_selfie: Optional[bool]
+    auth_id: Optional[bool]
+    deliver_via: Optional[str]
+    person_id: Optional[str]
+    order: Optional[str]
 
-        required_fields = [key]
-        if None in required_fields:
-            raise ValidationError(f"key attribute is required for '{type(self).__name__}' object")
+    @validator('deliver_via')
+    def deliver_via_is_allowed(cls, v):
+        if v is not None:
+            assert v in DELIVER_VIA.values(), f'deliver_via \'{v}\' not allowed. Must be None' \
+                                              f' or one of {DELIVER_VIA.values()}'
+        return v
+
+    @classmethod
+    def create(cls, name, **kwargs):
+        obj = Packet(key=generate_key('packet', 5),
+                     # person_id=str(uuid.uuid4()),
+                     name=name,
+                     **kwargs)
+        return obj
+
+
+class TemplateRefAssignment(BaseModel):
+    role: str = ...
+    signer: str = ...
+
+    @classmethod
+    def create(cls, role, signer, **kwargs):
+        obj = TemplateRefAssignment(role=role,
+                                    signer=signer,
+                                    **kwargs)
+        return obj
+
+
+class TemplateRefFieldValue(BaseModel):
+    key: str = ...
+    initial_value: str = ...
+
+    @classmethod
+    def create(cls, key, initial_value, **kwargs):
+        obj = TemplateRefFieldValue(key=key,
+                                    initial_value=initial_value,
+                                    **kwargs)
+        return obj
+
+
+class TemplateRef(BaseModel):
+    template_id: Optional[str]
+    assignments: Optional[List[TemplateRefAssignment]]
+    field_values: Optional[List[TemplateRefFieldValue]]
+
+    @classmethod
+    def create(cls,
+               *args,
+               **kwargs):
+
+        obj = TemplateRefFieldValue(**kwargs)
+        return obj
+
+    def add_assignment(self, assignment: TemplateRefAssignment):
+        if self.assignments is None:
+            self.assignments = []
+        self.assignments.append(assignment)
+
+    def add_field_value(self, field_value: TemplateRefFieldValue):
+        if self.field_values is None:
+            self.field_values = []
+        self.field_values.append(field_value)
+
+
+class Document(BaseModel):
+    key: str = ...
+
+    # document related
+    file_url: Optional[str]
+    file_index: Optional[int]
+    fields: Optional[List[Field]]
+
+    # template related
+    template_id: Optional[str]  # UUID to a valid template, required for Template
+    assignments: Optional[List[TemplateRefAssignment]]
+    field_values: Optional[List[TemplateRefFieldValue]]
+
+    @classmethod
+    def create(cls, **kwargs):
+        obj = Document(key=generate_key('doc', 5),
+                       **kwargs)
+        return obj
 
     def add_field(self, field: Field):
+        if self.fields is None:
+            self.fields = []
         self.fields.append(field)
 
+    def add_assignment(self, assignment: TemplateRefAssignment):
+        if self.assignments is None:
+            self.assignments = []
+        self.assignments.append(assignment)
 
-class TemplateRefAssignment:
-    def __init__(self, role, signer):
-        self.role = role
-        self.signer = signer
-
-        required_fields = [role, signer]
-        if None in required_fields:
-            raise ValidationError(f"role and signer attributes are required for '{type(self).__name__}' object")
-
-
-class TemplateRefFieldValue:
-    def __init__(self, key:str , initial_value:str ):
-        self.key = key
-        self.initial_value=initial_value
-
-        required_fields = [key, initial_value]
-        if None in required_fields:
-            raise ValidationError(f"key and initial_value attributes are required for '{type(self).__name__}' object")
+    def add_field_value(self, field_value: TemplateRefFieldValue):
+        if self.field_values is None:
+            self.field_values = []
+        self.field_values.append(field_value)
 
 
-class TemplateRef(Document):
-    def __init__(self, key:str, template_id, assignments:[TemplateRefAssignment] = [], field_values:[TemplateRefFieldValue] = []):
-        super(TemplateRef, self).__init__(key, None)
-        self.template_id = template_id
-        self.assignments = assignments
-        self.field_values = field_values
+class Bundle(BaseModel):
+    packets: List[Packet] = ...
+    documents: List[Document] = ...
+    label: Optional[str]
+    in_order: Optional[bool]
+    email_subject: Optional[str]
+    email_message: Optional[str]
+    cc_emails: Optional[List[str]]
+    is_test: Optional[bool]
+    custom_key: Optional[str]
+    team: Optional[str]
 
-        required_fields = [assignments, field_values]
-        if None in required_fields:
-            raise ValidationError(f"kind, x, y, w, h attributes are required for '{type(self).__name__}' object")
-        # for field in required_fields:
-        #     if type(field) == list:
-        #         if len(field) == 0:
-        #             raise ValidationError(f"One or more of required list fields (assignments, field_values) is empty.")
+    @classmethod
+    def create(cls, packets: List[Packet], documents: List[Document], **kwargs):
+        obj = Bundle(packets=packets,
+                     documents=documents,
+                     **kwargs)
+        return obj
+
+    def add_packet(self, packet: Packet):
+        if self.packets is None:
+            self.packets = []
+        self.packets.append(packet)
+
+    def add_document(self, document: Document):
+        if self.documents is None:
+            self.documents = []
+        self.documents.append(Document)
 
 
-class Packet:
+class BundleHelper:
+    ATTACHMENT_TYPE = ATTACHMENT_TYPE
+    BUNDLE_ORDER = BUNDLE_ORDER
+    BUNDLE_STATUS = BUNDLE_STATUS
     DELIVER_VIA = DELIVER_VIA
-    STATUS = PACKET_STATUS
+    FIELD_KIND = FIELD_KIND
+    PACKET_STATUS = PACKET_STATUS
+    V_PATTERN = V_PATTERN
 
-    def __init__(self, name:str, email:str, phone:str, auth_sms:bool, auth_selfie:bool, auth_id:bool, key:str,
-                 deliver_via:str, person_id: str, order: int):
-        self.name = name
-        self.email = email
-        self.phone = phone
-        self.auth_sms = auth_sms
-        self.auth_selfie = auth_selfie
-        self.auth_id = auth_id
-        self.key = key
-        self.deliver_via = deliver_via
-        self.person_id = person_id
-        self.order = order
+    def __init__(self,
+                 label: str = None,
+                 email_subject: str = None,
+                 email_message: str = None,
+                 in_order: bool = False,
+                 is_test: bool = False,
+                 custom_key: str = None,
+                 team: str = None):
+        self._label = label
+        self._in_order = in_order
+        self._email_subj = email_subject
+        self._email_msg = email_message
+        self._custom_key = custom_key
+        self._is_test = is_test
+        self._cc_emails = []
+        self._documents = {}
+        self._documents = {}
+        self._packets = {}
+        self._team = team
 
-        required_fields = [key]
-        if None in required_fields:
-            raise ValidationError(f"key attribute is required for '{type(self).__name__}' object")
+        # for file uploads, index should match those in the document "file_index" field
+        self.file_names = []
+        self.file_types = []
+        self.files = []
 
+    def add_cc(self, email: str):
+        self._cc_emails.append(email)
+        return self
 
-class Bundle:
-    STATUS = BUNDLE_STATUS
+    def add_document_by_url(self, url: str) -> Document:
+        """
+        Add a document via url.
+        :param key:
+        :param url:
+        :return: Document instance
+        """
+        document = Document.create(file_url=url)
+        self._documents[document.key] = document
+        return document
 
-    def __init__(self, label: str, in_order: bool, email_subject: str, email_message: str, is_test: bool,
-                 cc_emails: [str], packets: [Packet], documents: [Document], custom_key: str, team: str):
+    def add_document_by_file(self, file: io.BufferedReader, file_name: str, mime_type: str) -> Document:
+        """
+        Add a document via url, returns generated unique key.
+        :param file:
+        :param file_name:
+        :param mime_type:
+        :return: Document instance
+        """
+        file_index = len(self.files)
 
-        self.label = label
-        self.in_order = in_order
-        self.email_subject = email_subject
-        self.email_message = email_message
-        # self.requester_name = requester_name
-        # self.requester_email = requester_email
-        self.cc_emails = cc_emails
-        self.is_test = is_test
-        self.packets = packets
-        self.documents = documents
-        self.custom_key = custom_key
-        self.team = team
+        if type(file) == io.BufferedReader and file.readable():
+            self.files.append(file)
+            self.file_names.append(file_name)
+            self.file_types.append(mime_type)
+            print(f"Attaching file {file_index}: {file_name}")
+        else:
+            raise RuntimeError(f"File unreadable.")
+        document = Document.create(file_index=file_index)
+        self._documents[document.key] = document
+        return document
 
-        required_fields = [packets, documents]
-        if None in required_fields:
-            raise ValidationError(f"kind, x, y, w, h attributes are required for '{type(self).__name__}' object")
-        for field in required_fields:
-            if type(field) == list:
-                if len(field) == 0:
-                    raise ValidationError(f"One or more of required list fields (packets, documents) is empty.")
+    def add_document_by_path(self, file_path: str, mime_type: str) -> Document:
+        """
+        Add a document via url, returns generated unique key.
+        :param file_path:
+        :return: Document instance
+        """
 
-        if self.in_order:
-            order_indices = []
-            for packet in self.packets:
-                if packet.order is None:
-                    raise ValidationError(f'Bundle is set to be ordered but one or more packets (of {len(self.packets)})'
-                                          f' do not have an order index: {packet.name}')
-                if packet.order in order_indices:
-                    raise ValidationError('Two or more packets cannot have the same order index.')
-                order_indices.append(packet.order)
+        file = open(file_path, 'rb')
+        return self.add_document_by_file(file, file.name, mime_type)
 
-            for i in [i for i in range(0, len(self.packets))]:
-                if i not in order_indices:
-                    raise ValidationError('Malformed packet ordering. Check that packets have '
-                                          'sensible indices (eg. no skipped index)')
+    def add_document_by_bytearray(self, byte_array: bytearray, file_name: str, mime_type: str) -> Document:
+        '''
+        Add a document via url, with unique key.
+        :param byte_array:
+        :param file_name:
+        :param mime_type:
+        :return:
+        '''
+
+        bytes = io.BytesIO(byte_array)
+        file = io.BufferedReader(bytes, len(byte_array))
+        return self.add_document_by_file(file, file_name, mime_type)
+
+    def add_document_template(self, template_id: str):
+        """
+        Create and add a template reference
+        :param template_id:
+        :return:Template object
+        """
+        if template_id in self._documents.keys():
+            raise RuntimeError(f'Document/Template with id {template_id} already added.')
+
+        template = TemplateRef(template_id=template_id)
+        self._documents[template_id] = template
+        return template
+
+    def add_field(self, document: Document, x: int, y: int, w: int, h: int, p: int, kind: str,
+                  label: str = None, v_pattern: int = None, v_min: int = None,
+                  v_max: int = None, editors: [Packet] = None):
+        """
+        Create and add a field
+        :param document_key:
+        :param x:
+        :param y:
+        :param w:
+        :param h:
+        :param p:
+        :param kind:
+
+        :param label: Optional
+        :param v_pattern: Optional
+        :param v_min: Optional
+        :param v_max: Optional
+        :param editors: Optional
+        :return: Field object
+        """
+        if document.key not in self._documents:
+            raise RuntimeError(f"No document found with key {document.key}!")
+
+        field = Field.create(x, y, w, h, p, kind, label, v_pattern, v_min, v_max)
+        for editor in editors:
+            field.add_editor(editor.key)
+
+        self._documents[document.key].add_field(field)
+        return field
+
+    def add_signer(self, name: str, email: str=None, phone: str=None, deliver_via: str=None,
+                   person_id=None, auth_sms: bool=False, auth_selfie: bool=False, auth_id: bool=False,
+                   order: int = None):
+        """
+        Create and add a signer.
+        This should have at least an email xor phone number.
+
+        :param person_id: Optional
+        :param name: Optional
+        :param email: Optional
+        :param phone: Optional
+        :param auth_sms: Optional
+        :param auth_selfie: Optional
+        :param auth_id: Optional
+        :param deliver_via: Optional
+        :param order: Optional
+        :return:
+        """
+        if phone is None and email is None:
+            raise ValidationError('Packet must have either an email or phone number')
+
+        packet = Packet.create(name=name,
+                               person_id=person_id,
+                               email=email,
+                               phone=phone,
+                               auth_sms=auth_sms,
+                               auth_selfie=auth_selfie,
+                               auth_id=auth_id,
+                               deliver_via=deliver_via,
+                               order=order)
+        self._packets[packet.key] = packet
+        return packet
+
+    def assign_role(self, document_key: str, signer_id: str, role: str):
+        if document_key not in self._documents:
+            raise RuntimeError(f"No document found with key {document_key}!")
+        if type(self._documents[document_key]) is not TemplateRef:
+            raise RuntimeError(f"Document found with key {document_key} is not a Template!")
+        if signer_id not in self._packets:
+            raise RuntimeError(f"Signer {signer_id} does not have a corresponding packet")
+
+        assignment = TemplateRefAssignment.create(role, signer_id)
+        self._documents[document_key].assignments.append(assignment)
+
+    def set_value(self, document_key: str, key: str, value: str):
+        if document_key not in self._documents:
+            raise RuntimeError(f"No document found with key {document_key}!")
+        if type(self._documents[document_key]) is not TemplateRef:
+            raise RuntimeError(f"Document found with key {document_key} is not a Template!")
+
+        field_val = TemplateRefFieldValue.create(key, value)
+        self._documents[document_key].field_values.append(field_val)
+
+    def _compile_bundle(self) -> Bundle:
+        packets = list(self._packets.values())
+        documents = list(self._documents.values())
+        bundle_out = Bundle.create(packets,
+                                   documents,
+                                   label=self._label,
+                                   in_order=self._in_order,
+                                   email_subject=self._email_subj,
+                                   email_message=self._email_msg,
+                                   is_test=self._is_test,
+                                   cc_emails=self._cc_emails,
+                                   custom_key=self._custom_key,
+                                   team=self._team)
+        return bundle_out
+
+    def as_data(self):
+        """
+        Returns a Bundle as a python dictionary
+        :return:
+        """
+        bundle = self._compile_bundle()
+        return bundle.dict(exclude_unset=True, exclude_none=True)
+
+    def as_json(self):
+        """
+        Returns a Bundle as a python dictionary
+        :return:
+        """
+        bundle = self._compile_bundle()
+        return bundle.json(exclude_unset=True, exclude_none=True)
+
