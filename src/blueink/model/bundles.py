@@ -23,7 +23,7 @@ Validation is being done through these as well.
 
 
 class ValidationError(RuntimeError):
-    def __init__(self, error_text:str):
+    def __init__(self, error_text: str):
         super(ValidationError, self).__init__(error_text)
 
 
@@ -38,7 +38,7 @@ class HiddenEmptyFieldsSchemaMixin:
         return new_data
 
 
-class FieldSchema(Schema):
+class FieldSchema(Schema, HiddenEmptyFieldsSchemaMixin):
     kind = mmf.Str(required=True)
     key = mmf.Str()
     label = mmf.Str()
@@ -100,8 +100,8 @@ class DocumentSchema(Schema):
     # having a separate "TemplateRefSchema", child of DocumentSchema did not work out.
     # Perhaps a Marshmallow bug? Coded around this by including Template schema fields in Document
     # and the post_dump should clean up anythhing unused/null.
-    template_id = mmf.Str() # UUID to a valid template, required for Template
-    assignments = mmf.List(mmf.Nested(TemplateRefAssignmentSchema)) # required for a template
+    template_id = mmf.Str()  # UUID to a valid template, required for Template
+    assignments = mmf.List(mmf.Nested(TemplateRefAssignmentSchema))  # required for a template
     field_values = mmf.List(mmf.Nested(TemplateRefFieldValueSchema))
 
     class Meta:
@@ -115,10 +115,7 @@ class DocumentSchema(Schema):
         :param kwargs:
         :return:
         """
-        return {
-            key: value for key, value in data.items()
-            if value is not None
-        }
+        return {key: value for key, value in data.items() if value is not None}
 
 
 # This did not work out. Check DocumentSchema for explanation
@@ -150,7 +147,20 @@ class BundleSchema(Schema, HiddenEmptyFieldsSchemaMixin):
 class Field:
     KIND = FIELD_KIND
 
-    def __init__(self, kind:str, key:str, label:str, page:int, x:int, y:int, w:int, h:int, v_pattern:int, v_min:int, v_max:int):
+    def __init__(
+        self,
+        kind: str,
+        key: str,
+        label: str,
+        page: int,
+        x: int,
+        y: int,
+        w: int,
+        h: int,
+        v_pattern: int,
+        v_min: int,
+        v_max: int,
+    ):
         self.kind = kind
         self.key = key
         self.label = label
@@ -172,7 +182,7 @@ class Field:
         if kind not in allowed_kinds:
             raise ValidationError(f"kind '{kind}' is invalid. Kind must be one of the following: {allowed_kinds}")
 
-    def add_editor(self, editor:str):
+    def add_editor(self, editor: str):
         self.editors.append(editor)
 
 
@@ -202,9 +212,9 @@ class TemplateRefAssignment:
 
 
 class TemplateRefFieldValue:
-    def __init__(self, key:str , initial_value:str ):
+    def __init__(self, key: str, initial_value: str):
         self.key = key
-        self.initial_value=initial_value
+        self.initial_value = initial_value
 
         required_fields = [key, initial_value]
         if None in required_fields:
@@ -212,7 +222,13 @@ class TemplateRefFieldValue:
 
 
 class TemplateRef(Document):
-    def __init__(self, key:str, template_id, assignments:[TemplateRefAssignment] = [], field_values:[TemplateRefFieldValue] = []):
+    def __init__(
+        self,
+        key: str,
+        template_id,
+        assignments: [TemplateRefAssignment] = [],
+        field_values: [TemplateRefFieldValue] = [],
+    ):
         super(TemplateRef, self).__init__(key, None)
         self.template_id = template_id
         self.assignments = assignments
@@ -231,8 +247,19 @@ class Packet:
     DELIVER_VIA = DELIVER_VIA
     STATUS = PACKET_STATUS
 
-    def __init__(self, name:str, email:str, phone:str, auth_sms:bool, auth_selfie:bool, auth_id:bool, key:str,
-                 deliver_via:str, person_id: str, order: int):
+    def __init__(
+        self,
+        name: str,
+        email: str,
+        phone: str,
+        auth_sms: bool,
+        auth_selfie: bool,
+        auth_id: bool,
+        key: str,
+        deliver_via: str,
+        person_id: str,
+        order: int,
+    ):
         self.name = name
         self.email = email
         self.phone = phone
@@ -252,8 +279,19 @@ class Packet:
 class Bundle:
     STATUS = BUNDLE_STATUS
 
-    def __init__(self, label: str, in_order: bool, email_subject: str, email_message: str, is_test: bool,
-                 cc_emails: [str], packets: [Packet], documents: [Document], custom_key: str, team: str):
+    def __init__(
+        self,
+        label: str,
+        in_order: bool,
+        email_subject: str,
+        email_message: str,
+        is_test: bool,
+        cc_emails: [str],
+        packets: [Packet],
+        documents: [Document],
+        custom_key: str,
+        team: str,
+    ):
 
         self.label = label
         self.in_order = in_order
@@ -280,16 +318,19 @@ class Bundle:
             order_indices = []
             for packet in self.packets:
                 if packet.order is None:
-                    raise ValidationError(f'Bundle is set to be ordered but one or more packets (of {len(self.packets)})'
-                                          f' do not have an order index: {packet.name}')
+                    raise ValidationError(
+                        f"Bundle is set to be ordered but one or more packets (of {len(self.packets)})"
+                        f" do not have an order index: {packet.name}"
+                    )
                 if packet.order in order_indices:
-                    raise ValidationError('Two or more packets cannot have the same order index.')
+                    raise ValidationError("Two or more packets cannot have the same order index.")
                 order_indices.append(packet.order)
 
             for i in [i for i in range(0, len(self.packets))]:
                 if i not in order_indices:
-                    raise ValidationError('Malformed packet ordering. Check that packets have '
-                                          'sensible indices (eg. no skipped index)')
+                    raise ValidationError(
+                        "Malformed packet ordering. Check that packets have " "sensible indices (eg. no skipped index)"
+                    )
 
 
 class BundleHelper:
@@ -301,14 +342,16 @@ class BundleHelper:
     PACKET_STATUS = PACKET_STATUS
     V_PATTERN = V_PATTERN
 
-    def __init__(self,
-                 label: str = None,
-                 email_subject: str = None,
-                 email_message: str = None,
-                 in_order: bool = False,
-                 is_test: bool = False,
-                 custom_key: str = None,
-                 team: str = None):
+    def __init__(
+        self,
+        label: str = None,
+        email_subject: str = None,
+        email_message: str = None,
+        in_order: bool = False,
+        is_test: bool = False,
+        custom_key: str = None,
+        team: str = None,
+    ):
         self._label = label
         self._in_order = in_order
         self._email_subj = email_subject
@@ -325,31 +368,31 @@ class BundleHelper:
         self.file_types = []
         self.files = []
 
-    def add_cc(self, email:str):
+    def add_cc(self, email: str):
         self._cc_emails.append(email)
         return self
 
-    def add_document_by_url(self, key:str, url:str) -> str:
-        '''
+    def add_document_by_url(self, key: str, url: str) -> str:
+        """
         Add a document via url, with unique key.
         :param key:
         :param url:
         :return:
-        '''
+        """
         if key in self._documents.keys():
             raise RuntimeError(f"Document with key {key} already added!")
 
         self._documents[key] = Document(key, url=url)
         return key
 
-    def add_document_by_file(self, key:str, file:io.BufferedReader, file_name:str, mime_type:str) -> str:
-        '''
+    def add_document_by_file(self, key: str, file: io.BufferedReader, file_name: str, mime_type: str) -> str:
+        """
         Add a document via url, with unique key.
         :param file:
         :param key:
         :param url:
         :return:
-        '''
+        """
         if key in self._documents.keys():
             raise RuntimeError(f"Document with key {key} already added!")
 
@@ -366,38 +409,53 @@ class BundleHelper:
         self._documents[key] = Document(key, file_index=file_index)
         return key
 
-    def add_document_by_path(self, key:str, file_path:str, mime_type:str) -> str:
-        '''
+    def add_document_by_path(self, key: str, file_path: str, mime_type: str) -> str:
+        """
         Add a document via url, with unique key.
         :param file_path:
         :param key:
         :return:
-        '''
+        """
 
-        file = open(file_path, 'rb')
+        file = open(file_path, "rb")
         return self.add_document_by_file(key, file, file.name, mime_type)
 
-    def add_document_by_bytearray(self, key:str, byte_array:bytearray, file_name:str,  mime_type:str) -> str:
-        '''
+    def add_document_by_bytearray(self, key: str, byte_array: bytearray, file_name: str, mime_type: str) -> str:
+        """
         Add a document via url, with unique key.
         :param key:
         :param url:
         :return:
-        '''
+        """
 
         bytes = io.BytesIO(byte_array)
         file = io.BufferedReader(bytes, len(byte_array))
 
-        return self.add_document_by_file(key, file,file_name, mime_type)
+        return self.add_document_by_file(key, file, file_name, mime_type)
 
-    def add_document_template(self, key:str, template_id:str):
+    def add_document_template(self, key: str, template_id: str):
         if key in self._documents.keys():
             raise RuntimeError(f"Document with key {key} already added!")
         template = TemplateRef(key, template_id)
         self._documents[key] = template
         return key
 
-    def add_field(self, document_key:str, kind:str, key:str, label:str, page:int, x:int, y:int, w:int, h:int, v_pattern:int, v_min:int, v_max:int, editors: [str]):
+    def add_field(
+        self,
+        document_key: str,
+        kind: str,
+        key: str,
+        label: str,
+        page: int,
+        x: int,
+        y: int,
+        w: int,
+        h: int,
+        v_pattern: int,
+        v_min: int,
+        v_max: int,
+        editors: [str],
+    ):
         if document_key not in self._documents:
             raise RuntimeError(f"No document found with key {document_key}!")
 
@@ -412,14 +470,24 @@ class BundleHelper:
         self._documents[document_key].fields.append(field)
         return key
 
-    def add_signer(self, name: str, email: str, phone: str, auth_sms:bool, auth_selfie: bool, auth_id: bool,
-                   deliver_via: str, person_id: str = None, order: int = None):
+    def add_signer(
+        self,
+        name: str,
+        email: str,
+        phone: str,
+        auth_sms: bool,
+        auth_selfie: bool,
+        auth_id: bool,
+        deliver_via: str,
+        person_id: str = None,
+        order: int = None,
+    ):
         key = f"signer-{(len(self._packets) + 1)}"
         packet = Packet(name, email, phone, auth_sms, auth_selfie, auth_id, key, deliver_via, person_id, order)
         self._packets[key] = packet
         return key
 
-    def assign_role(self, document_key:str, signer_id:str, role:str):
+    def assign_role(self, document_key: str, signer_id: str, role: str):
         if document_key not in self._documents:
             raise RuntimeError(f"No document found with key {document_key}!")
         if type(self._documents[document_key]) is not TemplateRef:
@@ -430,7 +498,7 @@ class BundleHelper:
         assignment = TemplateRefAssignment(role, signer_id)
         self._documents[document_key].assignments.append(assignment)
 
-    def set_value(self, document_key:str, key:str, value:str):
+    def set_value(self, document_key: str, key: str, value: str):
         if document_key not in self._documents:
             raise RuntimeError(f"No document found with key {document_key}!")
         if type(self._documents[document_key]) is not TemplateRef:
@@ -440,16 +508,18 @@ class BundleHelper:
         self._documents[document_key].field_values.append(field_val)
 
     def as_data(self):
-        bundle_out = Bundle(self._label,
-                            self._in_order,
-                            self._email_subj,
-                            self._email_msg,
-                            self._is_test,
-                            self._cc_emails,
-                            self._packets.values(),
-                            self._documents.values(),
-                            self._custom_key,
-                            self._team)
+        bundle_out = Bundle(
+            self._label,
+            self._in_order,
+            self._email_subj,
+            self._email_msg,
+            self._is_test,
+            self._cc_emails,
+            self._packets.values(),
+            self._documents.values(),
+            self._custom_key,
+            self._team,
+        )
 
         schema = BundleSchema()
 
