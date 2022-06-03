@@ -1,5 +1,3 @@
-import json
-
 from src.blueink.client import Client
 from src.blueink.model.persons import PersonHelper
 
@@ -59,4 +57,4 @@ pprint(f"Result Create: {result.status}: {result.data}")
 # Delete the person from your account and check the result
 result = client.persons.delete(result.data.id)
 
-# pprint(f"Result Delete: {result.status}: {result.data}")
+pprint(f"Result Delete: {result.status}: {result.data}")
