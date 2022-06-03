@@ -3,10 +3,19 @@ from os import environ
 from munch import Munch
 
 from . import endpoints
-from .tokenizedrequests import (tget, tpost, tpost_formdata, tput, tpatch, tdelete, MunchedResponse, build_pagination_params)
+from .constants import DEFAULT_BASE_URL, ENV_BLUEINK_API_URL, ENV_BLUEINK_PRIVATE_API_KEY
 from .model.bundles import BundleHelper
 from .paginator import PaginatedIterator
-from .model.constants import DEFAULT_BASE_URL, ENV_BLUEINK_API_URL, ENV_BLUEINK_PRIVATE_API_KEY
+from .tokenizedrequests import (
+    tget,
+    tpost,
+    tpost_formdata,
+    tput,
+    tpatch,
+    tdelete,
+    MunchedResponse,
+    build_pagination_params
+)
 
 
 class Client:

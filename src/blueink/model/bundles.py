@@ -4,7 +4,7 @@ from copy import deepcopy
 from marshmallow import Schema, post_dump
 from marshmallow import fields as mmf
 
-from .constants import (
+from src.blueink.constants import (
     ATTACHMENT_TYPE,
     BUNDLE_ORDER,
     BUNDLE_STATUS,
