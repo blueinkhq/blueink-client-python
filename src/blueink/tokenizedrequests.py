@@ -35,6 +35,7 @@ class MunchedResponse:
         # Some requests have no content or html responses
         except json.JSONDecodeError:
             self.data = response.content
+
         self.status = response.status_code
 
         # Pagination
@@ -128,7 +129,7 @@ def tpost_formdata(
     return MunchedResponse(response)
 
 
-def tput(url, private_api_key, data=None, content_type=None) -> MunchedResponse:
+def tput(url, private_api_key, data=None, content_type="application/json") -> MunchedResponse:
     """
     Wrapped requests put request with proper header
     :param url:
@@ -154,7 +155,7 @@ def tdelete(url, private_api_key, data=None, content_type=None) -> MunchedRespon
     return MunchedResponse(response)
 
 
-def tpatch(url, private_api_key, data=None, content_type=None) -> MunchedResponse:
+def tpatch(url, private_api_key, data=None, content_type="application/json") -> MunchedResponse:
     """
     Wrapped requests patch request with proper header
     :param url:

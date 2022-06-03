@@ -116,9 +116,12 @@ for api_call in client.bundles.pagedlist(start_page=1, per_page=5, getAdditional
 Creating a person is similar to a creating a Bundle. There is a PersonHelper to help create a person
 ```python
 import json
+from copy import deepcopy
 
 from blueink.client import Client
 from blueink.model.persons import PersonHelper
+
+from pprint import pprint
 
 client = Client()
 
@@ -169,12 +172,41 @@ ph.set_phones(all_current_phones)
 
 # Create the person and check the result
 result = client.persons.create_from_person_helper(ph)
-print(f"Result Create: {result.status}: {result.data}")
+pprint(f"Result Create: {result.status}: {result.data}")
+
+# Change the persons name and call update
+result.data.name = "Second Name"
+
+"""
+ The channels in the response include both email and phone
+  If we want to update with this data we need to remove the ones
+  that are blank
+"""
+new_channels = []
+for channel in result.data.channels:
+    new_channel = deepcopy(channel)
+    for key, value in channel.items():
+        # Remove the key/value pairs that are not valid
+        if not value:
+            new_channel.pop(key)
+    new_channels.append(new_channel)
+
+# Set the channels to the recreated channels without the invalid keys
+result.data.channels = new_channels
+
+result = client.persons.update(result.data.id, json.dumps(result.data))
+pprint(f"Result Update: {result.status}: {result.data}")
+
+
+third_name = {"name": "Third Name"}
+result = client.persons.partial_update(result.data.id, json.dumps(third_name))
+pprint(f"Result Partial Update: {result.status}: {result.data}")
+
 
 # Delete the person from your account and check the result
 result = client.persons.delete(result.data.id)
 
-print(f"Result Delete: {result.status}: {result.data}")
+pprint(f"Result Delete: {result.status}: {result.data}")
 
 
 ```

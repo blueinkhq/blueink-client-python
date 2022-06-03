@@ -270,7 +270,7 @@ class Client:
             """
 
             :param person_id:
-            :param data: JSON string of person
+            :param data: JSON string representation of person
             :return:
             """
             url = (
