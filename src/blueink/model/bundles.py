@@ -4,7 +4,15 @@ from copy import deepcopy
 from marshmallow import Schema, post_dump
 from marshmallow import fields as mmf
 
-from src.blueink.model.constants import PacketDeliverVias, BundleStatuses, FieldKinds
+from .constants import (
+    ATTACHMENT_TYPE,
+    BUNDLE_ORDER,
+    BUNDLE_STATUS,
+    DELIVER_VIA,
+    FIELD_KIND,
+    PACKET_STATUS,
+    V_PATTERN,
+)
 
 """
 Developer Note:
@@ -140,7 +148,7 @@ class BundleSchema(Schema, HiddenEmptyFieldsSchemaMixin):
 
 
 class Field:
-    KIND = FieldKinds
+    KIND = FIELD_KIND
 
     def __init__(self, kind:str, key:str, label:str, page:int, x:int, y:int, w:int, h:int, v_pattern:int, v_min:int, v_max:int):
         self.kind = kind
@@ -220,7 +228,8 @@ class TemplateRef(Document):
 
 
 class Packet:
-    DELIVER_VIA = PacketDeliverVias
+    DELIVER_VIA = DELIVER_VIA
+    STATUS = PACKET_STATUS
 
     def __init__(self, name:str, email:str, phone:str, auth_sms:bool, auth_selfie:bool, auth_id:bool, key:str,
                  deliver_via:str, person_id: str, order: int):
@@ -241,7 +250,7 @@ class Packet:
 
 
 class Bundle:
-    STATUS = BundleStatuses
+    STATUS = BUNDLE_STATUS
 
     def __init__(self, label: str, in_order: bool, email_subject: str, email_message: str, is_test: bool,
                  cc_emails: [str], packets: [Packet], documents: [Document], custom_key: str, team: str):
@@ -283,10 +292,15 @@ class Bundle:
                                           'sensible indices (eg. no skipped index)')
 
 
-
-
-
 class BundleHelper:
+    ATTACHMENT_TYPE = ATTACHMENT_TYPE
+    BUNDLE_ORDER = BUNDLE_ORDER
+    BUNDLE_STATUS = BUNDLE_STATUS
+    DELIVER_VIA = DELIVER_VIA
+    FIELD_KIND = FIELD_KIND
+    PACKET_STATUS = PACKET_STATUS
+    V_PATTERN = V_PATTERN
+
     def __init__(self,
                  label: str = None,
                  email_subject: str = None,
