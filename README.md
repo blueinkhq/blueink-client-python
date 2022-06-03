@@ -88,14 +88,14 @@ If you are not coming from a filesystem (perhaps you're pulling from a DB client
 doc_id1 = bh.add_document_by_bytearray("fw9-1",pdf_bytearray, "fw9.pdf", "application/pdf")
 ```
 #### Retrieval
-Getting a single bundle is fairly easy. They can be accessed with a single call. To get the additional data (events, files, data), set the getAdditionalData flag to True.
+Getting a single bundle is fairly easy. They can be accessed with a single call. To get the additional data (events, files, data), set the related_data flag to True.
 
 ```python
-response = client.bundles.retrieve(bundle_id, getAdditionalData=True)
+response = client.bundles.retrieve(bundle_id, related_data=True)
 bundle = response.data
 bundleid = bundle.id
 
-# additional data fields (only exist if getAdditionalData==True)
+# additional data fields (only exist if related_data==True)
 events = bundle.events
 files = bundle.files
 data = bundle.data
@@ -107,7 +107,7 @@ Listing has several options regarding pagination. You can also choose to append 
 ```python
 # EXAMPLE: Collecting all bundle IDs
 ids = []
-for api_call in client.bundles.paged_list(start_page=1, per_page=5, getAdditionalData=True):
+for api_call in client.bundles.paged_list(start_page=1, per_page=5, related_data=True):
     print(f"Paged Call: {api_call.data}")
     for bundle in api_call.data:
         ids.append(bundle.id)
