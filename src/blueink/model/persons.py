@@ -1,77 +1,24 @@
-from copy import deepcopy
-from marshmallow import Schema, post_dump
-from marshmallow import fields as mmf
-
-"""
-Developer Note:
-
-Schema classes are for the Marshmallow serializer. 
-Validation is being done through these as well.
-"""
+from pydantic import BaseModel, EmailStr
+from typing import Optional, List
 
 
-class ValidationError(RuntimeError):
-    def __init__(self, error_text: str):
-        super(ValidationError, self).__init__(error_text)
+class ContactChannelSchema(BaseModel):
+    email: Optional[EmailStr]
+    phone: Optional[str]
+    kind: Optional[str]
 
 
-class HiddenEmptyFieldsSchemaMixin:
-    @post_dump
-    def remove_empties(self, data, many):
-        new_data = deepcopy(data)
-        for key, value in data.items():
-            if value is None:
-                new_data.pop(key)
-
-        return new_data
-
-
-class ContactChannelSchema(Schema, HiddenEmptyFieldsSchemaMixin):
-    email = mmf.Email()
-    phone = mmf.Str()
-    kind = mmf.Str()
-
-    class Meta:
-        ordered = True
-
-
-class PersonSchema(Schema, HiddenEmptyFieldsSchemaMixin):
-    name = mmf.Str()
-    metadata = mmf.Dict()
-    channels = mmf.List(mmf.Nested(ContactChannelSchema))
-
-    class Meta:
-        ordered = True
-
-
-class ContactChannel:
-    KIND_PHONE = "mp"
-    KIND_EMAIL = "em"
-
-    def __init__(self, kind: str, email: str = None, phone: str = None):
-        self.email = email
-        self.phone = phone
-        self.kind = kind
-
-
-class Person:
-    def __init__(
-        self,
-        name: str,
-        metadata: dict,
-        channels: [ContactChannel],
-    ):
-
-        self.name = name
-        self.metadata = metadata
-        self.channels = channels
+class PersonSchema(BaseModel):
+    name: Optional[str]
+    metadata: Optional[dict]
+    channels: Optional[List[ContactChannelSchema]]
 
 
 class PersonHelper:
     def __init__(
         self,
         name: str = None,
-        metadata: dict = None,
+        metadata: dict = {},
         phones: list = [],
         emails: list = [],
     ):
@@ -185,16 +132,14 @@ class PersonHelper:
         channels = []
 
         for email in self._emails:
-            channels.append(ContactChannel(email=email, kind=ContactChannel.KIND_EMAIL))
+            channels.append(ContactChannelSchema(email=email, kind="em"))
         for phone in self._phones:
-            channels.append(ContactChannel(phone=phone, kind=ContactChannel.KIND_PHONE))
+            channels.append(ContactChannelSchema(phone=phone, kind="mp"))
 
-        person_out = Person(
-            self._name,
-            self._metadata,
-            channels,
+        person_out = PersonSchema(
+            name=self._name,
+            metadata=self._metadata,
+            channels=channels,
         )
 
-        schema = PersonSchema()
-
-        return schema.dump(person_out)
+        return person_out.dict(exclude_unset=True)
