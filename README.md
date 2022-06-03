@@ -56,36 +56,51 @@ Bundles can be easily created using the ```BundleHelper``` class. Using the Bund
 Below is an example of using a URL for a document:
 
 ```python
-from BlueInkClient.client import Client
-from BlueInkClient.model.bundles import BundleHelper
+from src.blueink.client import Client
+from src.blueink.constants import FIELD_KIND, DELIVER_VIA
+from src.blueink.model.bundles import BundleHelper
 
+print("\n*********************")
+print("Bundle Creation via URL")
 bh = BundleHelper(label="label2022",
                   email_subject="Subject",
                   email_message="MessageText",
                   is_test=True)
 bh.add_cc("Homer.Simpson@example.com")
-doc_id1 = bh.add_document_by_url("w9", "https://www.irs.gov/pub/irs-pdf/fw9.pdf")
-signer_id1 = bh.add_signer("Homer Simpson", "Homer.Simpson@example.com", "505-555-5555", False, True, True,
-                           "email")
-signer_id2 = bh.add_signer("Marge Simpson", "Marge.Simpson@example.com", "505-555-5556", False, True, True,
-                           "email")
-bh.add_field(doc_id1, "inp", "inp-name", "label", 1, 15, 60, 20, 3, "email", 2, 30,
-             [signer_id1, signer_id2])
-bh.add_field(doc_id1, "sig", "sig-01", "signature", 1, 15, 68, 30, 12, "email", 2, 30,
-             [signer_id1])
+document = bh.add_document_by_url("https://www.irs.gov/pub/irs-pdf/fw9.pdf")
+signer1 = bh.add_signer(name="Homer Simpson",
+                        email="Homer.Simpson@example.com",
+                        phone="505-555-5555",
+                        deliver_via=DELIVER_VIA.EMAIL)
+signer2 = bh.add_signer(name="Marge Simpson",
+                        email="Marge.Simpson@example.com",
+                        phone="505-555-5556",
+                        deliver_via=DELIVER_VIA.EMAIL)
+
+field1 = bh.add_field(document=document,
+                         x=1, y=15, w=60, h=20, p=3,
+                         kind=FIELD_KIND.INPUT,
+                         label="label1",
+                         editors=[signer1, signer2])
+field2 = bh.add_field(document=document,
+                         x=1, y=15, w=68, h=30, p=4,
+                         kind=FIELD_KIND.ESIGNATURE,
+                         label="label2",
+                         editors=[signer1])
 
 client = Client()
 result = client.bundles.create_from_bundle_helper(bh)
+print(f"Result: {result.status}: {result.data}")
 ```
 
 If you were to use a file, you supply a path and content type instead of a URL:
 ```python
-doc_id1 = bh.add_document_by_path("fw9-1","fw9.pdf","application/pdf")
+document = bh.add_document_by_path("fw4.pdf", "application/pdf")
 ```
 
 If you are not coming from a filesystem (perhaps you're pulling from a DB client), you might have a bytearray object. Below, you have the bytearray and filename ```fw9.pdf```
 ```python
-doc_id1 = bh.add_document_by_bytearray("fw9-1",pdf_bytearray, "fw9.pdf", "application/pdf")
+document = bh.add_document_by_bytearray(pdf_bytearray, "fw4.pdf", "application/pdf")
 ```
 #### Retrieval
 Getting a single bundle is fairly easy. They can be accessed with a single call. To get the additional data (events, files, data), set the related_data flag to True.
