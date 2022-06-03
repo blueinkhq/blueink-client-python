@@ -24,7 +24,6 @@ signer2 = bh.add_signer(name="Marge Simpson",
                         email="Marge.Simpson@example.com",
                         phone="505-555-5556",
                         deliver_via=DELIVER_VIA.EMAIL)
-
 field1 = bh.add_field(document=doc1,
                       x=1, y=15, w=60, h=20, p=3,
                       kind=FIELD_KIND.INPUT,

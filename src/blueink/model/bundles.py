@@ -258,20 +258,17 @@ class BundleHelper:
         self._cc_emails.append(email)
         return self
 
-    def add_document_by_url(self, url: str) -> Document:
+    def add_document_by_url(self, url: str, **additional_data) -> Document:
         """
         Add a document via url.
         :param url:
         :return: Document instance
         """
-        document = Document.create(file_url=url)
+        document = Document.create(file_url=url, **additional_data)
         self._documents[document.key] = document
         return document
 
-        self._documents[key] = Document(key, url=url)
-        return key
-
-    def add_document_by_file(self, file:io.BufferedReader, file_name:str, mime_type:str) -> str:
+    def add_document_by_file(self, file:io.BufferedReader, file_name:str, mime_type:str, **additional_data) -> str:
         '''
         Add a document via url, with unique key.
         :param file:
@@ -289,11 +286,12 @@ class BundleHelper:
             print(f"Attaching file {file_index}: {file_name}")
         else:
             raise RuntimeError(f"File unreadable.")
-        document = Document.create(file_index=file_index)
+
+        document = Document.create(file_index=file_index, **additional_data)
         self._documents[document.key] = document
         return document
 
-    def add_document_by_path(self, file_path: str, mime_type: str) -> Document:
+    def add_document_by_path(self, file_path: str, mime_type: str, **additional_data) -> Document:
         """
         Add a document via url, returns generated unique key.
         :param file_path:
@@ -301,9 +299,11 @@ class BundleHelper:
         """
 
         file = open(file_path, 'rb')
-        return self.add_document_by_file(file, file.name, mime_type)
+        print('add data', additional_data)
 
-    def add_document_by_bytearray(self, byte_array: bytearray, file_name: str, mime_type: str) -> Document:
+        return self.add_document_by_file(file, file.name, mime_type, **additional_data)
+
+    def add_document_by_bytearray(self, byte_array: bytearray, file_name: str, mime_type: str, **additional_data) -> Document:
         '''
         Add a document via url, with unique key.
         :param byte_array:
@@ -314,7 +314,7 @@ class BundleHelper:
 
         bytes = io.BytesIO(byte_array)
         file = io.BufferedReader(bytes, len(byte_array))
-        return self.add_document_by_file(file, file_name, mime_type)
+        return self.add_document_by_file(file, file_name, mime_type, **additional_data)
 
     def add_document_template(self, template_id: str, **additional_data):
         """
