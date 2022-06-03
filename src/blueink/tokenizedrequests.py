@@ -36,6 +36,7 @@ class MunchedResponse:
         except json.JSONDecodeError:
             self.data = response.content
 
+        self.request = response.request
         self.status = response.status_code
 
         # Pagination
