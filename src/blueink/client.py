@@ -89,10 +89,7 @@ class Client:
             file_names = bundle_helper.file_names
             file_types = bundle_helper.file_types
 
-            return self.create(data=data,
-                               files=files,
-                               file_names=file_names,
-                               file_types=file_types)
+            return self.create(data=data, files=files, file_names=file_names, file_types=file_types)
 
         def paged_list(self, start_page=0, per_page=50, related_data=False) -> PaginatedIterator:
             """
@@ -218,7 +215,7 @@ class Client:
         def create(self, data: dict) -> MunchedResponse:
             """
             Creates a person.
-            :param data: JSON string for a person
+            :param data: A dictionary definition of a person
             :return:
             """
             data_json = json.dumps(data)
@@ -270,11 +267,11 @@ class Client:
             )
             return tget(url, self._private_api_key)
 
-        def update(self, person_id: str, data: str) -> MunchedResponse:
+        def update(self, person_id: str, data: dict) -> MunchedResponse:
             """
 
             :param person_id:
-            :param data: JSON string representation of person
+            :param data: dictionary representation of person
             :return:
             """
             url = (
@@ -282,9 +279,9 @@ class Client:
                 .interpolate(endpoints.interpolations.person_id, person_id)
                 .build()
             )
-            return tput(url, self._private_api_key, data)
+            return tput(url, self._private_api_key, json.dumps(data))
 
-        def partial_update(self, person_id: str, data: str) -> MunchedResponse:
+        def partial_update(self, person_id: str, data: dict) -> MunchedResponse:
             """
 
             :param person_id:
@@ -296,7 +293,7 @@ class Client:
                 .interpolate(endpoints.interpolations.person_id, person_id)
                 .build()
             )
-            return tpatch(url, self._private_api_key, data)
+            return tpatch(url, self._private_api_key, json.dumps(data))
 
         def delete(self, person_id: str) -> MunchedResponse:
             url = (
