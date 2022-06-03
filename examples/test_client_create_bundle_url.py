@@ -1,5 +1,5 @@
 from src.blueink.client import Client
-from src.blueink.model.bundles import BundleHelper
+from src.blueink import BundleHelper
 
 print("\n*********************")
 print("Bundle Creation via URL")

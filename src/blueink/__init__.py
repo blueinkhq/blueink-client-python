@@ -1,4 +1,4 @@
 from .client import Client
-from .model.bundles import BundleHelper
+from .model.helpers import BundleHelper
 
-__all__ = ['Client', 'BundleHelper']
+__all__ = ['Client']

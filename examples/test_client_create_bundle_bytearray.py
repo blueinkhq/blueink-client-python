@@ -1,6 +1,5 @@
 from src.blueink.client import Client
-from src.blueink.model.bundles import BundleHelper
-
+from src.blueink import BundleHelper
 
 pdf_bytearray = bytearray()
 with open("fw4.pdf", 'rb') as pdf_file:

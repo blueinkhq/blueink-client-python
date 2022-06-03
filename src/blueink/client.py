@@ -2,9 +2,8 @@ import sys
 from os import environ
 from munch import Munch
 
-from . import endpoints
+from . import endpoints, BundleHelper
 from .constants import BUNDLE_STATUS, DEFAULT_BASE_URL, ENV_BLUEINK_API_URL, ENV_BLUEINK_PRIVATE_API_KEY
-from .model.bundles import BundleHelper
 from .paginator import PaginatedIterator
 from .tokenizedrequests import (
     tget,
