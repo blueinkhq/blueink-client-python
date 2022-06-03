@@ -7,11 +7,17 @@ class ContactChannelSchema(BaseModel):
     phone: Optional[str]
     kind: Optional[str]
 
+    class Config:
+        extra = 'allow'
+
 
 class PersonSchema(BaseModel):
     name: Optional[str]
     metadata: Optional[dict]
     channels: Optional[List[ContactChannelSchema]]
+
+    class Config:
+        extra = 'allow'
 
 
 class PersonHelper:
