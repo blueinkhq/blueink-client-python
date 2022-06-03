@@ -32,6 +32,9 @@ class Field(BaseModel):
     v_max: Optional[int]
     editors: Optional[List[str]]
 
+    class Config:
+        extra = 'allow'
+
     @classmethod
     def create(cls, x, y, w, h, page, kind, *args, **kwargs):
         obj = Field(key=generate_key('field', 5),
@@ -67,6 +70,9 @@ class Packet(BaseModel):
     person_id: Optional[str]
     order: Optional[str]
 
+    class Config:
+        extra = 'allow'
+
     @validator('deliver_via')
     def deliver_via_is_allowed(cls, v):
         if v is not None:
@@ -87,6 +93,9 @@ class TemplateRefAssignment(BaseModel):
     role: str = ...
     signer: str = ...
 
+    class Config:
+        extra = 'allow'
+
     @classmethod
     def create(cls, role, signer, **kwargs):
         obj = TemplateRefAssignment(role=role,
@@ -98,6 +107,9 @@ class TemplateRefAssignment(BaseModel):
 class TemplateRefFieldValue(BaseModel):
     key: str = ...
     initial_value: str = ...
+
+    class Config:
+        extra = 'allow'
 
     @classmethod
     def create(cls, key, initial_value, **kwargs):
@@ -111,6 +123,9 @@ class TemplateRef(BaseModel):
     template_id: Optional[str]
     assignments: Optional[List[TemplateRefAssignment]]
     field_values: Optional[List[TemplateRefFieldValue]]
+
+    class Config:
+        extra = 'allow'
 
     @classmethod
     def create(cls,
@@ -143,6 +158,9 @@ class Document(BaseModel):
     template_id: Optional[str]  # UUID to a valid template, required for Template
     assignments: Optional[List[TemplateRefAssignment]]
     field_values: Optional[List[TemplateRefFieldValue]]
+
+    class Config:
+        extra = 'allow'
 
     @classmethod
     def create(cls, **kwargs):
@@ -177,6 +195,9 @@ class Bundle(BaseModel):
     is_test: Optional[bool]
     custom_key: Optional[str]
     team: Optional[str]
+
+    class Config:
+        extra = 'allow'
 
     @classmethod
     def create(cls, packets: List[Packet], documents: List[Document], **kwargs):
