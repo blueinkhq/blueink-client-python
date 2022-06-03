@@ -1,4 +1,6 @@
-from .tokenizedrequests import MunchedResponse
+from requests.exceptions import HTTPError
+
+from .tokenizedrequests import NormalizedResponse
 
 
 class PaginatedIterator:
@@ -21,24 +23,29 @@ class PaginatedIterator:
         self._paged_func = paged_api_function
         self._params = params
         self._page_number_idx = page_number_idx
+        self._total_pages = None
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        api_response: MunchedResponse = self._paged_func(*self._params)
+        page_number = self._params[self._page_number_idx]
 
-        if api_response.status != 200:
+        if self._total_pages is not None and page_number > self._total_pages:
+            raise StopIteration
+
+        try:
+            api_response: NormalizedResponse = self._paged_func(*self._params)
+        except HTTPError:
             raise StopIteration
 
         if api_response.pagination is None:
             raise StopIteration
 
-        next_page_number = api_response.pagination.page_number + 1
-        if next_page_number > api_response.pagination.total_pages + 1:
-            raise StopIteration
+        if self._total_pages is None:
+            self._total_pages = api_response.pagination.total_pages
 
-        self._params[self._page_number_idx] = next_page_number
-        self._page_number = next_page_number
+        self._params[self._page_number_idx] = page_number + 1
+
         return api_response
 

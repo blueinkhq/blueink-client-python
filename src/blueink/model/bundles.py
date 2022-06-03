@@ -356,10 +356,7 @@ class BundleHelper:
         file_index = len(self.files)
 
         if type(file) == io.BufferedReader and file.readable():
-            self.files.append(file)
-            self.file_names.append(file_name)
-            self.file_types.append(mime_type)
-            print(f"Attaching file {file_index}: {file_name}")
+            self.files.append({'file': file, "filename": file_name, "content_type": mime_type})
         else:
             raise RuntimeError(f"File unreadable.")
 
