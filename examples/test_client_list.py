@@ -1,7 +1,5 @@
 from src.blueink.client import Client
 
-from pprint import pprint
-
 client = Client()
 
 # # These test pagination. Collects IDs
