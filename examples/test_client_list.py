@@ -1,4 +1,4 @@
-from src.BlueInkClient.client import Client
+from src.blueink.client import Client
 
 client = Client()
 

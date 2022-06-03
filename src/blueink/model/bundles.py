@@ -4,7 +4,7 @@ from copy import deepcopy
 from marshmallow import Schema, post_dump
 from marshmallow import fields as mmf
 
-from src.BlueInkClient.model.constants import PacketDeliverVias, BundleStatuses, FieldKinds
+from src.blueink.model.constants import PacketDeliverVias, BundleStatuses, FieldKinds
 
 """
 Developer Note:
