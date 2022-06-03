@@ -80,7 +80,7 @@ result.data.channels = new_channels
 result = client.persons.update(result.data.id, json.dumps(result.data))
 pprint(f"Result Update: {result.status}: {result.data}")
 
-
+# Perform a partial update to change the name again
 third_name = {"name": "Third Name"}
 result = client.persons.partial_update(result.data.id, json.dumps(third_name))
 pprint(f"Result Partial Update: {result.status}: {result.data}")
