@@ -51,7 +51,7 @@ print(title)
 
 ### Bundles
 #### Creation
-Bundles can be easily created using the ```BundleBuilder``` class. Using the BundleBuilder class you can either specify a URL for documents, include a file for document upload, or include a bytearray for your document.
+Bundles can be easily created using the ```BundleHelper``` class. Using the BundleBuilder class you can either specify a URL for documents, include a file for document upload, or include a bytearray for your document.
 
 Below is an example of using a URL for a document:
 

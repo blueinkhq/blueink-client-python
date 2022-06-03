@@ -14,12 +14,6 @@ signer_id2 = bh.add_signer("Marge Simpson", "Marge.Simpson@example.com", "505-55
 bh.add_field(doc_id1, "inp", "inp-name", "label", 1, 15, 60, 20, 3, "email", 2, 30, [signer_id1, signer_id2])
 bh.add_field(doc_id1, "sig", "sig-01", "signature", 1, 15, 68, 30, 12, "email", 2, 30, [signer_id1])
 
-# template_id = bundleBuilder.add_document_template("doc-02", "template-id000")
-# bundleBuilder.assign_signer(template_id, signer_id1, "customer1")
-# bundleBuilder.assign_signer(template_id, signer_id2, "customer2")
-# bundleBuilder.set_value(template_id, "var1", "val1")
-# bundleBuilder.set_value(template_id, "var2", "val2")
-
 
 client = Client()
 result = client.bundles.create_from_bundle_helper(bh)
