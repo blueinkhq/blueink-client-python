@@ -88,26 +88,26 @@ If you are not coming from a filesystem (perhaps you're pulling from a DB client
 doc_id1 = bh.add_document_by_bytearray("fw9-1",pdf_bytearray, "fw9.pdf", "application/pdf")
 ```
 #### Retrieval
-Getting a single bundle is fairly easy. They can be accessed with a single call. To get the additional data (events, files, data), set the getAdditionalData flag to True.
+Getting a single bundle is fairly easy. They can be accessed with a single call. To get the additional data (events, files, data), set the related_data flag to True.
 
 ```python
-response = client.bundles.retrieve(bundle_id, getAdditionalData=True)
+response = client.bundles.retrieve(bundle_id, related_data=True)
 bundle = response.data
 bundleid = bundle.id
 
-# additional data fields (only exist if getAdditionalData==True)
+# additional data fields (only exist if related_data==True)
 events = bundle.events
 files = bundle.files
 data = bundle.data
 
 ```
 #### Listing
-Listing has several options regarding pagination. You can also choose to append the additional data on each retrieved bundle as you can with single fetches. ```client.bundles.pagedList()``` returns an iterator object that lazy loads subsequent pages. If no parameters are set, it will start at page 0 and have up to 50 bundles per page.
+Listing has several options regarding pagination. You can also choose to append the additional data on each retrieved bundle as you can with single fetches. ```client.bundles.paged_list()``` returns an iterator object that lazy loads subsequent pages. If no parameters are set, it will start at page 0 and have up to 50 bundles per page.
 
 ```python
 # EXAMPLE: Collecting all bundle IDs
 ids = []
-for api_call in client.bundles.pagedlist(start_page=1, per_page=5, getAdditionalData=True):
+for api_call in client.bundles.paged_list(start_page=1, per_page=5, related_data=True):
     print(f"Paged Call: {api_call.data}")
     for bundle in api_call.data:
         ids.append(bundle.id)
@@ -224,12 +224,13 @@ client.packets.retrieve_coe(packet_id)
 
 ### Templates
 Templates can be listed (non-paged), listed (paged) or retrieved singly:
+
 ```python
 # non paged
 templates_list_response = client.templates.list()
 # paged
-for page in client.templates.pagedlist():
-    page.data # templates in page
+for page in client.templates.paged_list():
+    page.data  # templates in page
 # single
 template_response = client.templates.retrieve(template_id)
 

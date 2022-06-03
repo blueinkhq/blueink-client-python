@@ -4,7 +4,7 @@ from os import environ
 from munch import Munch
 
 from . import endpoints
-from .constants import DEFAULT_BASE_URL, ENV_BLUEINK_API_URL, ENV_BLUEINK_PRIVATE_API_KEY
+from .constants import BUNDLE_STATUS, DEFAULT_BASE_URL, ENV_BLUEINK_API_URL, ENV_BLUEINK_PRIVATE_API_KEY
 from .model.bundles import BundleHelper
 from .model.persons import PersonHelper
 from .paginator import PaginatedIterator
@@ -90,28 +90,28 @@ class Client:
             file_types = bundle_helper.file_types
             return self.create(json=json, files=files, file_names=file_names, file_types=file_types)
 
-        def pagedlist(self, start_page=0, per_page=50, getAdditionalData=False) -> PaginatedIterator:
+        def paged_list(self, start_page=0, per_page=50, related_data=False) -> PaginatedIterator:
             """
             returns an iterable object such that you can do
 
-            for page in client.bundles.pagedlist():
+            for page in client.bundles.paged_list():
                 page.body -> munch of json
 
-            :param getAdditionalData:
+            :param related_data:
             :param start_page:
             :param per_page:
             :return:
             """
-            params = [start_page, per_page, getAdditionalData]
+            params = [start_page, per_page, related_data]
             paged_call = PaginatedIterator(self.list, params, 0)
             return paged_call
 
-        def list(self, page=None, per_page=None, getAdditionalData=False) -> MunchedResponse:
+        def list(self, page=None, per_page=None, related_data=False) -> MunchedResponse:
             """
             Returns a list of bundles
             :param page: (optional)
             :param per_page: (optional)
-            :param getAdditionalData: (default false), returns events, files, data if true
+            :param related_data: (default false), returns events, files, data if true
             :return:
             """
             response = None
@@ -124,7 +124,7 @@ class Client:
 
                 response = tget(url, self._private_api_key, url_params)
 
-            if getAdditionalData:
+            if related_data:
                 for bundle in response.data:
                     self._attach_additional_data(bundle)
 
@@ -138,18 +138,18 @@ class Client:
                 if events_response.status == 200:
                     bundle.events = events_response.data
 
-                if bundle.status == "co":
+                if bundle.status == BUNDLE_STATUS.COMPLETE:
                     files_response = self.list_files(bundle_id)
                     bundle.files = files_response.data
 
                     data_response = self.list_data(bundle_id)
                     bundle.data = data_response.data
 
-        def retrieve(self, bundle_id, getAdditionalData=False) -> MunchedResponse:
+        def retrieve(self, bundle_id, related_data=False) -> MunchedResponse:
             """
             Requests a single bundle
             :param bundle_id: bundle slug
-            :param getAdditionalData: (default false), returns events, files, data if true
+            :param related_data: (default false), returns events, files, data if true
             :return:
             """
             url = (
@@ -160,7 +160,7 @@ class Client:
 
             response = tget(url, self._private_api_key)
 
-            if getAdditionalData:
+            if related_data:
                 bundle = response.data
                 self._attach_additional_data(bundle)
 
@@ -229,11 +229,11 @@ class Client:
             """
             return self.create(person_helper.as_dict())
 
-        def pagedlist(self, start_page=0, per_page=50) -> PaginatedIterator:
+        def paged_list(self, start_page=0, per_page=50) -> PaginatedIterator:
             """
             returns an iterable object such that you can do
 
-            for page in client.persons.pagedlist():
+            for page in client.persons.paged_list():
                 page.body -> munch of json
 
             :param start_page:
@@ -340,11 +340,11 @@ class Client:
         def __init__(self, base_url, private_api_key):
             super().__init__(base_url, private_api_key)
 
-        def pagedlist(self, start_page=0, per_page=50) -> PaginatedIterator:
+        def paged_list(self, start_page=0, per_page=50) -> PaginatedIterator:
             """
             returns an iterable object such that you can do
 
-            for page in client.bundles.pagedlist():
+            for page in client.bundles.paged_list():
                 page.body -> munch of json
 
             :param start_page:
