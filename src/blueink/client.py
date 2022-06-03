@@ -1,10 +1,12 @@
 import sys
-from . import endpoints
 from os import environ
 from munch import Munch
+
+from . import endpoints
 from .tokenizedrequests import (tget, tpost, tpost_formdata, tput, tpatch, tdelete, MunchedResponse, build_pagination_params)
 from .model.bundles import BundleHelper
 from .paginator import PaginatedIterator
+from .model.constants import DEFAULT_BASE_URL, ENV_BLUEINK_API_URL, ENV_BLUEINK_PRIVATE_API_KEY
 
 
 class Client:
@@ -16,13 +18,21 @@ class Client:
         :param override_private_api_key: Provide or override value provided by environmental variable. If none supplied,
         will use env var BLUEINK_PRIVATE_API_KEY
         """
-        private_api_key = override_private_api_key if override_private_api_key is not None else environ['BLUEINK_PRIVATE_API_KEY']
-        base_url = None
+        if override_private_api_key:
+            private_api_key = override_private_api_key
+        else:
+            private_api_key = environ.get(ENV_BLUEINK_PRIVATE_API_KEY)
+
+        if not private_api_key:
+            raise ValueError(
+                "A Blueink Private API Key must be provided on Client initialization or "
+                + f"specified via the environment variable {ENV_BLUEINK_PRIVATE_API_KEY}"
+            )
+
         try:
-            base_url = override_base_url if override_base_url is not None else environ['BLUEINK_API_URL']
+            base_url = override_base_url if override_base_url else environ[ENV_BLUEINK_API_URL]
         except KeyError:
-            base_url = "https://api.blueink.com/api/v2"
-            print(f"Environment variable 'BLUEINK_API_URL' not supplied -- defaulting to {base_url}", file=sys.stderr)
+            base_url = DEFAULT_BASE_URL
 
         self.bundles = self._Bundles(base_url, private_api_key)
         self.persons = self._Persons(base_url, private_api_key)

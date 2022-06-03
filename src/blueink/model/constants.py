@@ -1,3 +1,7 @@
+DEFAULT_BASE_URL = "https://api.blueink.com/api/v2"
+ENV_BLUEINK_PRIVATE_API_KEY = 'BLUEINK_PRIVATE_API_KEY'
+ENV_BLUEINK_API_URL = 'BLUEINK_API_URL'
+
 ATTACHMENT_TYPE = Munch(
     JPG="jpg",
     JPEG="jpeg",
