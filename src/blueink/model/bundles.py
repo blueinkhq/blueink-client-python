@@ -1,21 +1,12 @@
 import io
 import random
 import string
-import uuid
 from typing import List, Optional
 from pydantic import BaseModel, validator, EmailStr
 from src.blueink.constants import (
     DELIVER_VIA,
     FIELD_KIND, ATTACHMENT_TYPE, BUNDLE_ORDER, BUNDLE_STATUS, PACKET_STATUS, V_PATTERN,
 )
-
-"""
-Developer Note:
-
-Schema classes are for the Marshmallow serializer. 
-Validation is being done through these as well.
-"""
-
 
 class ValidationError(RuntimeError):
     def __init__(self, error_text: str):
