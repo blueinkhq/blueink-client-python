@@ -36,10 +36,11 @@ field2 = bh.add_field(document=doc1,
                       editors=[signer1])
 
 doc2 = bh.add_document_by_path("fw4.pdf", "application/pdf")
-field1_id = bh.add_field(document=doc2,
+field3 = bh.add_field(document=doc2,
                          x=1, y=15, w=60, h=20, p=3,
                          kind=FIELD_KIND.INPUT,
-                         label="label1",
+                         label="label3",
                          editors=[signer1, signer2])
+
 result = client.bundles.create_from_bundle_helper(bh)
 print(f"Result: {result.status}: {result.data}")
