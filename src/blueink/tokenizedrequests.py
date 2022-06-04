@@ -93,14 +93,15 @@ class RequestHelper:
 
         return hdrs
 
-    def _make_request(self, method, url, data=None, files=None, params=None, headers=None, content_type=None):
+    def _make_request(self, method, url, data=None, json=None, files=None, params=None, headers=None, content_type=None):
         response = requests.request(
             method,
             url,
             params=params,
             data=data,
+            json=json,
+            headers=self._build_headers(content_type=content_type, more_headers=headers),
             files=files,
-            headers=self._build_headers(content_type=content_type, more_headers=headers)
         )
         response.raise_for_status()
         return NormalizedResponse(response)

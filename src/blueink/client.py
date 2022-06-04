@@ -101,7 +101,7 @@ class Client:
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.create).build()
 
             if not files:
-                response = self._requests.post(url, data=data)
+                response = self._requests.post(url, json=data)
             else:
                 files_data = self._prepare_files(files)
                 if not files_data:
@@ -258,7 +258,7 @@ class Client:
             :return:
             """
             url = endpoints.URLBuilder(self._base_url, endpoints.persons.create).build()
-            return self._requests.post(url, data=data)
+            return self._requests.post(url, json=data)
 
         def create_from_person_helper(self, person_helper: PersonHelper) -> NormalizedResponse:
             """
@@ -319,7 +319,7 @@ class Client:
                 .interpolate(endpoints.interpolations.person_id, person_id)
                 .build()
             )
-            return self._requests.update(url, data=data)
+            return self._requests.update(url, json=data)
 
         def partial_update(self, person_id:str, data:str) -> NormalizedResponse:
             """
@@ -334,7 +334,7 @@ class Client:
                 .build()
             )
 
-            return self._requests.patch(url, data=data)
+            return self._requests.patch(url, json=data)
 
         def delete(self, person_id: str) -> NormalizedResponse:
             url = (
@@ -351,7 +351,7 @@ class Client:
                 .interpolate(endpoints.interpolations.person_id, packet_id)
                 .build()
             )
-            return self._requests.patch(url, data=data)
+            return self._requests.patch(url, json=data)
 
         def delete(self, person_id: str) -> NormalizedResponse:
             """

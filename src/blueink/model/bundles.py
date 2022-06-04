@@ -34,7 +34,7 @@ class Field(BaseModel):
         extra = 'allow'
 
     @classmethod
-    def create(cls, x, y, w, h, page, kind, override_key=None, *args, **kwargs):
+    def create(cls, x, y, w, h, page, kind, override_key=None, **kwargs):
         key = override_key if override_key else generate_key('field', 5)
         obj = Field(key=key,
                     x=x,
@@ -43,7 +43,7 @@ class Field(BaseModel):
                     h=h,
                     page=page,
                     kind=kind,
-                    data=kwargs)
+                    **kwargs)
         return obj
 
     @validator('kind')
@@ -210,7 +210,7 @@ class Bundle(BaseModel):
     def add_document(self, document: Document):
         if self.documents is None:
             self.documents = []
-        self.documents.append(Document)
+        self.documents.append(document)
 
 
 class BundleHelper:
@@ -243,7 +243,7 @@ class BundleHelper:
     def add_cc(self, email: str):
         self._cc_emails.append(email)
 
-    def add_document_by_url(self, url: str, **additional_data) -> Document:
+    def add_document_by_url(self, url: str, **additional_data) -> str:
         """
         Add a document via url.
         :param url:
@@ -275,7 +275,7 @@ class BundleHelper:
         self._documents[document.key] = document
         return document.key
 
-    def add_document_by_path(self, file_path: str, mime_type: str = None, **additional_data) -> Document:
+    def add_document_by_path(self, file_path: str, mime_type: str = None, **additional_data) -> str:
         """
         Add a document via url, returns generated unique key.
         :param mime_type:
@@ -288,7 +288,7 @@ class BundleHelper:
         return self.add_document_by_file(file, file.name, mime_type, **additional_data)
 
     def add_document_by_bytearray(self, byte_array: bytearray, file_name: str, mime_type: str,
-                                  **additional_data) -> Document:
+                                  **additional_data) -> str:
         '''
         Add a document via url, with unique key.
         :param byte_array:
@@ -302,7 +302,7 @@ class BundleHelper:
         file = io.BufferedReader(bytes, len(byte_array))
         return self.add_document_by_file(file, file_name, mime_type, **additional_data)
 
-    def add_document_template(self, template_id: str, **additional_data):
+    def add_document_template(self, template_id: str, **additional_data) -> str:
         """
         Create and add a template reference
         :param template_id:
