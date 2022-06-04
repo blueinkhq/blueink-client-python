@@ -1,5 +1,4 @@
 import io
-import json
 from os import environ
 
 from munch import Munch
@@ -7,6 +6,7 @@ from munch import Munch
 from . import endpoints
 from .constants import BUNDLE_STATUS, DEFAULT_BASE_URL, ENV_BLUEINK_API_URL, ENV_BLUEINK_PRIVATE_API_KEY
 from .model.bundles import BundleHelper
+from .model.persons import PersonHelper
 from .paginator import PaginatedIterator
 from .tokenizedrequests import NormalizedResponse, RequestHelper
 
@@ -88,7 +88,7 @@ class Client:
         def create(self, data: dict, files=[]) -> NormalizedResponse:
             """
             Post a Bundle to the BlueInk application.
-            :param json: json string
+            :param data: python dict, typically from BundleHelper.as_data()
             :param files: list of file-like streams (optional)
             :param file_names: - list of file names, ordered same as files (optional)
             :param file_types: - list of file types, ordered same as files (optional)
@@ -117,7 +117,7 @@ class Client:
             """
             Post a Bundle to the BlueInk application. Convenience method as bundle_helper has files/filenames if
             creating a Bundle that way
-            :param bundle_helper: 
+            :param bundle_helper:
             :return:
             """
             data = bundle_helper.as_data()
@@ -125,7 +125,7 @@ class Client:
             return self.create(data=data, files=files)
 
         def paged_list(self, start_page=0, per_page=50, related_data=False) -> PaginatedIterator:
-            '''
+            """
             returns an iterable object such that you can do
 
             for page in client.bundles.paged_list():
@@ -135,7 +135,7 @@ class Client:
             :param start_page:
             :param per_page:
             :return:
-            '''
+            """
             params = [start_page, per_page, related_data]
             paged_call = PaginatedIterator(self.list, params, 0)
             return paged_call
@@ -180,9 +180,11 @@ class Client:
             :param related_data: (default false), returns events, files, data if true
             :return:
             """
-            url = endpoints.URLBuilder(self._base_url, endpoints.bundles.retrieve)\
-                .interpolate(endpoints.interpolations.bundle_id, bundle_id)\
+            url = (
+                endpoints.URLBuilder(self._base_url, endpoints.bundles.retrieve)
+                .interpolate(endpoints.interpolations.bundle_id, bundle_id)
                 .build()
+            )
 
             response = self._requests.get(url)
 
@@ -198,30 +200,55 @@ class Client:
             :param bundle_id:
             :return:
             """
-            url = endpoints.URLBuilder(self._base_url, endpoints.bundles.cancel) \
-                .interpolate(endpoints.interpolations.bundle_id, bundle_id)\
+            url = (
+                endpoints.URLBuilder(self._base_url, endpoints.bundles.cancel)
+                .interpolate(endpoints.interpolations.bundle_id, bundle_id)
                 .build()
+            )
 
             return self._request.put(url)
 
         def list_events(self, bundle_id) -> NormalizedResponse:
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.list_events) \
                 .interpolate(endpoints.interpolations.bundle_id, bundle_id)\
+            """
+            Returns a list of events for the supplied bundle corresponding to the id
+            :param bundle_id:
+            :return:
+            """
+            url = (
+                endpoints.URLBuilder(self._base_url, endpoints.bundles.list_events)
+                .interpolate(endpoints.interpolations.bundle_id, bundle_id)
                 .build()
+            )
 
             return self._requests.get(url)
 
         def list_files(self, bundle_id) -> NormalizedResponse:
-            url = endpoints.URLBuilder(self._base_url, endpoints.bundles.list_files) \
-                .interpolate(endpoints.interpolations.bundle_id, bundle_id)\
+            """
+            Returns a list of files for the supplied bundle corresponding to the id
+            :param bundle_id:
+            :return:
+            """
+            url = (
+                endpoints.URLBuilder(self._base_url, endpoints.bundles.list_files)
+                .interpolate(endpoints.interpolations.bundle_id, bundle_id)
                 .build()
+            )
 
             return self._requests.get(url)
 
         def list_data(self, bundle_id) -> NormalizedResponse:
-            url = endpoints.URLBuilder(self._base_url, endpoints.bundles.list_data) \
-                .interpolate(endpoints.interpolations.bundle_id, bundle_id)\
+            """
+            Returns a list of data fields for the supplied bundle corresponding to the id
+            :param bundle_id:
+            :return:
+            """
+            url = (
+                endpoints.URLBuilder(self._base_url, endpoints.bundles.list_data)
+                .interpolate(endpoints.interpolations.bundle_id, bundle_id)
                 .build()
+            )
 
             return self._requests.get(url)
 
@@ -229,15 +256,22 @@ class Client:
         def create(self, data) -> NormalizedResponse:
             """
             Creates a person.
-            :param data: JSON string for a person
+            :param data: A dictionary definition of a person
             :return:
             """
-            url = endpoints.URLBuilder(self._base_url, endpoints.persons.create)\
-                .build()
+            url = endpoints.URLBuilder(self._base_url, endpoints.persons.create).build()
             return self._requests.post(url, data=data)
 
+        def create_from_person_helper(self, person_helper: PersonHelper) -> NormalizedResponse:
+            """
+            Creates a person.
+            :param person_helper: PersonHelper setup of a person
+            :return:
+            """
+            return self.create(person_helper.as_dict())
+
         def paged_list(self, start_page=0, per_page=50) -> PaginatedIterator:
-            '''
+            """
             returns an iterable object such that you can do
 
             for page in client.persons.paged_list():
@@ -246,12 +280,18 @@ class Client:
             :param start_page:
             :param per_page:
             :return:
-            '''
+            """
             params = [start_page, per_page]
             paged_call = PaginatedIterator(self.list, params, 0)
             return paged_call
 
         def list(self, page=None, per_page=None, **query_params) -> NormalizedResponse:
+            """
+            Returns a list of persons. Optionally supply the page number and results per page.
+            :param page:
+            :param per_page:
+            :return:
+            """
             url = endpoints.URLBuilder(self._base_url, endpoints.persons.list, **query_params) \
                 .build()
             response = self._requests.get(url, params=_build_params(page, per_page, **query_params))
@@ -259,6 +299,11 @@ class Client:
             return response
 
         def retrieve(self, person_id:str) -> NormalizedResponse:
+            """
+            Retrieves details on a singular person
+            :param person_id:
+            :return:
+            """
             url = endpoints.URLBuilder(self._base_url, endpoints.persons.retrieve) \
                 .interpolate(endpoints.interpolations.person_id, person_id) \
                 .build()
@@ -268,11 +313,12 @@ class Client:
             """
 
             :param person_id:
-            :param data: JSON string of person
+            :param data: dictionary representation of person
             :return:
             """
-            url = endpoints.URLBuilder(self._base_url, endpoints.persons.update) \
-                .interpolate(endpoints.interpolations.person_id, person_id) \
+            url = (
+                endpoints.URLBuilder(self._base_url, endpoints.persons.full_update)
+                .interpolate(endpoints.interpolations.person_id, person_id)
                 .build()
             return self._requests.update(url, data=data)
 
@@ -283,48 +329,79 @@ class Client:
             :param data: JSON string of person
             :return:
             """
-            url = endpoints.URLBuilder(self._base_url, endpoints.persons.partial_update) \
-                .interpolate(endpoints.interpolations.person_id, person_id) \
+            url = (
+                endpoints.URLBuilder(self._base_url, endpoints.persons.partial_update)
+                .interpolate(endpoints.interpolations.person_id, person_id)
                 .build()
+            )
+
             return self._requests.patch(url, data=data)
 
-        def delete(self, person_id:str) -> NormalizedResponse:
-            url = endpoints.URLBuilder(self._base_url, endpoints.persons.delete) \
-                .interpolate(endpoints.interpolations.person_id, person_id) \
+        def delete(self, person_id: str) -> NormalizedResponse:
+            url = (
+                endpoints.URLBuilder(self._base_url, endpoints.persons.delete)
+                .interpolate(endpoints.interpolations.person_id, person_id)
                 .build()
+            )
             return self._requests.delete(url)
 
     class _Packets(_SubClient):
-        def update(self, packet_id:str, data:str) -> NormalizedResponse:
-            """
-
-            :param packet_id:
-            :param data: JSON of packet
-            :return:
-            """
-            url = endpoints.URLBuilder(self._base_url, endpoints.packets.update) \
-                .interpolate(endpoints.interpolations.packet_id, packet_id) \
+        def update(self, packet_id: str, data: dict) -> NormalizedResponse:
+            url = (
+                endpoints.URLBuilder(self._base_url, endpoints.persons.delete)
+                .interpolate(endpoints.interpolations.person_id, packet_id)
                 .build()
+            )
             return self._requests.patch(url, data=data)
 
-        def remind(self, packet_id:str) -> NormalizedResponse:
-            url = endpoints.URLBuilder(self._base_url, endpoints.packets.remind) \
-                .interpolate(endpoints.interpolations.packet_id, packet_id) \
+        def delete(self, person_id: str) -> NormalizedResponse:
+            """
+            Deletes a person
+            :param person_id:
+            :return:
+            """
+            url = (
+                endpoints.URLBuilder(self._base_url, endpoints.persons.delete)
+                .interpolate(endpoints.interpolations.person_id, person_id)
                 .build()
+            )
+            return self._requests.delete(url)
+
+        def remind(self, packet_id: str) -> NormalizedResponse:
+            url = (
+                endpoints.URLBuilder(self._base_url, endpoints.packets.remind)
+                .interpolate(endpoints.interpolations.packet_id, packet_id)
+                .build()
+            )
             return self._requests.put(url)
 
-        def retrieve_coe(self, packet_id:str) -> NormalizedResponse:
-            url = endpoints.URLBuilder(self._base_url, endpoints.packets.retrieve_coe) \
-                .interpolate(endpoints.interpolations.packet_id, packet_id) \
+        def retrieve_coe(self, packet_id: str) -> NormalizedResponse:
+            url = (
+                endpoints.URLBuilder(self._base_url, endpoints.packets.retrieve_coe)
+                .interpolate(endpoints.interpolations.packet_id, packet_id)
                 .build()
+            )
             return self._requests.get(url)
+
+        def remind(self, packet_id: str) -> NormalizedResponse:
+            """
+            Sends a reminder to the contact channel on this packet
+            :param packet_id:
+            :return:
+            """
+            url = (
+                endpoints.URLBuilder(self._base_url, endpoints.packets.remind)
+                .interpolate(endpoints.interpolations.packet_id, packet_id)
+                .build()
+            )
+            self._requests.put(url)
 
     class _Templates(_SubClient):
         def __init__(self, base_url, private_api_key):
             super().__init__(base_url, private_api_key)
 
         def paged_list(self, start_page=0, per_page=50) -> PaginatedIterator:
-            '''
+            """
             returns an iterable object such that you can do
 
             for page in client.bundles.paged_list():
@@ -333,17 +410,28 @@ class Client:
             :param start_page:
             :param per_page:
             :return:
-            '''
+            """
             params = [start_page, per_page]
             paged_call = PaginatedIterator(self.list, params, 0)
             return paged_call
 
         def list(self, page=None, per_page=None, **query_params) -> NormalizedResponse:
+            """
+            Retrieves a list of templates, optionally for a page and # of results per page
+            :param page:
+            :param per_page:
+            :return:
+            """
             url = endpoints.URLBuilder(self._base_url, endpoints.templates.list) \
                 .build()
             return self._requests.get(url, params=_build_params(page, per_page, **query_params))
 
         def retrieve(self, template_id:str) -> NormalizedResponse:
+            """
+            Retrieves a singular template with this id
+            :param template_id:
+            :return:
+            """
             url = endpoints.URLBuilder(self._base_url, endpoints.templates.retrieve) \
                 .interpolate(endpoints.interpolations.template_id, template_id) \
                 .build()

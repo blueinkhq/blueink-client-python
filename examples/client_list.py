@@ -1,4 +1,4 @@
-from src.blueink import Client, BundleHelper
+from src.blueink import Client, BundleHelper, constants
 
 client = Client()
 
@@ -11,7 +11,7 @@ for bundle in response.data[:3]:
     print(f"{bundle.id} {bundle.status}")
 
 print("\n*********************\nList Bundles - filtering by status")
-response = client.bundles.list(status=BundleHelper.BUNDLE_STATUS.COMPLETE)
+response = client.bundles.list(status=constants.BUNDLE_STATUS.COMPLETE)
 print(f"Retrieved {len(response.data)} Complete Bundles")
 print(f"Here are the first 3:")
 for bundle in response.data[:3]:

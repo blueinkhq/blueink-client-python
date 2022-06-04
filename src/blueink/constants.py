@@ -39,11 +39,16 @@ BUNDLE_STATUS = Munch(
     FAILED="fa",
 )
 
-DELIVER_VIA = Munch(
+SEND_VIA = Munch(
     EMAIL="em",
     SMS="sm",
     KIOSK="ki",
     BOTH="bo",
+)
+
+DELIVER_VIA = Munch(
+    EMAIL="email",
+    SMS="phone",
 )
 
 FIELD_KIND = Munch(
