@@ -1,6 +1,6 @@
 from requests.exceptions import HTTPError
 
-from .tokenizedrequests import NormalizedResponse
+from .request_helper import NormalizedResponse
 
 
 class PaginatedIterator:

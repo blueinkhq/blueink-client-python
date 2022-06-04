@@ -9,7 +9,7 @@ from .constants import BUNDLE_STATUS, DEFAULT_BASE_URL, ENV_BLUEINK_API_URL, ENV
 from .model.bundles import BundleHelper
 from .model.persons import PersonHelper
 from .paginator import PaginatedIterator
-from .tokenizedrequests import NormalizedResponse, RequestHelper
+from .request_helper import NormalizedResponse, RequestHelper
 
 
 def _build_params(page=None, per_page=None, **query_params):
