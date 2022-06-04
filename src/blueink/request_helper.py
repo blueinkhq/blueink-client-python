@@ -1,5 +1,3 @@
-import json
-
 import requests
 
 from munch import munchify
@@ -34,13 +32,14 @@ class NormalizedResponse:
         :param response:
         """
         try:
-            self.data = munchify(json.loads(response.content))
-        # Some requests have no content or html responses
-        except json.JSONDecodeError:
+            self.data = munchify(response.json())
+        except requests.exceptions.JSONDecodeError:
+            # Some responses (e.g. 500) have no content or html responses
             self.data = response.content
 
         self.request = response.request
         self.status = response.status_code
+        self.original_response = response
 
         # Pagination
         self.pagination = None
