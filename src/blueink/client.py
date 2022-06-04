@@ -1,4 +1,5 @@
 import io
+import json
 from os import environ
 
 from munch import Munch
@@ -65,10 +66,11 @@ class Client:
                 file_list = [file_list]
 
             form_data = {}
+            files_data = []
             if file_list:
                 for idx, file_dict in enumerate(file_list):
                     try:
-                        fh = file_dict['file']
+                        fh = file_dict["file"]
                     except KeyError:
                         raise ValueError("Each file dict must have a 'file' key that is a file-like object")
 
@@ -77,13 +79,12 @@ class Client:
                             f"Bad type for file {idx}. Expected an io.BufferedReader (e.g. an open file handle)"
                         )
 
-                    form_data[f'files[{idx}]'] = (
-                        file_dict.get('filename'),
-                        fh,
-                        file_dict.get('content_type')
+                    field_name = f"files[{idx}]"
+                    files_data.append(
+                        (field_name, (file_dict.get("filename"), fh, file_dict.get("content_type")))
                     )
 
-            return form_data
+            return files_data
 
         def create(self, data: dict, files=[]) -> NormalizedResponse:
             """
@@ -97,19 +98,18 @@ class Client:
             if not data:
                 raise ValueError('data is required')
 
-            url = endpoints.URLBuilder(self._base_url, endpoints.bundles.create) \
-                .build()
+            url = endpoints.URLBuilder(self._base_url, endpoints.bundles.create).build()
 
             if not files:
                 response = self._requests.post(url, data=data)
             else:
-                form_data = self._prepare_files(files)
-                if not form_data:
+                files_data = self._prepare_files(files)
+                if not files_data:
                     raise ValueError('No valid file data provided')
 
-                # form_data['bundle_request'] = (None, data, "application/json")
-                # form_data['bundle_request'] = data
-                response = self._requests.post(url, data=data, files=form_data)
+                bundle_request_data = {"bundle_request": json.dumps(data)}
+
+                response = self._requests.post(url, data=bundle_request_data, files=files_data)
 
             return response
 
@@ -209,8 +209,6 @@ class Client:
             return self._request.put(url)
 
         def list_events(self, bundle_id) -> NormalizedResponse:
-            url = endpoints.URLBuilder(self._base_url, endpoints.bundles.list_events) \
-                .interpolate(endpoints.interpolations.bundle_id, bundle_id)\
             """
             Returns a list of events for the supplied bundle corresponding to the id
             :param bundle_id:
@@ -320,6 +318,7 @@ class Client:
                 endpoints.URLBuilder(self._base_url, endpoints.persons.full_update)
                 .interpolate(endpoints.interpolations.person_id, person_id)
                 .build()
+            )
             return self._requests.update(url, data=data)
 
         def partial_update(self, person_id:str, data:str) -> NormalizedResponse:
