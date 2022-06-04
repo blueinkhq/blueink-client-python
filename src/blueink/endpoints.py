@@ -1,3 +1,4 @@
+from urllib import parse
 from munch import Munch
 
 bundles = Munch(

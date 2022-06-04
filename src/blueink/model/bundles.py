@@ -3,10 +3,7 @@ import random
 import string
 from typing import List, Optional
 from pydantic import BaseModel, validator, EmailStr
-from src.blueink.constants import (
-    DELIVER_VIA,
-    FIELD_KIND, ATTACHMENT_TYPE, BUNDLE_ORDER, BUNDLE_STATUS, PACKET_STATUS, V_PATTERN,
-)
+from src.blueink.constants import DELIVER_VIA, FIELD_KIND
 
 
 class ValidationError(RuntimeError):
@@ -37,7 +34,7 @@ class Field(BaseModel):
         extra = 'allow'
 
     @classmethod
-    def create(cls, x, y, w, h, page, kind, override_key=None, *args, **kwargs):
+    def create(cls, x, y, w, h, page, kind, override_key=None, **kwargs):
         key = override_key if override_key else generate_key('field', 5)
         obj = Field(key=key,
                     x=x,
@@ -46,7 +43,7 @@ class Field(BaseModel):
                     h=h,
                     page=page,
                     kind=kind,
-                    data=kwargs)
+                    **kwargs)
         return obj
 
     @validator('kind')
@@ -130,11 +127,8 @@ class TemplateRef(BaseModel):
         extra = 'allow'
 
     @classmethod
-    def create(cls,
-               *args,
-               **kwargs):
-
-        obj = TemplateRefFieldValue(**kwargs)
+    def create(cls, **kwargs):
+        obj = TemplateRef(**kwargs)
         return obj
 
     def add_assignment(self, assignment: TemplateRefAssignment):
@@ -167,8 +161,7 @@ class Document(BaseModel):
     @classmethod
     def create(cls, override_key=None, **kwargs):
         key = override_key if override_key else generate_key('dock', 5)
-        obj = Document(key=key,
-                       **kwargs)
+        obj = Document(key=key, **kwargs)
         return obj
 
     def add_field(self, field: Field):
@@ -217,18 +210,10 @@ class Bundle(BaseModel):
     def add_document(self, document: Document):
         if self.documents is None:
             self.documents = []
-        self.documents.append(Document)
+        self.documents.append(document)
 
 
 class BundleHelper:
-    ATTACHMENT_TYPE = ATTACHMENT_TYPE
-    BUNDLE_ORDER = BUNDLE_ORDER
-    BUNDLE_STATUS = BUNDLE_STATUS
-    DELIVER_VIA = DELIVER_VIA
-    FIELD_KIND = FIELD_KIND
-    PACKET_STATUS = PACKET_STATUS
-    V_PATTERN = V_PATTERN
-
     def __init__(
             self,
             label: str = None,
@@ -257,9 +242,8 @@ class BundleHelper:
 
     def add_cc(self, email: str):
         self._cc_emails.append(email)
-        return self
 
-    def add_document_by_url(self, url: str, **additional_data) -> Document:
+    def add_document_by_url(self, url: str, **additional_data) -> str:
         """
         Add a document via url.
         :param url:
@@ -268,7 +252,7 @@ class BundleHelper:
         """
         document = Document.create(file_url=url, **additional_data)
         self._documents[document.key] = document
-        return document
+        return document.key
 
     def add_document_by_file(self, file: io.BufferedReader, file_name: str, mime_type: str, **additional_data) -> str:
         """
@@ -283,18 +267,15 @@ class BundleHelper:
         file_index = len(self.files)
 
         if type(file) == io.BufferedReader and file.readable():
-            self.files.append(file)
-            self.file_names.append(file_name)
-            self.file_types.append(mime_type)
-            print(f"Attaching file {file_index}: {file_name}")
+            self.files.append({'file': file, "filename": file_name, "content_type": mime_type})
         else:
-            raise RuntimeError(f"File unreadable.")
+            raise ValueError(f"File unreadable.")
 
         document = Document.create(file_index=file_index, **additional_data)
         self._documents[document.key] = document
-        return document
+        return document.key
 
-    def add_document_by_path(self, file_path: str, mime_type: str, **additional_data) -> Document:
+    def add_document_by_path(self, file_path: str, mime_type: str = None, **additional_data) -> str:
         """
         Add a document via url, returns generated unique key.
         :param mime_type:
@@ -304,12 +285,10 @@ class BundleHelper:
         """
 
         file = open(file_path, 'rb')
-        print('add data', additional_data)
-
         return self.add_document_by_file(file, file.name, mime_type, **additional_data)
 
     def add_document_by_bytearray(self, byte_array: bytearray, file_name: str, mime_type: str,
-                                  **additional_data) -> Document:
+                                  **additional_data) -> str:
         '''
         Add a document via url, with unique key.
         :param byte_array:
@@ -323,7 +302,7 @@ class BundleHelper:
         file = io.BufferedReader(bytes, len(byte_array))
         return self.add_document_by_file(file, file_name, mime_type, **additional_data)
 
-    def add_document_template(self, template_id: str, **additional_data):
+    def add_document_template(self, template_id: str, **additional_data) -> str:
         """
         Create and add a template reference
         :param template_id:
@@ -333,13 +312,13 @@ class BundleHelper:
         if template_id in self._documents.keys():
             raise RuntimeError(f'Document/Template with id {template_id} already added.')
 
-        template = TemplateRef(template_id=template_id, **additional_data)
+        template = TemplateRef.create(template_id=template_id, **additional_data)
         self._documents[template_id] = template
-        return template
+        return template.key
 
-    def add_field(self, document: Document, x: int, y: int, w: int, h: int, p: int, kind: str,
-                  label: str = None, v_pattern: int = None, v_min: int = None,
-                  v_max: int = None, editors: [Packet] = None, override_key=None, **additional_data):
+    def add_field(self, document_key: str, x: int, y: int, w: int, h: int, p: int, kind: str,
+                  editors: [str] = None, label: str = None, v_pattern: str = None, v_min: int = None,
+                  v_max: int = None, override_key=None, **additional_data):
         """
         Create and add a field
         :param document:
@@ -359,15 +338,19 @@ class BundleHelper:
         :param additional_data: Optional and will append any additional kwargs to the json of the field
         :return: Field object
         """
-        if document.key not in self._documents:
-            raise RuntimeError(f"No document found with key {document.key}!")
+        if document_key not in self._documents:
+            raise RuntimeError(f"No document found with key {document_key}!")
 
-        field = Field.create(x, y, w, h, p, kind, label, v_pattern, v_min, v_max, **additional_data)
-        for editor in editors:
-            field.add_editor(editor.key)
+        field = Field.create(
+            x, y, w, h, p, kind,
+            label=label, v_pattern=v_pattern, v_min=v_min, v_max=v_max, override_key=override_key,
+            **additional_data
+        )
+        for packet_key in editors:
+            field.add_editor(packet_key)
 
-        self._documents[document.key].add_field(field)
-        return field
+        self._documents[document_key].add_field(field)
+        return field.key
 
     def add_signer(self, name: str, email: str = None, phone: str = None, deliver_via: str = None,
                    person_id=None, auth_sms: bool = False, auth_selfie: bool = False, auth_id: bool = False,
@@ -392,7 +375,6 @@ class BundleHelper:
         if phone is None and email is None:
             raise ValidationError('Packet must have either an email or phone number')
 
-        print('sign', additional_data)
         packet = Packet.create(name=name,
                                person_id=person_id,
                                email=email,
@@ -405,7 +387,7 @@ class BundleHelper:
                                override_key=override_key,
                                **additional_data)
         self._packets[packet.key] = packet
-        return packet
+        return packet.key
 
     def assign_role(self, document_key: str, signer_id: str, role: str, **additional_data):
         """

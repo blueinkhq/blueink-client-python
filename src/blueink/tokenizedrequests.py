@@ -1,7 +1,9 @@
 import io
 import json
+
+import requests
+
 from munch import munchify
-from requests import Response, get, post, put, patch, delete
 
 """
 Helper functions to add header with user's token.txt
@@ -17,12 +19,18 @@ class Pagination:
         pagination_split = pagination_header.split(",")
         self.page_number = int(pagination_split[0])
         self.total_pages = int(pagination_split[1])
-        self.items_on_page = int(pagination_split[2])
+        self.per_page = int(pagination_split[2])
         self.total_results = int(pagination_split[3])
 
+    def __str__(self):
+        return (
+            f"page_number: {self.page_number}, per_page: {self.per_page}, "
+            f"total_pages: {self.total_pages}, total_results: {self.total_results}"
+        )
 
-class MunchedResponse:
-    def __init__(self, response: Response):
+
+class NormalizedResponse:
+    def __init__(self, response: requests.Response):
         """
         Encapsulates the response from a BlueInk REST endpoint in a "Munch" of the JSON body.
         Status code and pagination also included.
@@ -45,125 +53,55 @@ class MunchedResponse:
             self.pagination = Pagination(response.headers.get("X-Blueink-Pagination"))
 
 
-def build_header(private_api_key, content_type=None):
-    """
-    Builds header with API key, optional content-type.
-    :param private_api_key:
-    :param content_type:
-    :return:
-    """
-    if private_api_key is None:
-        raise RuntimeError("Private API key must be supplied.")
+class RequestHelper:
+    def __init__(self, private_api_key):
+        self._private_api_key = private_api_key
 
-    hdr = {"Authorization": f"Token {private_api_key}"}
+    def delete(self, url, **kwargs):
+        return self._make_request('delete', url, **kwargs)
 
-    if content_type is not None:
-        hdr["Content-Type"] = content_type
+    def get(self, url, **kwargs):
+        return self._make_request('get', url, **kwargs)
 
-    return hdr
+    def patch(self, url, **kwargs):
+        return self._make_request('patch', url, **kwargs)
 
+    def post(self, url, **kwargs):
+        return self._make_request('post', url, **kwargs)
 
-def build_pagination_params(page_number, per_page=None):
-    """
-    Builds pagination URL params dict for requests' params field.
-    :param page_number:
-    :param per_page:
-    :return:
-    """
-    params = {"page": page_number, "per_page": per_page}
+    def put(self, url, **kwargs):
+        return self._make_request('put', url, **kwargs)
 
-    return params
+    def _build_headers(self, content_type=None, more_headers=None):
+        """
+        Builds header with API key, optional content-type.
+        :param private_api_key:
+        :param content_type:
+        :return:
+        """
+        if self._private_api_key is None:
+            raise RuntimeError("Private API key must be supplied.")
 
+        hdrs = {}
+        if more_headers:
+            hdrs.update(more_headers)
 
-def tget(url, private_api_key, params=None) -> MunchedResponse:
-    """
-    Wrapped requests get request with proper header
-    :param url:
-    :param private_api_key:
-    :param params:
-    :return:
-    """
-    response = get(url=url, headers=build_header(private_api_key), params=params)
+        hdrs['Authorization'] = f"Token {self._private_api_key}"
 
-    return MunchedResponse(response)
+        if content_type is not None:
+           hdrs['Content-Type'] = content_type
 
+        return hdrs
 
-def tpost(url, private_api_key, data=None, content_type="application/json") -> MunchedResponse:
-    """
-    Wrapped requests post request with proper header, taking json data
-    :param url:
-    :param private_api_key:
-    :param data: json data
-    :param content_type:
-    :return:
-    """
-    response = post(url=url, data=data, headers=build_header(private_api_key, content_type))
-    return MunchedResponse(response)
-
-
-def tpost_formdata(
-    url, private_api_key, json_data=None, files=[io.BufferedReader], file_names=[str], content_types=[str]
-) -> MunchedResponse:
-    """
-    Wrapped requests post request with proper header
-    :param url:
-    :param private_api_key:
-    :param json_data:
-    :param files: array of file like objects (io.BufferedReader)
-    :param file_names: array of filenames
-    :param content_types: array of content types (eg 'application/pdf')
-    :return:
-    """
-    # construct form_data dict
-    form_data = {
-        "bundle_request": (None, json_data, "application/json")  # 'None' filename is a must or server 500's out
-    }
-    for file_index, file in enumerate(files):
-        if type(file) == io.BufferedReader:
-            formdata_file = (file_names[file_index], file, content_types[file_index])
-            form_data[f"files[{file_index}]"] = formdata_file
-        else:
-            raise RuntimeError("File is not of io.BufferedReader type!")
-
-    response = post(url=url, files=form_data, headers=build_header(private_api_key))
-
-    return MunchedResponse(response)
-
-
-def tput(url, private_api_key, data=None, content_type="application/json") -> MunchedResponse:
-    """
-    Wrapped requests put request with proper header
-    :param url:
-    :param private_api_key:
-    :param data:
-    :param content_type:
-    :return:
-    """
-    response = put(url=url, data=data, headers=build_header(private_api_key, content_type))
-    return MunchedResponse(response)
-
-
-def tdelete(url, private_api_key, data=None, content_type=None) -> MunchedResponse:
-    """
-    Wrapped requests delete request with proper header
-    :param url:
-    :param private_api_key:
-    :param data:
-    :param content_type:
-    :return:
-    """
-    response = delete(url=url, data=data, headers=build_header(private_api_key, content_type))
-    return MunchedResponse(response)
-
-
-def tpatch(url, private_api_key, data=None, content_type="application/json") -> MunchedResponse:
-    """
-    Wrapped requests patch request with proper header
-    :param url:
-    :param private_api_key:
-    :param data:
-    :param content_type:
-    :return:
-    """
-    response = patch(url=url, data=data, headers=build_header(private_api_key, content_type))
-    return MunchedResponse(response)
+    def _make_request(self, method, url, data=None, json=None, files=None, params=None, headers=None, content_type=None):
+        response = requests.request(
+            method,
+            url,
+            params=params,
+            data=data,
+            json=json,
+            headers=self._build_headers(content_type=content_type, more_headers=headers),
+            files=files,
+        )
+        response.raise_for_status()
+        return NormalizedResponse(response)
