@@ -36,9 +36,13 @@ if len(ids) > 0:
     print(f"{bundle.id}: {bundle.status}")
 
 print("\n*********************\nPaged Persons Listing")
+page = 0
 for api_call in client.persons.paged_list(start_page=1, per_page=2):
     print(f"Page {page}, {len(api_call.data)} Persons")
+    page += 1
 
 print("\n*********************\nPaged Templates Listing")
+page = 0
 for api_call in client.templates.paged_list(start_page=1, per_page=2):
     print(f"Page {page}, {len(api_call.data)} Templates")
+    page += 1

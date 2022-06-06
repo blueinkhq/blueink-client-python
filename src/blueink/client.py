@@ -267,7 +267,7 @@ class Client:
             """
             return self.create(person_helper.as_dict())
 
-        def paged_list(self, start_page=0, per_page=50) -> PaginatedIterator:
+        def paged_list(self, start_page=0, per_page=50, **query_params) -> PaginatedIterator:
             """
             returns an iterable object such that you can do
 
@@ -279,7 +279,7 @@ class Client:
             :return:
             """
             params = [start_page, per_page]
-            paged_call = PaginatedIterator(self.list, params, 0)
+            paged_call = PaginatedIterator(self.list, params, 0, **query_params)
             return paged_call
 
         def list(self, page=None, per_page=None, **query_params) -> NormalizedResponse:
@@ -289,7 +289,7 @@ class Client:
             :param per_page:
             :return:
             """
-            url = endpoints.URLBuilder(self._base_url, endpoints.persons.list, **query_params) \
+            url = endpoints.URLBuilder(self._base_url, endpoints.persons.list) \
                 .build()
             response = self._requests.get(url, params=_build_params(page, per_page, **query_params))
 
@@ -398,7 +398,7 @@ class Client:
         def __init__(self, base_url, private_api_key):
             super().__init__(base_url, private_api_key)
 
-        def paged_list(self, start_page=0, per_page=50) -> PaginatedIterator:
+        def paged_list(self, start_page=0, per_page=50, **query_params) -> PaginatedIterator:
             """
             returns an iterable object such that you can do
 
@@ -410,7 +410,7 @@ class Client:
             :return:
             """
             params = [start_page, per_page]
-            paged_call = PaginatedIterator(self.list, params, 0)
+            paged_call = PaginatedIterator(self.list, params, 0,  **query_params)
             return paged_call
 
         def list(self, page=None, per_page=None, **query_params) -> NormalizedResponse:
