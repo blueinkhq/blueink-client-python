@@ -1,12 +1,10 @@
 import json
 from copy import deepcopy
-from urllib.error import HTTPError
+from requests.exceptions import HTTPError
+from pprint import pprint
 
 from src.blueink.client import Client
 from src.blueink.person_helper import PersonHelper
-
-from pprint import pprint
-from requests.exceptions import HTTPError
 
 client = Client()
 
@@ -29,6 +27,8 @@ metadata["number"] = 1
 metadata["string"] = "stringy"
 metadata["dict"] = {}
 metadata["dict"]["number"] = 2
+metadata["list"] = []
+metadata["list"].append(3)
 
 # Set the metadata of the person
 ph.set_metadata(metadata)
@@ -134,6 +134,27 @@ except Exception as e:
 
 # Delete the person from your account and check the result
 try:
+    result = client.persons.delete(result.data.id)
+    pprint(f"Result Delete: {result.status}: {result.data}")
+except HTTPError as e:
+    print(e)
+    pprint(e.response.text)
+except Exception as e:
+    print("Error:")
+    print(e)
+
+"""
+Create a person and pass extra arguments
+if using a older version of sdk that doesn't
+support certain new API parameters you can add them
+this way in the person helper
+If calling another method that just takes a dict
+add them to the dict directly
+"""
+try:
+    ph = PersonHelper(name="New Person")
+    result = client.persons.create_from_person_helper(ph, hidden_person=True)
+    pprint(f"Result Create With Extra Args: {result.status}: {result.data}")
     result = client.persons.delete(result.data.id)
     pprint(f"Result Delete: {result.status}: {result.data}")
 except HTTPError as e:
