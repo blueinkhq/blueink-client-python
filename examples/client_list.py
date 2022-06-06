@@ -21,7 +21,7 @@ for bundle in response.data[:3]:
 print("\n*********************\nPaged Bundle Listing")
 ids = []
 page = 1
-for api_call in client.bundles.paged_list(start_page=1, per_page=5, status=constants.BUNDLE_STATUS.COMPLETE):
+for api_call in client.bundles.paged_list(page=1, per_page=5, status=constants.BUNDLE_STATUS.COMPLETE):
     # print(f"Paged Call: {api_call.data}")
     print(f"Page {page}, {len(api_call.data)} Bundles")
     for bundle in api_call.data:
@@ -37,12 +37,12 @@ if len(ids) > 0:
 
 print("\n*********************\nPaged Persons Listing")
 page = 0
-for api_call in client.persons.paged_list(start_page=1, per_page=2):
+for api_call in client.persons.paged_list(page=1, per_page=2):
     print(f"Page {page}, {len(api_call.data)} Persons")
     page += 1
 
 print("\n*********************\nPaged Templates Listing")
 page = 0
-for api_call in client.templates.paged_list(start_page=1, per_page=2):
+for api_call in client.templates.paged_list(page=1, per_page=2):
     print(f"Page {page}, {len(api_call.data)} Templates")
     page += 1
