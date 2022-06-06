@@ -6,8 +6,8 @@ from munch import Munch
 
 from . import endpoints
 from .constants import BUNDLE_STATUS, DEFAULT_BASE_URL, ENV_BLUEINK_API_URL, ENV_BLUEINK_PRIVATE_API_KEY
-from .model.bundles import BundleHelper
-from .model.persons import PersonHelper
+from .bundle_helper import BundleHelper
+from .person_helper import PersonHelper
 from .paginator import PaginatedIterator
 from .request_helper import NormalizedResponse, RequestHelper
 
@@ -80,9 +80,7 @@ class Client:
                         )
 
                     field_name = f"files[{idx}]"
-                    files_data.append(
-                        (field_name, (file_dict.get("filename"), fh, file_dict.get("content_type")))
-                    )
+                    files_data.append((field_name, (file_dict.get("filename"), fh, file_dict.get("content_type"))))
 
             return files_data
 
@@ -96,7 +94,7 @@ class Client:
             :return:
             """
             if not data:
-                raise ValueError('data is required')
+                raise ValueError("data is required")
 
             url = endpoints.URLBuilder(self._base_url, endpoints.bundles.create).build()
 
@@ -105,7 +103,7 @@ class Client:
             else:
                 files_data = self._prepare_files(files)
                 if not files_data:
-                    raise ValueError('No valid file data provided')
+                    raise ValueError("No valid file data provided")
 
                 bundle_request_data = {"bundle_request": json.dumps(data)}
 
@@ -148,8 +146,7 @@ class Client:
             :param related_data: (default false), returns events, files, data if true
             :return:
             """
-            url = endpoints.URLBuilder(self._base_url, endpoints.bundles.list) \
-                .build()
+            url = endpoints.URLBuilder(self._base_url, endpoints.bundles.list).build()
             response = self._requests.get(url, params=_build_params(page, per_page, **query_params))
 
             if related_data:
@@ -251,22 +248,28 @@ class Client:
             return self._requests.get(url)
 
     class _Persons(_SubClient):
-        def create(self, data) -> NormalizedResponse:
+        def create(self, data: dict, **kwargs) -> NormalizedResponse:
             """
             Creates a person.
             :param data: A dictionary definition of a person
             :return:
             """
+            if "name" not in data or not data["name"]:
+                raise ValueError("A name is required to create a Person")
+
+            # Merge the kwargs with the given data
+            data = {**data, **kwargs}
+
             url = endpoints.URLBuilder(self._base_url, endpoints.persons.create).build()
             return self._requests.post(url, json=data)
 
-        def create_from_person_helper(self, person_helper: PersonHelper) -> NormalizedResponse:
+        def create_from_person_helper(self, person_helper: PersonHelper, **kwargs) -> NormalizedResponse:
             """
             Creates a person.
             :param person_helper: PersonHelper setup of a person
             :return:
             """
-            return self.create(person_helper.as_dict())
+            return self.create(person_helper.as_dict(**kwargs))
 
         def paged_list(self, start_page=0, per_page=50) -> PaginatedIterator:
             """
@@ -290,28 +293,28 @@ class Client:
             :param per_page:
             :return:
             """
-            url = endpoints.URLBuilder(self._base_url, endpoints.persons.list, **query_params) \
-                .build()
+            url = endpoints.URLBuilder(self._base_url, endpoints.persons.list, **query_params).build()
             response = self._requests.get(url, params=_build_params(page, per_page, **query_params))
 
             return response
 
-        def retrieve(self, person_id:str) -> NormalizedResponse:
+        def retrieve(self, person_id: str) -> NormalizedResponse:
             """
             Retrieves details on a singular person
             :param person_id:
             :return:
             """
-            url = endpoints.URLBuilder(self._base_url, endpoints.persons.retrieve) \
-                .interpolate(endpoints.interpolations.person_id, person_id) \
+            url = (
+                endpoints.URLBuilder(self._base_url, endpoints.persons.retrieve)
+                .interpolate(endpoints.interpolations.person_id, person_id)
                 .build()
+            )
             return self._requests.get(url)
 
-        def update(self, person_id:str, data:str) -> NormalizedResponse:
+        def update(self, person_id: str, data: dict) -> NormalizedResponse:
             """
-
             :param person_id:
-            :param data: dictionary representation of person
+            :param data: a full dictionary representation of person
             :return:
             """
             url = (
@@ -319,13 +322,14 @@ class Client:
                 .interpolate(endpoints.interpolations.person_id, person_id)
                 .build()
             )
-            return self._requests.update(url, json=data)
 
-        def partial_update(self, person_id:str, data:str) -> NormalizedResponse:
+            return self._requests.put(url, json=data)
+
+        def partial_update(self, person_id: str, data: dict) -> NormalizedResponse:
             """
 
             :param person_id:
-            :param data: JSON string of person
+            :param data: a partial dictionary representation of person
             :return:
             """
             url = (
@@ -333,7 +337,6 @@ class Client:
                 .interpolate(endpoints.interpolations.person_id, person_id)
                 .build()
             )
-
             return self._requests.patch(url, json=data)
 
         def delete(self, person_id: str) -> NormalizedResponse:
@@ -347,7 +350,7 @@ class Client:
     class _Packets(_SubClient):
         def update(self, packet_id: str, data: dict) -> NormalizedResponse:
             url = (
-                endpoints.URLBuilder(self._base_url, endpoints.persons.delete)
+                endpoints.URLBuilder(self._base_url, endpoints.packets.full_update)
                 .interpolate(endpoints.interpolations.person_id, packet_id)
                 .build()
             )
@@ -360,7 +363,7 @@ class Client:
             :return:
             """
             url = (
-                endpoints.URLBuilder(self._base_url, endpoints.persons.delete)
+                endpoints.URLBuilder(self._base_url, endpoints.packets.delete)
                 .interpolate(endpoints.interpolations.person_id, person_id)
                 .build()
             )
@@ -421,17 +424,18 @@ class Client:
             :param per_page:
             :return:
             """
-            url = endpoints.URLBuilder(self._base_url, endpoints.templates.list) \
-                .build()
+            url = endpoints.URLBuilder(self._base_url, endpoints.templates.list).build()
             return self._requests.get(url, params=_build_params(page, per_page, **query_params))
 
-        def retrieve(self, template_id:str) -> NormalizedResponse:
+        def retrieve(self, template_id: str) -> NormalizedResponse:
             """
             Retrieves a singular template with this id
             :param template_id:
             :return:
             """
-            url = endpoints.URLBuilder(self._base_url, endpoints.templates.retrieve) \
-                .interpolate(endpoints.interpolations.template_id, template_id) \
+            url = (
+                endpoints.URLBuilder(self._base_url, endpoints.templates.retrieve)
+                .interpolate(endpoints.interpolations.template_id, template_id)
                 .build()
+            )
             return self._requests.get(url)

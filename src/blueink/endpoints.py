@@ -21,7 +21,7 @@ persons = Munch(
 )
 
 packets = Munch(
-    update="/packets/{packet_id}/", remind="/packets/{packet_id}/remind/", retrieve_coe="/packets/{packet_id}/coe/"
+    full_update="/packets/{packet_id}/", remind="/packets/{packet_id}/remind/", retrieve_coe="/packets/{packet_id}/coe/"
 )
 
 templates = Munch(list="/templates/", retrieve="/templates/{template_id}/")

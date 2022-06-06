@@ -1,14 +1,27 @@
 import json
 from copy import deepcopy
+from urllib.error import HTTPError
 
 from src.blueink.client import Client
-from src.blueink.model.persons import PersonHelper
+from src.blueink.person_helper import PersonHelper
 
 from pprint import pprint
+from requests.exceptions import HTTPError
 
 client = Client()
 
 ph = PersonHelper()
+
+# Try and create a person without setting anything up
+#  this is expected to error
+try:
+    result = client.persons.create_from_person_helper(ph)
+except HTTPError as e:
+    print(e)
+    pprint(e.response.text)
+except Exception as e:
+    print("Error:")
+    print(e)
 
 # Make up some metadata to add to the person
 metadata = {}
@@ -54,8 +67,15 @@ all_current_phones.pop()
 ph.set_phones(all_current_phones)
 
 # Create the person and check the result
-result = client.persons.create_from_person_helper(ph)
-pprint(f"Result Create: {result.status}: {result.data}")
+try:
+    result = client.persons.create_from_person_helper(ph)
+    pprint(f"Result Create: {result.status}: {result.data}")
+except HTTPError as e:
+    print(e)
+    pprint(e.response.text)
+except Exception as e:
+    print("Error:")
+    print(e)
 
 # Change the persons name and call update
 result.data.name = "Second Name"
@@ -77,16 +97,48 @@ for channel in result.data.channels:
 # Set the channels to the recreated channels without the invalid keys
 result.data.channels = new_channels
 
-result = client.persons.update(result.data.id, result.data)
-pprint(f"Result Update: {result.status}: {result.data}")
+try:
+    result = client.persons.update(result.data.id, result.data)
+    pprint(f"Result Update: {result.status}: {result.data}")
+except HTTPError as e:
+    print(e)
+    pprint(e.response.text)
+except Exception as e:
+    print("Error:")
+    print(e)
+
+
+# Retrieve the person
+try:
+    result = client.persons.retrieve(result.data.id)
+    pprint(f"Result Retrieve: {result.status}: {result.data}")
+except HTTPError as e:
+    print(e)
+    pprint(e.response.text)
+except Exception as e:
+    print("Error:")
+    print(e)
+
 
 # Perform a partial update to change the name again
 third_name = {"name": "Third Name"}
-result = client.persons.partial_update(result.data.id, third_name)
-pprint(f"Result Partial Update: {result.status}: {result.data}")
-
+try:
+    result = client.persons.partial_update(result.data.id, third_name)
+    pprint(f"Result Partial Update: {result.status}: {result.data}")
+except HTTPError as e:
+    print(e)
+    pprint(e.response.text)
+except Exception as e:
+    print("Error:")
+    print(e)
 
 # Delete the person from your account and check the result
-result = client.persons.delete(result.data.id)
-
-pprint(f"Result Delete: {result.status}: {result.data}")
+try:
+    result = client.persons.delete(result.data.id)
+    pprint(f"Result Delete: {result.status}: {result.data}")
+except HTTPError as e:
+    print(e)
+    pprint(e.response.text)
+except Exception as e:
+    print("Error:")
+    print(e)

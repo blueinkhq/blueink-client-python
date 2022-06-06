@@ -109,7 +109,7 @@ class PersonHelper:
         self._name = name
         return self._name
 
-    def as_dict(self):
+    def as_dict(self, **kwargs):
         """
         Return a person as a dictionary
 
@@ -128,5 +128,11 @@ class PersonHelper:
             metadata=self._metadata,
             channels=channels,
         )
+        out_dict = person_out.dict(
+            exclude_unset=True,
+        )
 
-        return person_out.dict(exclude_unset=True)
+        # Merge in the additional data
+        out_dict = {**out_dict, **kwargs}
+
+        return out_dict
