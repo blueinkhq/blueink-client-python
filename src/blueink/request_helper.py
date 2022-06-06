@@ -52,19 +52,19 @@ class RequestHelper:
         self._private_api_key = private_api_key
 
     def delete(self, url, **kwargs):
-        return self._make_request('delete', url, **kwargs)
+        return self._make_request("delete", url, **kwargs)
 
     def get(self, url, **kwargs):
-        return self._make_request('get', url, **kwargs)
+        return self._make_request("get", url, **kwargs)
 
     def patch(self, url, **kwargs):
-        return self._make_request('patch', url, **kwargs)
+        return self._make_request("patch", url, **kwargs)
 
     def post(self, url, **kwargs):
-        return self._make_request('post', url, **kwargs)
+        return self._make_request("post", url, **kwargs)
 
     def put(self, url, **kwargs):
-        return self._make_request('put', url, **kwargs)
+        return self._make_request("put", url, **kwargs)
 
     def _build_headers(self, content_type=None, more_headers=None):
         """
@@ -80,14 +80,16 @@ class RequestHelper:
         if more_headers:
             hdrs.update(more_headers)
 
-        hdrs['Authorization'] = f"Token {self._private_api_key}"
+        hdrs["Authorization"] = f"Token {self._private_api_key}"
 
         if content_type is not None:
-           hdrs['Content-Type'] = content_type
+            hdrs["Content-Type"] = content_type
 
         return hdrs
 
-    def _make_request(self, method, url, data=None, json=None, files=None, params=None, headers=None, content_type=None):
+    def _make_request(
+        self, method, url, data=None, json=None, files=None, params=None, headers=None, content_type=None
+    ):
         response = requests.request(
             method,
             url,
