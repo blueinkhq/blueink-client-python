@@ -3,12 +3,11 @@ import json
 from os import environ
 
 from munch import Munch
-
+from .bundle_helper import BundleHelper
 from . import endpoints
 from .constants import BUNDLE_STATUS, DEFAULT_BASE_URL, ENV_BLUEINK_API_URL, ENV_BLUEINK_PRIVATE_API_KEY
-from .model.bundles import BundleHelper
-from .model.persons import PersonHelper
 from .paginator import PaginatedIterator
+from .person_helper import PersonHelper
 from .request_helper import NormalizedResponse, RequestHelper
 
 
@@ -124,7 +123,7 @@ class Client:
             files = bundle_helper.files
             return self.create(data=data, files=files)
 
-        def paged_list(self, start_page=0, per_page=50, related_data=False) -> PaginatedIterator:
+        def paged_list(self, start_page=0, per_page=50, related_data=False, **query_params) -> PaginatedIterator:
             """
             returns an iterable object such that you can do
 
@@ -137,7 +136,7 @@ class Client:
             :return:
             """
             params = [start_page, per_page, related_data]
-            paged_call = PaginatedIterator(self.list, params, 0)
+            paged_call = PaginatedIterator(self.list, params, 0, **query_params)
             return paged_call
 
         def list(self, page=None, per_page=None, related_data=False, **query_params) -> NormalizedResponse:

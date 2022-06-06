@@ -1,4 +1,4 @@
-from src.blueink import Client, BundleHelper, constants
+from src.blueink import Client, constants
 
 client = Client()
 
@@ -13,7 +13,7 @@ for bundle in response.data[:3]:
 print("\n*********************\nList Bundles - filtering by status")
 response = client.bundles.list(status=constants.BUNDLE_STATUS.COMPLETE)
 print(f"Retrieved {len(response.data)} Complete Bundles")
-print(f"Here are the first 3:")
+print(f"Here are the first 2:")
 for bundle in response.data[:3]:
     print(f"{bundle.id} {bundle.status}")
 
@@ -21,7 +21,7 @@ for bundle in response.data[:3]:
 print("\n*********************\nPaged Bundle Listing")
 ids = []
 page = 1
-for api_call in client.bundles.paged_list(start_page=1, per_page=5):
+for api_call in client.bundles.paged_list(start_page=1, per_page=5, status=constants.BUNDLE_STATUS.COMPLETE):
     # print(f"Paged Call: {api_call.data}")
     print(f"Page {page}, {len(api_call.data)} Bundles")
     for bundle in api_call.data:

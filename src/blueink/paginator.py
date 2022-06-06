@@ -4,7 +4,7 @@ from .request_helper import NormalizedResponse
 
 
 class PaginatedIterator:
-    def __init__(self, paged_api_function, params, page_number_idx):
+    def __init__(self, paged_api_function, params, page_number_idx, **query_params):
         '''
 
         Iterator to run client functions such as client.bundles.list() in a pythonic way
@@ -22,6 +22,7 @@ class PaginatedIterator:
         '''
         self._paged_func = paged_api_function
         self._params = params
+        self._query_params = query_params
         self._page_number_idx = page_number_idx
         self._total_pages = None
 
@@ -35,7 +36,7 @@ class PaginatedIterator:
             raise StopIteration
 
         try:
-            api_response: NormalizedResponse = self._paged_func(*self._params)
+            api_response: NormalizedResponse = self._paged_func(*self._params, **self._query_params)
         except HTTPError:
             raise StopIteration
 
