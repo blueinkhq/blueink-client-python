@@ -21,28 +21,29 @@ for bundle in response.data[:3]:
 print("\n*********************\nPaged Bundle Listing")
 ids = []
 page = 1
-for api_call in client.bundles.paged_list(page=1, per_page=5, status=constants.BUNDLE_STATUS.COMPLETE):
-    # print(f"Paged Call: {api_call.data}")
-    print(f"Page {page}, {len(api_call.data)} Bundles")
-    for bundle in api_call.data:
+iterator = client.bundles.paged_list(page=1, per_page=5, status=constants.BUNDLE_STATUS.COMPLETE)
+for paged_response in iterator:
+    print(f"Page {page}, {len(paged_response.data)} Bundles")
+    for bundle in paged_response.data:
         ids.append(bundle.id)
     page += 1
 print(f"Found {len(ids)} bundle ids!")
 print("")
 
-print(f"---> Single bundle retrieval, id {ids[0]}")
 if len(ids) > 0:
-    single_bundle = client.bundles.retrieve(ids[0], related_data=True)
-    print(f"{bundle.id}: {bundle.status}")
+    print(f"---> Single bundle retrieval, id {ids[0]}")
+    response = client.bundles.retrieve(ids[0], related_data=True)
+    single_bundle = response.data
+    print(f"{single_bundle.id}: {single_bundle.status}")
 
 print("\n*********************\nPaged Persons Listing")
 page = 1
-for api_call in client.persons.paged_list(page=1, per_page=2):
-    print(f"Page {page}, {len(api_call.data)} Persons")
+for paged_response in client.persons.paged_list(page=1, per_page=2):
+    print(f"Page {page}, {len(paged_response.data)} Persons")
     page += 1
 
 print("\n*********************\nPaged Templates Listing")
 page = 1
-for api_call in client.templates.paged_list(page=1, per_page=2):
-    print(f"Page {page}, {len(api_call.data)} Templates")
+for paged_response in client.templates.paged_list(page=1, per_page=2):
+    print(f"Page {page}, {len(paged_response.data)} Templates")
     page += 1
