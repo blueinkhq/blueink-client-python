@@ -2,6 +2,8 @@ import requests
 
 from munch import munchify
 
+from .constants import BLUEINK_PAGINATION_HEADER
+
 
 class Pagination:
     def __init__(self, pagination_header: str):
@@ -44,7 +46,7 @@ class NormalizedResponse:
         # Pagination
         self.pagination = None
         if "X-Blueink-Pagination" in response.headers:
-            self.pagination = Pagination(response.headers.get("X-Blueink-Pagination"))
+            self.pagination = Pagination(response.headers.get(BLUEINK_PAGINATION_HEADER))
 
 
 class RequestHelper:
