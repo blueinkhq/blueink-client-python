@@ -4,7 +4,7 @@ A Python client library for the BlueInk API.
 ## Installation
 To install this library, run the following command:
 ```bash
-pip install blueinkclient
+pip install blueink-client-python
 ```
 
 ## Usage
@@ -16,7 +16,7 @@ If this does not suit you, the client constructor also accepts two override para
 
 The client can be imported using the following import statement. Initializing a client is a one-liner:
 ```python
-from BlueInkClient.client import Client
+from blueink import Client
 
 client = Client()
 # or, positionally:
@@ -302,10 +302,15 @@ except Exception as e:
 ### Packets
 Packets can be updated. Reminders may be triggered, and COEs can be retrieve using the client:
 ```python
-# Retrieval
+# Retrieve
+client.packets.retrieve(packet_id)
+
+# Update
 client.packets.update(packet_id, packet_json)
+
 # Remind
 client.packets.remind(packet_id)
+
 # Get COE
 client.packets.retrieve_coe(packet_id)
 ```
