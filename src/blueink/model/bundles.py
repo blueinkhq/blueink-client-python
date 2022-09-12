@@ -2,7 +2,8 @@ import random
 import string
 from typing import List, Optional
 from pydantic import BaseModel, validator, EmailStr
-from src.blueink.constants import DELIVER_VIA, FIELD_KIND
+
+from ..constants import DELIVER_VIA, FIELD_KIND
 
 
 class ValidationError(RuntimeError):
