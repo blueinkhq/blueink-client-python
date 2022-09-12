@@ -375,13 +375,13 @@ class Client:
             )
             return self._requests.delete(url)
 
-        def remind(self, packet_id: str) -> NormalizedResponse:
+        def embed_url(self, packet_id: str) -> NormalizedResponse:
             url = (
-                endpoints.URLBuilder(self._base_url, endpoints.packets.remind)
+                endpoints.URLBuilder(self._base_url, endpoints.packets.embed_url)
                     .interpolate(endpoints.interpolations.packet_id, packet_id)
                     .build()
             )
-            return self._requests.put(url)
+            return self._requests.post(url)
 
         def retrieve_coe(self, packet_id: str) -> NormalizedResponse:
             url = (

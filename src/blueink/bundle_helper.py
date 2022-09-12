@@ -112,7 +112,7 @@ class BundleHelper:
             raise RuntimeError(f'Document/Template with id {template_id} already added.')
 
         template = TemplateRef.create(template_id=template_id, **additional_data)
-        self._documents[template_id] = template
+        self._documents[template.key] = template
         return template.key
 
     def add_field(self, document_key: str, x: int, y: int, w: int, h: int, p: int, kind: str,
@@ -205,7 +205,7 @@ class BundleHelper:
             raise RuntimeError(f"Signer {signer_id} does not have a corresponding packet")
 
         assignment = TemplateRefAssignment.create(role, signer_id, **additional_data)
-        self._documents[document_key].assignments.append(assignment)
+        self._documents[document_key].add_assignment(assignment)
 
     def set_value(self, document_key: str, key: str, value: str, **additional_data):
         """
