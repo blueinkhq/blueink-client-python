@@ -127,8 +127,9 @@ class TemplateRef(BaseModel):
         extra = 'allow'
 
     @classmethod
-    def create(cls, **kwargs):
-        obj = TemplateRef(**kwargs)
+    def create(cls, override_key=None, **kwargs):
+        key = override_key if override_key else generate_key('tmpl', 5)
+        obj = TemplateRef(key=key, **kwargs)
         return obj
 
     def add_assignment(self, assignment: TemplateRefAssignment):

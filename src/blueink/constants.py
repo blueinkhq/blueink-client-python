@@ -49,6 +49,7 @@ SEND_VIA = Munch(
 
 DELIVER_VIA = Munch(
     EMAIL="email",
+    EMBED="embed",
     SMS="phone",
 )
 
