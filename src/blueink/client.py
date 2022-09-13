@@ -24,28 +24,37 @@ def _build_params(page=None, per_page=None, **query_params):
 
 
 class Client:
-    def __init__(self, override_base_url=None, override_private_api_key=None):
-        """
+    def __init__(self, private_api_key=None, base_url=None):
+        """Initialize a Client instance to access the Blueink eSignature API
 
-        :param override_base_url: Provide or override value provided by environmental variable. If none supplied, will
-        use default "https://api.blueink.com/api/v2" if no env var BLUEINK_API_URL found.
-        :param override_private_api_key: Provide or override value provided by environmental variable. If none supplied,
-        will use env var BLUEINK_PRIVATE_API_KEY
+        Args:
+            private_api_key: the private API key used to access the Blueink API.
+                If no value is provided, then the environment is checked for a variable named
+                "BLUEINK_PRIVATE_API_KEY".
+            base_url: override the API base URL. If not supplied, we check the environment variable
+                BLUEINK_API_URL. If that is empty, the default value of "https://api.blueink.com/api/v2"
+                is used.
+
+        Returns:
+            A Client instance
+
+        Raises:
+            ValueError if a private API key is neither passed during instantiation
+            nor specified via the environment.
         """
-        if override_private_api_key:
-            private_api_key = override_private_api_key
-        else:
+        if not private_api_key:
             private_api_key = environ.get(ENV_BLUEINK_PRIVATE_API_KEY)
 
         if not private_api_key:
             raise ValueError(
                 "A Blueink Private API Key must be provided on Client initialization or "
-                + f"specified via the environment variable {ENV_BLUEINK_PRIVATE_API_KEY}"
+                f"specified via the environment variable {ENV_BLUEINK_PRIVATE_API_KEY}"
             )
 
-        try:
-            base_url = override_base_url if override_base_url else environ[ENV_BLUEINK_API_URL]
-        except KeyError:
+        if not base_url:
+            base_url = environ.get(ENV_BLUEINK_API_URL)
+
+        if not base_url:
             base_url = DEFAULT_BASE_URL
 
         self._request_helper = RequestHelper(private_api_key)
