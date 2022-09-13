@@ -1,36 +1,39 @@
-from munch import Munch
+from string import Template
 
-bundles = Munch(
-    create="/bundles/",
-    list="/bundles/",
-    retrieve="/bundles/{bundle_id}/",
-    cancel="/bundles/{bundle_id}/cancel/",
-    list_events="/bundles/{bundle_id}/events/",
-    list_files="/bundles/{bundle_id}/files/",
-    list_data="/bundles/{bundle_id}/data/",
-)
+# Note, this module abuses Classes to achieve a namespace, where SimpleNameSpace
+# or something similar might be more appropriate. However, afaik none of those
+# solutions have good auto-completion support in IDEs.
+# So we do it this way. ¯\_(ツ)_/¯
 
-persons = Munch(
-    create="/persons/",
-    list="/persons/",
-    retrieve="/persons/{person_id}/",
-    full_update="/persons/{person_id}/",
-    partial_update="/persons/{person_id}/",
-    delete="/persons/{person_id}/",
-)
 
-packets = Munch(
-    embed_url="/packets/{packet_id}/embed_url/",
-    full_update="/packets/{packet_id}/",
-    remind="/packets/{packet_id}/remind/",
-    retrieve_coe="/packets/{packet_id}/coe/",
-)
+class BUNDLES:
+    CREATE = "/bundles/"
+    LIST = "/bundles/"
+    RETRIEVE = "/bundles/${bundle_id}/"
+    CANCEL = "/bundles/${bundle_id}/cancel/"
+    LIST_EVENTS = "/bundles/${bundle_id}/events/"
+    LIST_FILES = "/bundles/${bundle_id}/files/"
+    LIST_DATA = "/bundles/${bundle_id}/data/"
 
-templates = Munch(list="/templates/", retrieve="/templates/{template_id}/")
 
-interpolations = Munch(
-    bundle_id="{bundle_id}", person_id="{person_id}", packet_id="{packet_id}", template_id="{template_id}"
-)
+class PERSONS:
+    CREATE = "/persons/"
+    LIST = "/persons/"
+    RETRIEVE = "/persons/${person_id}/"
+    UPDATE = "/persons/${person_id}/"
+    DELETE = "/persons/${person_id}/"
+
+
+class PACKETS:
+    EMBED_URL = "/packets/${packet_id}/embed_url/"
+    UPDATE = "/packets/${packet_id}/"
+    REMIND = "/packets/${packet_id}/remind/"
+    RETRIEVE_COE = "/packets/${packet_id}/coe/"
+
+
+class TEMPLATES:
+    LIST = "/templates/"
+    RETRIEVE = "/templates/${template_id}/"
 
 
 class URLBuilder:
@@ -38,9 +41,5 @@ class URLBuilder:
         self._base_url = base_url
         self._endpoint = endpoint
 
-    def interpolate(self, variable: str, value):
-        self._endpoint = self._endpoint.replace(variable, str(value))
-        return self
-
-    def build(self):
-        return self._base_url + self._endpoint
+    def build(self, **kwargs):
+        return self._base_url + Template(self._endpoint).substitute(**kwargs)
