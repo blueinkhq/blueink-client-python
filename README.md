@@ -128,6 +128,7 @@ for api_call in client.bundles.paged_list(start_page=1, per_page=5, related_data
 ```
 ### Persons
 Creating a person is similar to a creating a Bundle. There is a PersonHelper to help create a person
+
 ```python
 import json
 from copy import deepcopy
@@ -238,7 +239,6 @@ except Exception as e:
     print("Error:")
     print(e)
 
-
 # Retrieve the person
 try:
     result = client.persons.retrieve(result.data.id)
@@ -249,7 +249,6 @@ except HTTPError as e:
 except Exception as e:
     print("Error:")
     print(e)
-
 
 # Perform a partial update to change the name again
 third_name = {"name": "Third Name"}
@@ -300,6 +299,7 @@ except Exception as e:
 
 ### Packets
 Packets can be updated. Reminders may be triggered, and COEs can be retrieve using the client:
+
 ```python
 # Retrieve
 client.packets.retrieve(packet_id)
