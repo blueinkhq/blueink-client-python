@@ -1,4 +1,3 @@
-import json
 from copy import deepcopy
 from requests.exceptions import HTTPError
 from pprint import pprint
@@ -123,7 +122,7 @@ except Exception as e:
 # Perform a partial update to change the name again
 third_name = {"name": "Third Name"}
 try:
-    result = client.persons.partial_update(result.data.id, third_name)
+    result = client.persons.update(result.data.id, third_name, partial=True)
     pprint(f"Result Partial Update: {result.status}: {result.data}")
 except HTTPError as e:
     print(e)

@@ -5,17 +5,29 @@ from src.blueink import Client, constants, exceptions, BundleHelper
 
 client = Client()
 
+# Fetch templates
+response = client.templates.list()
+templates = response.data
+
 print("\n*********************")
 print("Bundle Creation with a Template")
+
+print("== Available Templates ==")
+for t in templates:
+    print(
+        f'{t.id} -- "{t.name or "[No name]"}" -- '
+        f"{len(t.roles)} signers, {len(t.fields)} fields"
+    )
+
+template_id = input("\nPlease enter template ID: ")
+# This will fail with an exception if the template ID does not exist
+response = client.templates.retrieve(template_id)
+template = response.data
+
 bh = BundleHelper(label="Example from Template",
                   email_subject="Here is your example Bundle",
                   email_message="Please sign. This bundle was created from a template",
                   is_test=True)
-
-template_id = input("Please enter template ID: ")
-# This will fail with an exception if the template ID does not exist
-response = client.templates.retrieve(template_id)
-template = response.data
 
 doc_key = bh.add_document_template(template_id)
 

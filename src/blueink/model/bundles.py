@@ -34,8 +34,9 @@ class Field(BaseModel):
         extra = 'allow'
 
     @classmethod
-    def create(cls, x, y, w, h, page, kind, override_key=None, **kwargs):
-        key = override_key if override_key else generate_key('field', 5)
+    def create(cls, x, y, w, h, page, kind, key=None, **kwargs):
+        if not key:
+            key = generate_key('field', 5)
         obj = Field(key=key,
                     x=x,
                     y=y,
@@ -80,8 +81,9 @@ class Packet(BaseModel):
         return v
 
     @classmethod
-    def create(cls, name, override_key=None, **kwargs):
-        key = override_key if override_key else generate_key('packet', 5)
+    def create(cls, name, key=None, **kwargs):
+        if not key:
+            key = generate_key('packet', 5)
         obj = Packet(key=key,
                      name=name,
                      **kwargs)
@@ -127,8 +129,9 @@ class TemplateRef(BaseModel):
         extra = 'allow'
 
     @classmethod
-    def create(cls, override_key=None, **kwargs):
-        key = override_key if override_key else generate_key('tmpl', 5)
+    def create(cls, key=None, **kwargs):
+        if not key:
+            key = generate_key('tmpl', 5)
         obj = TemplateRef(key=key, **kwargs)
         return obj
 
@@ -151,17 +154,13 @@ class Document(BaseModel):
     file_index: Optional[int]
     fields: Optional[List[Field]]
 
-    # template related
-    template_id: Optional[str]  # UUID to a valid template, required for Template
-    assignments: Optional[List[TemplateRefAssignment]]
-    field_values: Optional[List[TemplateRefFieldValue]]
-
     class Config:
         extra = 'allow'
 
     @classmethod
-    def create(cls, override_key=None, **kwargs):
-        key = override_key if override_key else generate_key('dock', 5)
+    def create(cls, key=None, **kwargs):
+        if not key:
+            key = generate_key('doc', 5)
         obj = Document(key=key, **kwargs)
         return obj
 
@@ -174,11 +173,6 @@ class Document(BaseModel):
         if self.assignments is None:
             self.assignments = []
         self.assignments.append(assignment)
-
-    def add_field_value(self, field_value: TemplateRefFieldValue):
-        if self.field_values is None:
-            self.field_values = []
-        self.field_values.append(field_value)
 
 
 class Bundle(BaseModel):

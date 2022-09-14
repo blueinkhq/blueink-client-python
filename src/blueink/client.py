@@ -3,11 +3,12 @@ import json
 from os import environ
 
 from munch import Munch
-from .bundle_helper import BundleHelper
+
 from . import endpoints
+from .bundle_helper import BundleHelper
 from .constants import BUNDLE_STATUS, DEFAULT_BASE_URL, ENV_BLUEINK_API_URL, ENV_BLUEINK_PRIVATE_API_KEY
-from .person_helper import PersonHelper
 from .paginator import PaginatedIterator
+from .person_helper import PersonHelper
 from .request_helper import NormalizedResponse, RequestHelper
 
 
@@ -23,28 +24,37 @@ def _build_params(page=None, per_page=None, **query_params):
 
 
 class Client:
-    def __init__(self, override_base_url=None, override_private_api_key=None):
-        """
+    def __init__(self, private_api_key=None, base_url=None):
+        """Initialize a Client instance to access the Blueink eSignature API
 
-        :param override_base_url: Provide or override value provided by environmental variable. If none supplied, will
-        use default "https://api.blueink.com/api/v2" if no env var BLUEINK_API_URL found.
-        :param override_private_api_key: Provide or override value provided by environmental variable. If none supplied,
-        will use env var BLUEINK_PRIVATE_API_KEY
+        Args:
+            private_api_key: the private API key used to access the Blueink API.
+                If no value is provided, then the environment is checked for a variable named
+                "BLUEINK_PRIVATE_API_KEY".
+            base_url: override the API base URL. If not supplied, we check the environment variable
+                BLUEINK_API_URL. If that is empty, the default value of "https://api.blueink.com/api/v2"
+                is used.
+
+        Returns:
+            A Client instance
+
+        Raises:
+            ValueError if a private API key is neither passed during instantiation
+            nor specified via the environment.
         """
-        if override_private_api_key:
-            private_api_key = override_private_api_key
-        else:
+        if not private_api_key:
             private_api_key = environ.get(ENV_BLUEINK_PRIVATE_API_KEY)
 
         if not private_api_key:
             raise ValueError(
                 "A Blueink Private API Key must be provided on Client initialization or "
-                + f"specified via the environment variable {ENV_BLUEINK_PRIVATE_API_KEY}"
+                f"specified via the environment variable {ENV_BLUEINK_PRIVATE_API_KEY}"
             )
 
-        try:
-            base_url = override_base_url if override_base_url else environ[ENV_BLUEINK_API_URL]
-        except KeyError:
+        if not base_url:
+            base_url = environ.get(ENV_BLUEINK_API_URL)
+
+        if not base_url:
             base_url = DEFAULT_BASE_URL
 
         self._request_helper = RequestHelper(private_api_key)
@@ -58,6 +68,32 @@ class Client:
         def __init__(self, base_url, requests_helper):
             self._base_url = base_url
             self._requests = requests_helper
+
+        def build_url(self, endpoint: str, **kwargs):
+            """Shortcut to build a URL using endpoints.URLBuilder
+
+            Args:
+                endpoint: one of the API endpoints, e.g. endpoints.BUNDLES.create
+                **kwargs: the arg name should be one of the keys in endpoints.interpolations, and the arg
+                    value will be substituted for the named placeholder in the endpoint str
+
+            Returns:
+                The URL as a str
+
+            Raises:
+                ValueError if one of the kwargs is not a valid endpoint interpolation key
+            """
+            # All of our current endpoints take 1 parameter, max
+            if len(kwargs) > 1:
+                raise ValueError('Only one interpolation parameter is allowed')
+
+            try:
+                url = endpoints.URLBuilder(self._base_url, endpoint).build(**kwargs)
+            except KeyError:
+                arg_name = list(kwargs.keys())[0]
+                raise ValueError(f'Invalid substitution argument "{arg_name}" provided for endpoint "{endpoint}"')
+
+            return url
 
     class _Bundles(_SubClient):
         def _prepare_files(self, file_list):
@@ -92,7 +128,7 @@ class Client:
             if not data:
                 raise ValueError("data is required")
 
-            url = endpoints.URLBuilder(self._base_url, endpoints.bundles.create).build()
+            url = self.build_url(endpoints.BUNDLES.CREATE)
 
             if not files:
                 response = self._requests.post(url, json=data)
@@ -147,7 +183,7 @@ class Client:
             :param query_params: Additional query params to be put onto the request
             :return:
             """
-            url = endpoints.URLBuilder(self._base_url, endpoints.bundles.list).build()
+            url = self.build_url(endpoints.BUNDLES.LIST)
             response = self._requests.get(url, params=_build_params(page, per_page, **query_params))
 
             if related_data:
@@ -178,12 +214,7 @@ class Client:
             :param related_data: (default false), returns events, files, data if true
             :return:
             """
-            url = (
-                endpoints.URLBuilder(self._base_url, endpoints.bundles.retrieve)
-                    .interpolate(endpoints.interpolations.bundle_id, bundle_id)
-                    .build()
-            )
-
+            url = self.build_url(endpoints.BUNDLES.RETRIEVE, bundle_id=bundle_id)
             response = self._requests.get(url)
 
             if related_data:
@@ -198,12 +229,7 @@ class Client:
             :param bundle_id:
             :return:
             """
-            url = (
-                endpoints.URLBuilder(self._base_url, endpoints.bundles.cancel)
-                    .interpolate(endpoints.interpolations.bundle_id, bundle_id)
-                    .build()
-            )
-
+            url = self.build_url(endpoints.BUNDLES.CANCEL, bundle_id=bundle_id)
             return self._request.put(url)
 
         def list_events(self, bundle_id) -> NormalizedResponse:
@@ -212,12 +238,7 @@ class Client:
             :param bundle_id:
             :return:
             """
-            url = (
-                endpoints.URLBuilder(self._base_url, endpoints.bundles.list_events)
-                    .interpolate(endpoints.interpolations.bundle_id, bundle_id)
-                    .build()
-            )
-
+            url = self.build_url(endpoints.BUNDLES.LIST_EVENTS, bundle_id=bundle_id)
             return self._requests.get(url)
 
         def list_files(self, bundle_id) -> NormalizedResponse:
@@ -226,12 +247,7 @@ class Client:
             :param bundle_id:
             :return:
             """
-            url = (
-                endpoints.URLBuilder(self._base_url, endpoints.bundles.list_files)
-                    .interpolate(endpoints.interpolations.bundle_id, bundle_id)
-                    .build()
-            )
-
+            url = self.build_url(endpoints.BUNDLES.LIST_FILES, bundle_id=bundle_id)
             return self._requests.get(url)
 
         def list_data(self, bundle_id) -> NormalizedResponse:
@@ -240,12 +256,7 @@ class Client:
             :param bundle_id:
             :return:
             """
-            url = (
-                endpoints.URLBuilder(self._base_url, endpoints.bundles.list_data)
-                    .interpolate(endpoints.interpolations.bundle_id, bundle_id)
-                    .build()
-            )
-
+            url = self.build_url(endpoints.BUNDLES.LIST_DATA, bundle_id=bundle_id)
             return self._requests.get(url)
 
     class _Persons(_SubClient):
@@ -261,7 +272,7 @@ class Client:
             # Merge the kwargs with the given data
             data = {**data, **kwargs}
 
-            url = endpoints.URLBuilder(self._base_url, endpoints.persons.create).build()
+            url = self.build_url(endpoints.PERSONS.CREATE)
             return self._requests.post(url, json=data)
 
         def create_from_person_helper(self, person_helper: PersonHelper, **kwargs) -> NormalizedResponse:
@@ -299,10 +310,8 @@ class Client:
             :param query_params: Additional query params to be put onto the request
             :return:
             """
-            url = endpoints.URLBuilder(self._base_url, endpoints.persons.list).build()
-            response = self._requests.get(url, params=_build_params(page, per_page, **query_params))
-
-            return response
+            url = self.build_url(endpoints.PERSONS.LIST)
+            return self._requests.get(url, params=_build_params(page, per_page, **query_params))
 
         def retrieve(self, person_id: str) -> NormalizedResponse:
             """
@@ -310,98 +319,74 @@ class Client:
             :param person_id:
             :return:
             """
-            url = (
-                endpoints.URLBuilder(self._base_url, endpoints.persons.retrieve)
-                    .interpolate(endpoints.interpolations.person_id, person_id)
-                    .build()
-            )
+            url = self.build_url(endpoints.PERSONS.RETRIEVE, person_id=person_id)
             return self._requests.get(url)
 
-        def update(self, person_id: str, data: dict) -> NormalizedResponse:
+        def update(self, person_id: str, data: dict, partial=False) -> NormalizedResponse:
             """
             :param person_id:
             :param data: a full dictionary representation of person
             :return:
             """
-            url = (
-                endpoints.URLBuilder(self._base_url, endpoints.persons.full_update)
-                    .interpolate(endpoints.interpolations.person_id, person_id)
-                    .build()
-            )
-
-            return self._requests.put(url, json=data)
-
-        def partial_update(self, person_id: str, data: dict) -> NormalizedResponse:
-            """
-
-            :param person_id:
-            :param data: a partial dictionary representation of person
-            :return:
-            """
-            url = (
-                endpoints.URLBuilder(self._base_url, endpoints.persons.partial_update)
-                    .interpolate(endpoints.interpolations.person_id, person_id)
-                    .build()
-            )
-            return self._requests.patch(url, json=data)
+            url = self.build_url(endpoints.PERSONS.UPDATE, person_id=person_id)
+            if partial:
+                response = self._requests.patch(url, json=data)
+            else:
+                response = self._requests.put(url, json=data)
+            return response
 
         def delete(self, person_id: str) -> NormalizedResponse:
-            url = (
-                endpoints.URLBuilder(self._base_url, endpoints.persons.delete)
-                    .interpolate(endpoints.interpolations.person_id, person_id)
-                    .build()
-            )
+            url = self.build_url(endpoints.PERSONS.DELETE, person_id=person_id)
             return self._requests.delete(url)
 
     class _Packets(_SubClient):
         def update(self, packet_id: str, data: dict) -> NormalizedResponse:
-            url = (
-                endpoints.URLBuilder(self._base_url, endpoints.packets.full_update)
-                    .interpolate(endpoints.interpolations.person_id, packet_id)
-                    .build()
-            )
+            """Update a Packet
+
+            Note: this always performs a partial update (PATCH) because that is
+            the only method supported by the Blueink API for this endpoint
+
+            Args:
+                packet_id: the ID of the Packet
+                data: the updated field values for the Packet
+
+            Returns:
+                A NormalizedResponse, with the updated packet as `data`
+
+            Raises:
+                 exceptions.RequestException (or a more specific exception class) if an error occured
+            """
+            url = self.build_url(endpoints.PACKETS.UPDATE, packet_id=packet_id)
             return self._requests.patch(url, json=data)
 
-        def delete(self, person_id: str) -> NormalizedResponse:
-            """
-            Deletes a person
-            :param person_id:
-            :return:
-            """
-            url = (
-                endpoints.URLBuilder(self._base_url, endpoints.packets.delete)
-                    .interpolate(endpoints.interpolations.person_id, person_id)
-                    .build()
-            )
-            return self._requests.delete(url)
-
         def embed_url(self, packet_id: str) -> NormalizedResponse:
-            url = (
-                endpoints.URLBuilder(self._base_url, endpoints.packets.embed_url)
-                    .interpolate(endpoints.interpolations.packet_id, packet_id)
-                    .build()
-            )
+            """Create an embedded signing URL
+
+            deliver_via on the Packet must be set to "embed" for this request to succeed.
+
+            Args:
+                packet_id: the ID of the Packet.
+
+            Returns:
+                A NormalizedResponse
+            """
+            url = self.build_url(endpoints.PACKETS.EMBED_URL, packet_id=packet_id)
             return self._requests.post(url)
 
         def retrieve_coe(self, packet_id: str) -> NormalizedResponse:
-            url = (
-                endpoints.URLBuilder(self._base_url, endpoints.packets.retrieve_coe)
-                    .interpolate(endpoints.interpolations.packet_id, packet_id)
-                    .build()
-            )
+            url = self.build_url(endpoints.PACKETS.RETRIEVE_COE, packet_id=packet_id)
             return self._requests.get(url)
 
         def remind(self, packet_id: str) -> NormalizedResponse:
+            """Send a reminder to this Packet
+
+            Args:
+                packet_id: the ID of the Packet
+
+            Returns:
+                A NormalizedResponse
             """
-            Sends a reminder to the contact channel on this packet
-            :param packet_id:
-            :return:
-            """
-            url = (
-                endpoints.URLBuilder(self._base_url, endpoints.packets.remind)
-                    .interpolate(endpoints.interpolations.packet_id, packet_id)
-                    .build()
-            )
+            url = self.build_url(endpoints.PACKETS.REMIND, packet_id=packet_id)
             self._requests.put(url)
 
     class _Templates(_SubClient):
@@ -434,7 +419,7 @@ class Client:
             :param query_params: Additional query params to be put onto the request
             :return:
             """
-            url = endpoints.URLBuilder(self._base_url, endpoints.templates.list).build()
+            url = self.build_url(endpoints.TEMPLATES.LIST)
             return self._requests.get(url, params=_build_params(page, per_page, **query_params))
 
         def retrieve(self, template_id: str) -> NormalizedResponse:
@@ -443,9 +428,5 @@ class Client:
             :param template_id:
             :return:
             """
-            url = (
-                endpoints.URLBuilder(self._base_url, endpoints.templates.retrieve)
-                    .interpolate(endpoints.interpolations.template_id, template_id)
-                    .build()
-            )
+            url = self.build_url(endpoints.TEMPLATES.RETRIEVE, template_id=template_id)
             return self._requests.get(url)
