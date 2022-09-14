@@ -26,8 +26,11 @@ class Pagination:
 
 class NormalizedResponse:
     def __init__(self, response: requests.Response):
-        """
-        Encapsulates the response from a BlueInk REST endpoint in a "Munch" of the JSON body.
+        """Encapsulates the response from a BlueInk REST endpoint
+
+        The response data is available via the `data` attribute and supports
+        both dictionary-style access (`data['id']`) and dot access (`data.id`).
+
         Status code and pagination also included.
 
         This will error out if JSON is not returned.
@@ -45,8 +48,10 @@ class NormalizedResponse:
 
         # Pagination
         self.pagination = None
-        if "X-Blueink-Pagination" in response.headers:
-            self.pagination = Pagination(response.headers.get(BLUEINK_PAGINATION_HEADER))
+        if BLUEINK_PAGINATION_HEADER in response.headers:
+            self.pagination = Pagination(
+                response.headers.get(BLUEINK_PAGINATION_HEADER)
+            )
 
 
 class RequestHelper:

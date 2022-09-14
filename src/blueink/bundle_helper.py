@@ -117,7 +117,7 @@ class BundleHelper:
 
     def add_field(self, document_key: str, x: int, y: int, w: int, h: int, p: int, kind: str,
                   editors: [str] = None, label: str = None, v_pattern: str = None, v_min: int = None,
-                  v_max: int = None, override_key=None, **additional_data):
+                  v_max: int = None, key=None, **additional_data):
         """
         Create and add a field
         :param document:
@@ -133,7 +133,7 @@ class BundleHelper:
         :param v_min: Optional
         :param v_max: Optional
         :param editors: Optional
-        :param override_key: Optional
+        :param key: Optional
         :param additional_data: Optional and will append any additional kwargs to the json of the field
         :return: Field object
         """
@@ -142,7 +142,7 @@ class BundleHelper:
 
         field = Field.create(
             x, y, w, h, p, kind,
-            label=label, v_pattern=v_pattern, v_min=v_min, v_max=v_max, override_key=override_key,
+            label=label, v_pattern=v_pattern, v_min=v_min, v_max=v_max, key=key,
             **additional_data
         )
         for packet_key in editors:
@@ -153,12 +153,12 @@ class BundleHelper:
 
     def add_signer(self, name: str, email: str = None, phone: str = None, deliver_via: str = None,
                    person_id=None, auth_sms: bool = False, auth_selfie: bool = False, auth_id: bool = False,
-                   order: int = None, override_key=None, **additional_data):
+                   order: int = None, key=None, **additional_data):
         """
         Create and add a signer.
         This should have at least an email xor phone number.
 
-        :param override_key:
+        :param key:
         :param person_id: Optional
         :param name: Optional
         :param email: Optional
@@ -183,16 +183,16 @@ class BundleHelper:
                                auth_id=auth_id,
                                deliver_via=deliver_via,
                                order=order,
-                               override_key=override_key,
+                               key=key,
                                **additional_data)
         self._packets[packet.key] = packet
         return packet.key
 
-    def assign_role(self, document_key: str, signer_id: str, role: str, **additional_data):
+    def assign_role(self, document_key: str, signer_key: str, role: str, **additional_data):
         """
         Assigns a signer to a particular role in a template
         :param document_key:
-        :param signer_id:
+        :param signer_key:
         :param role:
         :param additional_data: Optional and will append any additional kwargs to the json of the ref assignment
         :return:
@@ -201,10 +201,10 @@ class BundleHelper:
             raise RuntimeError(f"No document found with key {document_key}!")
         if type(self._documents[document_key]) is not TemplateRef:
             raise RuntimeError(f"Document found with key {document_key} is not a Template!")
-        if signer_id not in self._packets:
-            raise RuntimeError(f"Signer {signer_id} does not have a corresponding packet")
+        if signer_key not in self._packets:
+            raise RuntimeError(f"Signer {signer_key} does not have a corresponding packet")
 
-        assignment = TemplateRefAssignment.create(role, signer_id, **additional_data)
+        assignment = TemplateRefAssignment.create(role, signer_key, **additional_data)
         self._documents[document_key].add_assignment(assignment)
 
     def set_value(self, document_key: str, key: str, value: str, **additional_data):
