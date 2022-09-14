@@ -13,15 +13,34 @@ for bundle in response.data[:3]:
 print("\n*********************\nList Bundles - filtering by status")
 response = client.bundles.list(status=constants.BUNDLE_STATUS.COMPLETE)
 print(f"Retrieved {len(response.data)} Complete Bundles")
-print(f"Here are the first 2:")
-for bundle in response.data[:3]:
+print(f"Here are the first 10:")
+for bundle in response.data[:10]:
     print(f"{bundle.id} {bundle.status}")
+
+print("\n*********************\nList Bundles - filtering by multiple statuses")
+statuses = ",".join([
+    constants.BUNDLE_STATUS.COMPLETE,
+    constants.BUNDLE_STATUS.STARTED
+])
+response = client.bundles.list(status__in=statuses)
+print(f"Retrieved {len(response.data)} Complete or Started Bundles")
+print(f"Here are the first 10:")
+for bundle in response.data[:10]:
+    print(f"{bundle.id} {bundle.status}")
+
+print("\n*********************\nList Bundles - search for an email address")
+response = client.bundles.list(search="example.com")
+print(f"Retrieved {len(response.data)} Matching Bundles")
+print(f"Here are the first 10:")
+for bundle in response.data[:10]:
+    print(f"{bundle.id} {bundle.status}")
+
 
 # These test pagination. Collects IDs
 print("\n*********************\nPaged Bundle Listing")
 ids = []
 page = 1
-iterator = client.bundles.paged_list(page=1, per_page=5, status=constants.BUNDLE_STATUS.COMPLETE)
+iterator = client.bundles.paged_list(page=1, per_page=5)
 for paged_response in iterator:
     print(f"Page {page}, {len(paged_response.data)} Bundles")
     for bundle in paged_response.data:
