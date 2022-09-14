@@ -78,11 +78,11 @@ The supported "resources" are:
  * `templates`
 
  The methods correspond to common REST operations: 
- * `list`
- * `retrieve`
- * `create`
- * `update`
- * `delete`.
+ * `list()`
+ * `retrieve()`
+ * `create()`
+ * `update()`
+ * `delete()`
 
 However, note that:
 * Not all resources support all methods. 
@@ -99,9 +99,9 @@ the following attributes.
 
 * **response.data**
 
-  The json data returned via the API call is accessible via the data attribute. The data
-  attribute supports dictionary access and dot-notation access (for convenience and less
-  typing)
+  The json data returned via the API call is accessible via the `data` attribute. The 
+  `data` attribute supports dictionary access and dot-notation access (for convenience 
+  and less typing).
 
   ```python
   response = client.bundles.retrieve("some bundle ID")
@@ -120,7 +120,7 @@ the following attributes.
 * **response.original_response**
 
   Similarly, if you need access to the original response as returned by 
-  Python Requests library, it's accessible as `original_response`.
+  the Python Requests library, it's accessible as `original_response`.
 
 * **response.pagination**
 
@@ -139,17 +139,56 @@ the following attributes.
   print(pagination.total_results, ' - total results')
   ```
 
-See [Lists and Pagination](lists-and-pagination) below.
+See "Requests that Return Lists > Pagination" below.
 
-### Lists and Pagination
+### Requests that Return Lists
+
+#### Filtering and Searching
+
+Some Blueink [API endpoints](https://blueink.com/r/api-docs/) support searching and / or
+filtering. In those cases, you can pass querystring parameters to the `list(...)` or 
+`paged_list(...)` method on those resources.
+
+For example:
+
+```python
+from blueink import Client, constants
+
+client = Client()
+
+# Retrieve Bundles with a status of "Complete"
+response = client.bundles.list(status=constants.BUNDLE_STATUS.COMPLETE)
+complete_bundles = response.data
+
+# Retrieve Bundles with a status or "Complete" or "Started"
+statuses = ",".join([
+    constants.BUNDLE_STATUS.COMPLETE,
+    constants.BUNDLE_STATUS.STARTED
+])
+response = client.bundles.list(status__in=statuses)
+complete_or_started_bundles = response.data
+
+# Retrieve Bundles matching a search of "example.com" (which will match signer email 
+# addresses). We can pass pagination parameters too.
+response = client.bundles.list(per_page=10, page=2, search="example.com")
+matching_bundles = response.data
+
+# Filtering / searching works with pagination iterators / paged_list() calls as well
+iterator = client.bundles.paged_list(search="example.com")
+for paged_response in iterator:
+    for bundle in paged_response.data:
+        print(bundle.id)
+```
+
+#### Pagination
 
 Blueink API calls that return a list of results are paginated - ie, if there
 are a lot of results, you need to make multiple requests to retrieve all of those 
-results, including a page_number parameter (and optionally a page_size parameter) 
+results, including a `page_number` parameter (and optionally a `page_size` parameter) 
 in each request.
 
 The details of Blueink pagination scheme can be found in the 
-[API documentation](/r/api-docs/pagination/):
+[API documentation](https://blueink.com/r/api-docs/pagination/):
 
 This client library provides convenience methods to make looping over
 paginated results easier. Whenever there is a `list()` method available for a resource,
@@ -176,9 +215,9 @@ for paged_response in iterator:
 
 #### Creating Bundles with the BundleHelper
 
-When creating a Bundle via the API, you need to pass a lot of data in the 
-`bundle.create(...)` request. This library provides a `BundleHelper` class to ease the
-construction of that data. 
+When creating a Bundle via the API, you need to pass quite a bit of data in the 
+`client.bundle.create(...)` request. To ease the construction of that data, this 
+library provides a `BundleHelper` class.
 
 Below is an example of using `BundleHelper` to create a Bundle with 1 document,
 and 2 signers. In this example, the uploaded document is specified via a URL.
@@ -196,7 +235,7 @@ bh = BundleHelper(label="Test Bundle 01",
 bh.add_cc("bart.simpson@example.com")
 
 # Add a document to the Bundle by providing a publicly accessible URL where
-# Blueink can download the document to include in the Bundle
+# the Blueink platform can download the document to include in the Bundle
 doc_key = bh.add_document_by_url("https://www.irs.gov/pub/irs-pdf/fw9.pdf")
 
 signer1_key = bh.add_signer(
