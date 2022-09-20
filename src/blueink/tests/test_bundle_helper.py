@@ -116,8 +116,6 @@ class TestBundleHelper(TestCase):
 
         compiled_bundle = bh.as_data()
 
-        # Bundle and Field correctly populated, probably can use reflection
-        # to be more thorough.
         self.assert_in("documents", compiled_bundle)
         self.assert_len(compiled_bundle["documents"], 1)
 
@@ -125,12 +123,26 @@ class TestBundleHelper(TestCase):
         self.assert_len(compiled_bundle["documents"][0]["fields"], 2)
 
         field01 = compiled_bundle["documents"][0]["fields"][0]
-        self.assert_equal(field01_data["label"], field01["label"])
         self.assert_len(field01["editors"], 2)
+        self.assert_in("key", field01)
+        self.assert_equal(field01["x"], field01_data["x"])
+        self.assert_equal(field01["y"], field01_data["y"])
+        self.assert_equal(field01["w"], field01_data["w"])
+        self.assert_equal(field01["h"], field01_data["h"])
+        self.assert_equal(field01["page"], field01_data["p"])
+        self.assert_equal(field01["kind"], field01_data["kind"])
+        self.assert_equal(field01["label"], field01_data["label"])
 
         field02 = compiled_bundle["documents"][0]["fields"][1]
-        self.assert_equal(field02_data["label"], field02["label"])
         self.assert_len(field02["editors"], 1)
+        self.assert_in("key", field02)
+        self.assert_equal(field02["x"], field02_data["x"])
+        self.assert_equal(field02["y"], field02_data["y"])
+        self.assert_equal(field02["w"], field02_data["w"])
+        self.assert_equal(field02["h"], field02_data["h"])
+        self.assert_equal(field02["page"], field02_data["p"])
+        self.assert_equal(field02["kind"], field02_data["kind"])
+        self.assert_equal(field02["label"], field02_data["label"])
 
         # Correct packets
         self.assert_in("packets", compiled_bundle)
@@ -138,3 +150,9 @@ class TestBundleHelper(TestCase):
 
         self.assert_equal(compiled_bundle["packets"][0]["key"], signer01_key)
         self.assert_equal(compiled_bundle["packets"][1]["key"], signer02_key)
+
+        # Verify signer data transferred as expected
+        for k, v in signer01_data.items():
+            self.assert_equal(compiled_bundle["packets"][0][k], v)
+        for k, v in signer02_data.items():
+            self.assert_equal(compiled_bundle["packets"][1][k], v)
