@@ -13,7 +13,6 @@ class TestBundleHelper(TestCase):
         "in_order": True,
         "is_test": False,
         "custom_key": "CUSTOM_KEY",
-        "team": None
     }
 
     SIGNER_01_DATA = {
@@ -62,11 +61,6 @@ class TestBundleHelper(TestCase):
 
     DOCUMENT_01_URL = "https://www.example.com/example1.pdf"
     DOCUMENT_02_URL = "https://www.example.com/example2.pdf"
-
-
-
-    def __init__(self):
-        pass
 
     def test_base_bundle(self):
         """Test creating a Bundle with no documents, no signers -- just the base Bundle"""
@@ -136,7 +130,7 @@ class TestBundleHelper(TestCase):
 
         field02 = compiled_bundle["documents"][0]["fields"][1]
         self.assert_equal(field02_data["label"], field02["label"])
-        self.assert_len(field02["editors"], 2)
+        self.assert_len(field02["editors"], 1)
 
         # Correct packets
         self.assert_in("packets", compiled_bundle)
