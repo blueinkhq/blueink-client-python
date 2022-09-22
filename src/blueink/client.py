@@ -105,7 +105,7 @@ class Client:
             return url
 
     class _Bundles(_SubClient):
-        def _prepare_files(self, file_list: list[io.BufferedReader]):
+        def _prepare_files(self, file_list: [io.BufferedReader]):
             if isinstance(file_list, dict):
                 file_list = [file_list]
 
@@ -132,7 +132,7 @@ class Client:
             return files_data
 
         def create(self, data: dict,
-                   files: list[io.BufferedReader] = []) -> NormalizedResponse:
+                   files: [io.BufferedReader] = []) -> NormalizedResponse:
             """
             Post a Bundle to the BlueInk application.
             :param data: python dict, typically from BundleHelper.as_data()

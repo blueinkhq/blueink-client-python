@@ -53,7 +53,7 @@ class BundleHelper:
         self._documents[document.key] = document
         return document.key
 
-    def add_document_by_file(self, file: io.BufferedReader, file_name: str, mime_type: str, **additional_data) -> str:
+    def add_document_by_file(self, file: io.BufferedReader, file_name: str, **additional_data) -> str:
         """
         Add a document via url, with unique key.
         :param mime_type:
@@ -66,7 +66,7 @@ class BundleHelper:
         file_index = len(self.files)
 
         if type(file) == io.BufferedReader and file.readable():
-            self.files.append({'file': file, "filename": file_name, "content_type": mime_type})
+            self.files.append({'file': file, "filename": file_name})
         else:
             raise ValueError(f"File unreadable.")
 
@@ -86,7 +86,7 @@ class BundleHelper:
         file = open(file_path, 'rb')
         return self.add_document_by_file(file, file.name, mime_type, **additional_data)
 
-    def add_document_by_bytearray(self, byte_array: bytearray, file_name: str, mime_type: str,
+    def add_document_by_bytearray(self, byte_array: bytearray, file_name: str,
                                   **additional_data) -> str:
         '''
         Add a document via url, with unique key.
@@ -99,7 +99,7 @@ class BundleHelper:
 
         bytes = io.BytesIO(byte_array)
         file = io.BufferedReader(bytes, len(byte_array))
-        return self.add_document_by_file(file, file_name, mime_type, **additional_data)
+        return self.add_document_by_file(file, file_name, **additional_data)
 
     def add_document_template(self, template_id: str, **additional_data) -> str:
         """

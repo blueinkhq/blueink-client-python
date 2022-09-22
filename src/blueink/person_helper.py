@@ -14,7 +14,7 @@ class PersonHelper:
         self._phones = phones
         self._emails = emails
 
-    def add_phone(self, phone: str) -> list[str]:
+    def add_phone(self, phone: str) -> [str]:
         """
         Add a phone number to the current list of phone numbers
 
@@ -27,7 +27,7 @@ class PersonHelper:
         self._phones.append(phone)
         return self._phones
 
-    def set_phones(self, phones: list) -> list[str]:
+    def set_phones(self, phones: list) -> [str]:
         """
         Replace the current list of phone numbers with this list
 
@@ -40,7 +40,7 @@ class PersonHelper:
         self._phones = phones
         return self._phones
 
-    def get_phones(self) -> list[str]:
+    def get_phones(self) -> [str]:
         """
         Returns all of the phone numbers currently stored
 
@@ -49,7 +49,7 @@ class PersonHelper:
         """
         return self._phones
 
-    def add_email(self, email: str) -> list[str]:
+    def add_email(self, email: str) -> [str]:
         """
         Add an email to the current list of emails
 
@@ -61,7 +61,7 @@ class PersonHelper:
         self._emails.append(email)
         return self._emails
 
-    def set_emails(self, emails: list) -> list[str]:
+    def set_emails(self, emails: list) -> [str]:
         """
         Replace the current list of emails with this list
 
@@ -74,7 +74,7 @@ class PersonHelper:
         self._emails = emails
         return self._emails
 
-    def get_emails(self) -> list[str]:
+    def get_emails(self) -> [str]:
         """
         Returns all of the emails currently stored
 
