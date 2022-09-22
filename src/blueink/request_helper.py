@@ -43,7 +43,7 @@ class NormalizedResponse:
             self.data = response.content
 
         self.request = response.request
-        self.status = response.status_code
+        self.status: int = response.status_code
         self.original_response = response
 
         # Pagination

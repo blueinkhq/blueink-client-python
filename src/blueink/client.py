@@ -6,13 +6,18 @@ from munch import Munch
 
 from . import endpoints
 from .bundle_helper import BundleHelper
-from .constants import BUNDLE_STATUS, DEFAULT_BASE_URL, ENV_BLUEINK_API_URL, ENV_BLUEINK_PRIVATE_API_KEY
+from .constants import (
+    BUNDLE_STATUS,
+    DEFAULT_BASE_URL,
+    ENV_BLUEINK_API_URL,
+    ENV_BLUEINK_PRIVATE_API_KEY
+)
 from .paginator import PaginatedIterator
 from .person_helper import PersonHelper
 from .request_helper import NormalizedResponse, RequestHelper
 
 
-def _build_params(page=None, per_page=None, **query_params):
+def _build_params(page: int = None, per_page: int = None, **query_params):
     params = dict(**query_params)
     if page is not None:  # page could be zero, although Blueink pagination is 1-indexed
         params["page"] = page
@@ -24,16 +29,16 @@ def _build_params(page=None, per_page=None, **query_params):
 
 
 class Client:
-    def __init__(self, private_api_key=None, base_url=None):
+    def __init__(self, private_api_key: str = None, base_url: str = None):
         """Initialize a Client instance to access the Blueink eSignature API
 
         Args:
             private_api_key: the private API key used to access the Blueink API.
-                If no value is provided, then the environment is checked for a variable named
-                "BLUEINK_PRIVATE_API_KEY".
-            base_url: override the API base URL. If not supplied, we check the environment variable
-                BLUEINK_API_URL. If that is empty, the default value of "https://api.blueink.com/api/v2"
-                is used.
+                If no value is provided, then the environment is checked for a variable
+                named "BLUEINK_PRIVATE_API_KEY".
+            base_url: override the API base URL. If not supplied, we check the
+                environment variable BLUEINK_API_URL. If that is empty, the default
+                value of "https://api.blueink.com/api/v2" is used.
 
         Returns:
             A Client instance
@@ -47,8 +52,9 @@ class Client:
 
         if not private_api_key:
             raise ValueError(
-                "A Blueink Private API Key must be provided on Client initialization or "
-                f"specified via the environment variable {ENV_BLUEINK_PRIVATE_API_KEY}"
+                "A Blueink Private API Key must be provided on Client initialization"
+                " or specified via the environment variable"
+                " {ENV_BLUEINK_PRIVATE_API_KEY}"
             )
 
         if not base_url:
@@ -65,7 +71,7 @@ class Client:
         self.templates = self._Templates(base_url, self._request_helper)
 
     class _SubClient:
-        def __init__(self, base_url, requests_helper):
+        def __init__(self, base_url: str, requests_helper: RequestHelper):
             self._base_url = base_url
             self._requests = requests_helper
 
@@ -74,14 +80,16 @@ class Client:
 
             Args:
                 endpoint: one of the API endpoints, e.g. endpoints.BUNDLES.create
-                **kwargs: the arg name should be one of the keys in endpoints.interpolations, and the arg
-                    value will be substituted for the named placeholder in the endpoint str
+                **kwargs: the arg name should be one of the keys in endpoints.
+                interpolations, and the arg value will be substituted for the named
+                placeholder in the endpoint str
 
             Returns:
                 The URL as a str
 
             Raises:
-                ValueError if one of the kwargs is not a valid endpoint interpolation key
+                ValueError if one of the kwargs is not a valid endpoint
+                interpolation key
             """
             # All of our current endpoints take 1 parameter, max
             if len(kwargs) > 1:
@@ -91,12 +99,13 @@ class Client:
                 url = endpoints.URLBuilder(self._base_url, endpoint).build(**kwargs)
             except KeyError:
                 arg_name = list(kwargs.keys())[0]
-                raise ValueError(f'Invalid substitution argument "{arg_name}" provided for endpoint "{endpoint}"')
+                raise ValueError(f'Invalid substitution argument "{arg_name}"'
+                                 f' provided for endpoint "{endpoint}"')
 
             return url
 
     class _Bundles(_SubClient):
-        def _prepare_files(self, file_list):
+        def _prepare_files(self, file_list: list[io.BufferedReader]):
             if isinstance(file_list, dict):
                 file_list = [file_list]
 
@@ -106,19 +115,24 @@ class Client:
                     try:
                         fh = file_dict["file"]
                     except KeyError:
-                        raise ValueError("Each file dict must have a 'file' key that is a file-like object")
+                        raise ValueError("Each file dict must have a 'file' key that"
+                                         " is a file-like object")
 
                     if not isinstance(fh, io.BufferedReader):
                         raise ValueError(
-                            f"Bad type for file {idx}. Expected an io.BufferedReader (e.g. an open file handle)"
+                            f"Bad type for file {idx}. Expected an io.BufferedReader"
+                            f" (e.g. an open file handle)"
                         )
 
                     field_name = f"files[{idx}]"
-                    files_data.append((field_name, (file_dict.get("filename"), fh, file_dict.get("content_type"))))
+                    files_data.append((field_name, (file_dict.get("filename"),
+                                                    fh,
+                                                    file_dict.get("content_type"))))
 
             return files_data
 
-        def create(self, data: dict, files=[]) -> NormalizedResponse:
+        def create(self, data: dict,
+                   files: list[io.BufferedReader] = []) -> NormalizedResponse:
             """
             Post a Bundle to the BlueInk application.
             :param data: python dict, typically from BundleHelper.as_data()
@@ -139,22 +153,26 @@ class Client:
 
                 bundle_request_data = {"bundle_request": json.dumps(data)}
 
-                response = self._requests.post(url, data=bundle_request_data, files=files_data)
+                response = self._requests.post(url,
+                                               data=bundle_request_data,
+                                               files=files_data)
 
             return response
 
-        def create_from_bundle_helper(self, bundle_helper: BundleHelper) -> NormalizedResponse:
+        def create_from_bundle_helper(self,
+                                      bdl_helper: BundleHelper) -> NormalizedResponse:
             """
-            Post a Bundle to the BlueInk application. Convenience method as bundle_helper has files/filenames if
-            creating a Bundle that way
-            :param bundle_helper:
+            Post a Bundle to the BlueInk application. Convenience method as
+            bundle_helper has files/filenames if creating a Bundle that way
+            :param bdl_helper:
             :return:
             """
-            data = bundle_helper.as_data()
-            files = bundle_helper.files
+            data = bdl_helper.as_data()
+            files = bdl_helper.files
             return self.create(data=data, files=files)
 
-        def paged_list(self, page=1, per_page=50, related_data=False, **query_params) -> PaginatedIterator:
+        def paged_list(self, page: int = 1, per_page: int = 50,
+                       related_data: bool = False, **query_params) -> PaginatedIterator:
             """
             returns an iterable object such that you can do
 
@@ -174,7 +192,8 @@ class Client:
                                          **query_params)
             return iterator
 
-        def list(self, page=None, per_page=None, related_data=False, **query_params) -> NormalizedResponse:
+        def list(self, page: int = None, per_page: int = None,
+                 related_data: bool = False, **query_params) -> NormalizedResponse:
             """
             Returns a list of bundles
             :param page: (optional)
@@ -184,7 +203,10 @@ class Client:
             :return:
             """
             url = self.build_url(endpoints.BUNDLES.LIST)
-            response = self._requests.get(url, params=_build_params(page, per_page, **query_params))
+            response = self._requests.get(url,
+                                          params=_build_params(page,
+                                                               per_page,
+                                                               **query_params))
 
             if related_data:
                 for bundle in response.data:
@@ -207,7 +229,8 @@ class Client:
                     data_response = self.list_data(bundle_id)
                     bundle.data = data_response.data
 
-        def retrieve(self, bundle_id, related_data=False) -> NormalizedResponse:
+        def retrieve(self, bundle_id: str,
+                     related_data: bool = False) -> NormalizedResponse:
             """
             Requests a single bundle
             :param bundle_id: bundle slug
@@ -223,7 +246,7 @@ class Client:
 
             return response
 
-        def cancel(self, bundle_id) -> NormalizedResponse:
+        def cancel(self, bundle_id: str) -> NormalizedResponse:
             """
             Cancels a bundle given bundle slug
             :param bundle_id:
@@ -232,7 +255,7 @@ class Client:
             url = self.build_url(endpoints.BUNDLES.CANCEL, bundle_id=bundle_id)
             return self._request.put(url)
 
-        def list_events(self, bundle_id) -> NormalizedResponse:
+        def list_events(self, bundle_id: str) -> NormalizedResponse:
             """
             Returns a list of events for the supplied bundle corresponding to the id
             :param bundle_id:
@@ -241,7 +264,7 @@ class Client:
             url = self.build_url(endpoints.BUNDLES.LIST_EVENTS, bundle_id=bundle_id)
             return self._requests.get(url)
 
-        def list_files(self, bundle_id) -> NormalizedResponse:
+        def list_files(self, bundle_id: str) -> NormalizedResponse:
             """
             Returns a list of files for the supplied bundle corresponding to the id
             :param bundle_id:
@@ -250,9 +273,10 @@ class Client:
             url = self.build_url(endpoints.BUNDLES.LIST_FILES, bundle_id=bundle_id)
             return self._requests.get(url)
 
-        def list_data(self, bundle_id) -> NormalizedResponse:
+        def list_data(self, bundle_id: str) -> NormalizedResponse:
             """
-            Returns a list of data fields for the supplied bundle corresponding to the id
+            Returns a list of data fields for the supplied bundle corresponding to
+            the id
             :param bundle_id:
             :return:
             """
@@ -275,7 +299,8 @@ class Client:
             url = self.build_url(endpoints.PERSONS.CREATE)
             return self._requests.post(url, json=data)
 
-        def create_from_person_helper(self, person_helper: PersonHelper, **kwargs) -> NormalizedResponse:
+        def create_from_person_helper(self, person_helper: PersonHelper,
+                                      **kwargs) -> NormalizedResponse:
             """
             Creates a person.
             :param person_helper: PersonHelper setup of a person
@@ -283,7 +308,8 @@ class Client:
             """
             return self.create(person_helper.as_dict(**kwargs))
 
-        def paged_list(self, page=1, per_page=50, **query_params) -> PaginatedIterator:
+        def paged_list(self, page: int = 1, per_page: int = 50,
+                       **query_params) -> PaginatedIterator:
             """
             returns an iterable object such that you can do
 
@@ -302,16 +328,21 @@ class Client:
                                          **query_params)
             return iterator
 
-        def list(self, page=None, per_page=None, **query_params) -> NormalizedResponse:
+        def list(self, page: int = None, per_page: int = None,
+                 **query_params) -> NormalizedResponse:
             """
-            Returns a list of persons. Optionally supply the page number and results per page.
+            Returns a list of persons. Optionally supply the page number and results
+            per page.
             :param page:
             :param per_page:
             :param query_params: Additional query params to be put onto the request
             :return:
             """
             url = self.build_url(endpoints.PERSONS.LIST)
-            return self._requests.get(url, params=_build_params(page, per_page, **query_params))
+            return self._requests.get(url,
+                                      params=_build_params(page,
+                                                           per_page,
+                                                           **query_params))
 
         def retrieve(self, person_id: str) -> NormalizedResponse:
             """
@@ -322,7 +353,8 @@ class Client:
             url = self.build_url(endpoints.PERSONS.RETRIEVE, person_id=person_id)
             return self._requests.get(url)
 
-        def update(self, person_id: str, data: dict, partial=False) -> NormalizedResponse:
+        def update(self, person_id: str, data: dict,
+                   partial: bool = False) -> NormalizedResponse:
             """
             :param person_id:
             :param data: a full dictionary representation of person
@@ -354,7 +386,8 @@ class Client:
                 A NormalizedResponse, with the updated packet as `data`
 
             Raises:
-                 exceptions.RequestException (or a more specific exception class) if an error occured
+                 exceptions.RequestException (or a more specific exception class)
+                 if an error occured
             """
             url = self.build_url(endpoints.PACKETS.UPDATE, packet_id=packet_id)
             return self._requests.patch(url, json=data)
@@ -362,7 +395,8 @@ class Client:
         def embed_url(self, packet_id: str) -> NormalizedResponse:
             """Create an embedded signing URL
 
-            deliver_via on the Packet must be set to "embed" for this request to succeed.
+            deliver_via on the Packet must be set to "embed" for this request
+            to succeed.
 
             Args:
                 packet_id: the ID of the Packet.
@@ -393,7 +427,8 @@ class Client:
         def __init__(self, base_url, private_api_key):
             super().__init__(base_url, private_api_key)
 
-        def paged_list(self, page=1, per_page=50, **query_params) -> PaginatedIterator:
+        def paged_list(self, page: int = 1, per_page: int = 50,
+                       **query_params) -> PaginatedIterator:
             """
             returns an iterable object such that you can do
 
@@ -411,16 +446,20 @@ class Client:
                                          **query_params)
             return iterator
 
-        def list(self, page=None, per_page=None, **query_params) -> NormalizedResponse:
+        def list(self, page: int = None, per_page: int = None,
+                 **query_params) -> NormalizedResponse:
             """
-            Retrieves a list of templates, optionally for a page and # of results per page
+            Retrieves a list of templates, optionally for a page and # of results
+            per page
             :param page:
             :param per_page:
             :param query_params: Additional query params to be put onto the request
             :return:
             """
             url = self.build_url(endpoints.TEMPLATES.LIST)
-            return self._requests.get(url, params=_build_params(page, per_page, **query_params))
+            return self._requests.get(url, params=_build_params(page,
+                                                                per_page,
+                                                                **query_params))
 
         def retrieve(self, template_id: str) -> NormalizedResponse:
             """
