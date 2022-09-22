@@ -1,6 +1,7 @@
 import io
 import json
 from os import environ
+from typing import List
 
 from munch import Munch
 
@@ -132,12 +133,15 @@ class Client:
             return files_data
 
         def create(self, data: dict,
-                   files: [io.BufferedReader] = []) -> NormalizedResponse:
-            """
-            Post a Bundle to the BlueInk application.
-            :param data: python dict, typically from BundleHelper.as_data()
-            :param files: list of file-like streams (optional)
-            :return:
+                   files: List[io.BufferedReader] = []) -> NormalizedResponse:
+            """ Post a Bundle to the BlueInk application.
+
+            Args:
+                data: raw data for Bundle, expressed as a python dict
+                files: list of file-like objects
+
+            Returns:
+                NormalizedResponse object
             """
             if not data:
                 raise ValueError("data is required")
@@ -161,11 +165,17 @@ class Client:
 
         def create_from_bundle_helper(self,
                                       bdl_helper: BundleHelper) -> NormalizedResponse:
-            """
-            Post a Bundle to the BlueInk application. Convenience method as
-            bundle_helper has files/filenames if creating a Bundle that way
-            :param bdl_helper:
-            :return:
+            """ Post a Bundle to the BlueInk application.
+
+            Provided as a convenience to simplify posting of a Bundle. This is the
+            recommended way to create a Bundle.
+
+            Args:
+                bdl_helper: BundleHelper that has been configured as desired.
+
+            Returns:
+                NormalizedResponse object
+
             """
             data = bdl_helper.as_data()
             files = bdl_helper.files
@@ -173,17 +183,21 @@ class Client:
 
         def paged_list(self, page: int = 1, per_page: int = 50,
                        related_data: bool = False, **query_params) -> PaginatedIterator:
-            """
-            returns an iterable object such that you can do
+            """Returns an iterable object such that you may lazily fetch a number of
+            Bundles
 
-            for page in client.bundles.paged_list():
-                page.body -> munch of json
+            Typical Usage:
+                for page in client.bundles.paged_list():
+                    page.body -> munch of json
 
-            :param page: start page (default 1)
-            :param per_page: max # of results per page (default 50)
-            :param related_data: (default false), returns events, files, data if true
-            :param query_params: Additional query params to be put onto the request
-            :return:
+            Args:
+                page: what page to start iterator at
+                per_page: max number of bundles per page
+                related_data: toggles whether or not to provide metadata along with
+                bundles (events, files, data)
+
+            Returns:
+                PaginatedIterator object, compliant with python iterables
             """
             iterator = PaginatedIterator(paged_api_function=self.list,
                                          page=page,
@@ -194,13 +208,16 @@ class Client:
 
         def list(self, page: int = None, per_page: int = None,
                  related_data: bool = False, **query_params) -> NormalizedResponse:
-            """
-            Returns a list of bundles
-            :param page: (optional)
-            :param per_page: (optional)
-            :param related_data: (default false), returns events, files, data if true
-            :param query_params: Additional query params to be put onto the request
-            :return:
+            """ Returns a list of bundles
+
+            Args:
+                page: which page to fetch
+                per_page: how many bundles to fetch
+                related_data: (default false), returns events, files, data if true
+                query_params: Additional query params to be put onto the request
+
+            Returns:
+                NormalizedResponse object
             """
             url = self.build_url(endpoints.BUNDLES.LIST)
             response = self._requests.get(url,
@@ -231,11 +248,14 @@ class Client:
 
         def retrieve(self, bundle_id: str,
                      related_data: bool = False) -> NormalizedResponse:
-            """
-            Requests a single bundle
-            :param bundle_id: bundle slug
-            :param related_data: (default false), returns events, files, data if true
-            :return:
+            """Request a single bundle
+
+            Args:
+                bundle_id: bundle slug
+                related_data: (default false), returns events, files, data if true
+
+            Returns:
+                NormalizedResponse object
             """
             url = self.build_url(endpoints.BUNDLES.RETRIEVE, bundle_id=bundle_id)
             response = self._requests.get(url)
@@ -247,48 +267,63 @@ class Client:
             return response
 
         def cancel(self, bundle_id: str) -> NormalizedResponse:
-            """
-            Cancels a bundle given bundle slug
-            :param bundle_id:
-            :return:
+            """Cancel a bundle given bundle slug
+
+            Args:
+                bundle_id: denotes which bundle to cancel
+
+            Returns:
+                NormalizedResponse object
+
             """
             url = self.build_url(endpoints.BUNDLES.CANCEL, bundle_id=bundle_id)
             return self._request.put(url)
 
         def list_events(self, bundle_id: str) -> NormalizedResponse:
-            """
-            Returns a list of events for the supplied bundle corresponding to the id
-            :param bundle_id:
-            :return:
+            """Return a list of events for the supplied bundle corresponding to the id
+
+            Args:
+                bundle_id: which bundle to return events for
+
+            Returns:
+                NormalizedResponse object
             """
             url = self.build_url(endpoints.BUNDLES.LIST_EVENTS, bundle_id=bundle_id)
             return self._requests.get(url)
 
         def list_files(self, bundle_id: str) -> NormalizedResponse:
-            """
-            Returns a list of files for the supplied bundle corresponding to the id
-            :param bundle_id:
-            :return:
+            """Return a list of files for the supplied bundle corresponding to the id
+
+            Args:
+                bundle_id: which bundle to return files for
+
+            Returns:
+                NormalizedResponse object
             """
             url = self.build_url(endpoints.BUNDLES.LIST_FILES, bundle_id=bundle_id)
             return self._requests.get(url)
 
         def list_data(self, bundle_id: str) -> NormalizedResponse:
-            """
-            Returns a list of data fields for the supplied bundle corresponding to
-            the id
-            :param bundle_id:
-            :return:
+            """Return a data for the supplied bundle corresponding to the id
+
+            Args:
+                bundle_id: which bundle to return data for
+
+            Returns:
+                NormalizedResponse object
             """
             url = self.build_url(endpoints.BUNDLES.LIST_DATA, bundle_id=bundle_id)
             return self._requests.get(url)
 
     class _Persons(_SubClient):
         def create(self, data: dict, **kwargs) -> NormalizedResponse:
-            """
-            Creates a person.
-            :param data: A dictionary definition of a person
-            :return:
+            """Create a person (eg. signer) record.
+
+            Args:
+                data: A dictionary definition of a person
+
+            Returns:
+                NormalizedResponse object
             """
             if "name" not in data or not data["name"]:
                 raise ValueError("A name is required to create a Person")
@@ -301,25 +336,32 @@ class Client:
 
         def create_from_person_helper(self, person_helper: PersonHelper,
                                       **kwargs) -> NormalizedResponse:
-            """
-            Creates a person.
-            :param person_helper: PersonHelper setup of a person
-            :return:
+            """Create a person using PersonHelper convenience object
+
+            Args:
+                person_helper: PersonHelper setup of a person
+
+            Return:
+                NormalizedResponse object
             """
             return self.create(person_helper.as_dict(**kwargs))
 
         def paged_list(self, page: int = 1, per_page: int = 50,
                        **query_params) -> PaginatedIterator:
-            """
-            returns an iterable object such that you can do
+            """Return an iterable object such that you may lazily fetch a number of
+            Persons (signers)
 
-            for page in client.persons.paged_list():
-                page.body -> munch of json
+            Typical Usage:
+                for page in client.persons.paged_list():
+                    page.body -> munch of json
 
-            :param page: start page (default 1)
-            :param per_page: max # of results per page (default 50)
-            :param query_params: Additional query params to be put onto the request
-            :return:
+            Args:
+                page: start page (default 1)
+                per_page: max # of results per page (default 50)
+                query_params: Additional query params to be put onto the request
+
+            Returns:
+                PaginatedIterator object
             """
 
             iterator = PaginatedIterator(paged_api_function=self.list,
@@ -330,13 +372,15 @@ class Client:
 
         def list(self, page: int = None, per_page: int = None,
                  **query_params) -> NormalizedResponse:
-            """
-            Returns a list of persons. Optionally supply the page number and results
-            per page.
-            :param page:
-            :param per_page:
-            :param query_params: Additional query params to be put onto the request
-            :return:
+            """Return a list of persons (signers).
+
+            Args:
+                page:
+                per_page:
+                query_params: Additional query params to be put onto the request
+
+            Returns:
+                NormalizedResponse object
             """
             url = self.build_url(endpoints.PERSONS.LIST)
             return self._requests.get(url,
@@ -345,20 +389,28 @@ class Client:
                                                            **query_params))
 
         def retrieve(self, person_id: str) -> NormalizedResponse:
-            """
-            Retrieves details on a singular person
-            :param person_id:
-            :return:
+            """Retrieve details on a singular person
+
+            Args:
+                person_id: identifying which signer to retrieve
+
+            Returns:
+                NormalizedResponse object
             """
             url = self.build_url(endpoints.PERSONS.RETRIEVE, person_id=person_id)
             return self._requests.get(url)
 
         def update(self, person_id: str, data: dict,
                    partial: bool = False) -> NormalizedResponse:
-            """
-            :param person_id:
-            :param data: a full dictionary representation of person
-            :return:
+            """Update a Person (signer)'s record
+
+            Args:
+                person_id:
+                data: a dictionary representation of person's data
+                partial: Whether to do a partial update
+
+            Returns:
+                NormalizedResponse object
             """
             url = self.build_url(endpoints.PERSONS.UPDATE, person_id=person_id)
             if partial:
@@ -368,6 +420,14 @@ class Client:
             return response
 
         def delete(self, person_id: str) -> NormalizedResponse:
+            """Delete a person (signer)
+
+            Args:
+                person_id:
+
+            Returns:
+                NormalizedResponse object
+            """
             url = self.build_url(endpoints.PERSONS.DELETE, person_id=person_id)
             return self._requests.delete(url)
 
@@ -429,16 +489,19 @@ class Client:
 
         def paged_list(self, page: int = 1, per_page: int = 50,
                        **query_params) -> PaginatedIterator:
-            """
-            returns an iterable object such that you can do
+            """return an iterable object containing a list of templates
 
-            for page in client.templates.paged_list():
-                page.body -> munch of json
+            Typical Usage:
+                for page in client.templates.paged_list():
+                    page.body -> munch of json
 
-            :param page: start page (default 1)
-            :param per_page: max # of results per page (default 50)
-            :param query_params: Additional query params to be put onto the request
-            :return:
+            Args:
+                page: start page (default 1)
+                per_page: max # of results per page (default 50)
+                query_params: Additional query params to be put onto the request
+
+            Returns:
+                PaginatedIterator object
             """
             iterator = PaginatedIterator(paged_api_function=self.list,
                                          page=page,
@@ -448,13 +511,15 @@ class Client:
 
         def list(self, page: int = None, per_page: int = None,
                  **query_params) -> NormalizedResponse:
-            """
-            Retrieves a list of templates, optionally for a page and # of results
-            per page
-            :param page:
-            :param per_page:
-            :param query_params: Additional query params to be put onto the request
-            :return:
+            """Return a list of Templates.
+
+            Args:
+                page:
+                per_page:
+                query_params: Additional query params to be put onto the request
+
+            Returns:
+                NormalizedResponse object
             """
             url = self.build_url(endpoints.TEMPLATES.LIST)
             return self._requests.get(url, params=_build_params(page,
@@ -462,10 +527,13 @@ class Client:
                                                                 **query_params))
 
         def retrieve(self, template_id: str) -> NormalizedResponse:
-            """
-            Retrieves a singular template with this id
-            :param template_id:
-            :return:
+            """Return a singular Template by id.
+
+            Args:
+                template_id:
+
+            Returns:
+                NormalizedResponse object
             """
             url = self.build_url(endpoints.TEMPLATES.RETRIEVE, template_id=template_id)
             return self._requests.get(url)

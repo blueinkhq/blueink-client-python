@@ -48,7 +48,7 @@ field3 = bh.add_field(doc2,
                       kind=FIELD_KIND.INPUT,
                       label="label3",
                       editors=[signer1, signer2])
-
+client.bundles.create(data={}, files=12)
 try:
     response = client.bundles.create_from_bundle_helper(bh)
 except exceptions.HTTPError as e:

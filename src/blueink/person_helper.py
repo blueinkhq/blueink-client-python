@@ -1,3 +1,5 @@
+from typing import List
+
 from .model.persons import ContactChannelSchema, PersonSchema
 
 
@@ -6,15 +8,24 @@ class PersonHelper:
         self,
         name: str = None,
         metadata: dict = {},
-        phones: list = [],
-        emails: list = [],
+        phones: List[str] = [],
+        emails: List[str] = [],
     ):
+        """Helper class to aid building a Person.
+
+        Once Person is ready, use as_dict() to compile python dictionary for the Person.
+        Args:
+            name:
+            metadata:
+            phones:
+            emails:
+        """
         self._name = name
         self._metadata = metadata
         self._phones = phones
         self._emails = emails
 
-    def add_phone(self, phone: str) -> [str]:
+    def add_phone(self, phone: str) -> List[str]:
         """
         Add a phone number to the current list of phone numbers
 
@@ -27,7 +38,7 @@ class PersonHelper:
         self._phones.append(phone)
         return self._phones
 
-    def set_phones(self, phones: list) -> [str]:
+    def set_phones(self, phones: List[str]) -> List[str]:
         """
         Replace the current list of phone numbers with this list
 
@@ -40,7 +51,7 @@ class PersonHelper:
         self._phones = phones
         return self._phones
 
-    def get_phones(self) -> [str]:
+    def get_phones(self) -> List[str]:
         """
         Returns all of the phone numbers currently stored
 
@@ -49,7 +60,7 @@ class PersonHelper:
         """
         return self._phones
 
-    def add_email(self, email: str) -> [str]:
+    def add_email(self, email: str) -> List[str]:
         """
         Add an email to the current list of emails
 
@@ -61,7 +72,7 @@ class PersonHelper:
         self._emails.append(email)
         return self._emails
 
-    def set_emails(self, emails: list) -> [str]:
+    def set_emails(self, emails: List[str]) -> List[str]:
         """
         Replace the current list of emails with this list
 
@@ -74,7 +85,7 @@ class PersonHelper:
         self._emails = emails
         return self._emails
 
-    def get_emails(self) -> [str]:
+    def get_emails(self) -> List[str]:
         """
         Returns all of the emails currently stored
 
