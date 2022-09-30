@@ -69,38 +69,6 @@ class BundleHelper:
         self._documents[document.key] = document
         return document.key
 
-    # DEPRECATED, FILE HANDLE IS NOT CLOSED
-    # def add_document_by_file(self, file: io.BufferedReader, file_name: str, **additional_data) -> str:
-    #     """
-    #     Add a document via url, with unique key.
-    #     :param file_name:
-    #     :param file:
-    #     :param additional_data: Optional and will append any additional kwargs to the json of the document
-    #     :return:
-    #     """
-    #
-    #     file_index = len(self.files)
-    #
-    #     if type(file) == io.BufferedReader and file.readable():
-    #         self.files.append({'file': file, "filename": file_name})
-    #     else:
-    #         raise ValueError(f"File unreadable.")
-    #
-    #     document = Document.create(file_index=file_index, **additional_data)
-    #     self._documents[document.key] = document
-    #     return document.key
-
-    # # DEPRECATED, FILE HANDLE IS NOT CLOSED
-    # def add_document_by_path(self, file_path: str, **additional_data) -> str:
-    #     """
-    #     Add a document via url, returns generated unique key.
-    #     :param file_path:
-    #     :param additional_data: Optional and will append any additional kwargs to the json of the document
-    #     :return: Document instance
-    #     """
-    #
-    #     file = open(file_path, 'rb')
-    #     return self.add_document_by_file(file, file.name, **additional_data)
     def add_document_by_path(self, file_path: str, **additional_data) -> str:
         filename = basename(file_path)
 

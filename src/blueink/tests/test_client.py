@@ -2,10 +2,7 @@ from base64 import b64encode
 from os.path import basename
 
 from munch import Munch
-
-from src.blueink import Client
-from src.blueink.bundle_helper import BundleHelper
-from src.blueink.person_helper import PersonHelper
+from src.blueink import Client, BundleHelper, PersonHelper
 from src.blueink.utils.testcase import TestCase
 
 
