@@ -36,27 +36,27 @@ class TEMPLATES:
     RETRIEVE = "/templates/${template_id}/"
 
 
-# class WEBHOOKS:
-#     CREATE = "/webhooks/"
-#     LIST = "/webhooks/"
-#     RETRIEVE = "/webhooks/${webhook_id}/"
-#     UPDATE = "/webhooks/${webhook_id}/"
-#     DELETE = "/webhooks/${webhook_id}/"
-#
-#     CREATE_HEADER = "/webhooks/headers/"
-#     LIST_HEADERS = "/webhooks/headers/"
-#     RETRIEVE_HEADER = "/webhooks/headers/${webhook_header_id}/"
-#     UPDATE_HEADER = "/webhooks/headers/${webhook_header_id}/"
-#     DELETE_HEADER = "/webhooks/headers/${webhook_header_id}/"
-#
-#     LIST_EVENTS = "/webhooks/events/"
-#     RETRIEVE_EVENT = "/webhooks/events/${webhook_event_id}/"
-#
-#     LIST_DELIVERIES = "/webhooks/deliveries/"
-#     RETRIEVE_DELIVERY = "/webhooks/deliveries/${webhook_delivery_id}/"
-#
-#     RETRIEVE_SECRET = "/webhooks/secret/"
-#     REGENERATE_SECRET = "/webhooks/secret/regenerate/"
+class WEBHOOKS:
+    CREATE = "/webhooks/"
+    LIST = "/webhooks/"
+    RETRIEVE = "/webhooks/${webhook_id}/"
+    UPDATE = "/webhooks/${webhook_id}/"
+    DELETE = "/webhooks/${webhook_id}/"
+
+    CREATE_HEADER = "/webhooks/headers/"
+    LIST_HEADERS = "/webhooks/headers/"
+    RETRIEVE_HEADER = "/webhooks/headers/${webhook_header_id}/"
+    UPDATE_HEADER = "/webhooks/headers/${webhook_header_id}/"
+    DELETE_HEADER = "/webhooks/headers/${webhook_header_id}/"
+
+    LIST_EVENTS = "/webhooks/events/"
+    RETRIEVE_EVENT = "/webhooks/events/${webhook_event_id}/"
+
+    LIST_DELIVERIES = "/webhooks/deliveries/"
+    RETRIEVE_DELIVERY = "/webhooks/deliveries/${webhook_delivery_id}/"
+
+    RETRIEVE_SECRET = "/webhooks/secret/"
+    REGENERATE_SECRET = "/webhooks/secret/regenerate/"
 
 
 class URLBuilder:
