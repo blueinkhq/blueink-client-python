@@ -82,9 +82,10 @@ class TestClient(TestCase):
         elif method == self.DOC_METHODS.URL:
             doc01_key = bh.add_document_by_url(self.REAL_DOCUMENT_URL)
         elif method == self.DOC_METHODS.B64:
-            file = open(self.REAL_DOCUMENT_PATH)
+            file = open(self.REAL_DOCUMENT_PATH, 'rb')
             filename = basename(self.REAL_DOCUMENT_PATH)
             b64str = b64encode(file.read())
+            file.close()
             doc01_key = bh.add_document_by_b64(filename, b64str)
 
         # Add Signer 1
