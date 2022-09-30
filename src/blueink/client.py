@@ -30,7 +30,8 @@ def _build_params(page: int = None, per_page: int = None, **query_params):
 
 
 class Client:
-    def __init__(self, private_api_key: str = None, base_url: str = None):
+    def __init__(self, private_api_key: str = None, base_url: str = None,
+                 raise_exceptions: bool = True):
         """Initialize a Client instance to access the Blueink eSignature API
 
         Args:
@@ -40,6 +41,8 @@ class Client:
             base_url: override the API base URL. If not supplied, we check the
                 environment variable BLUEINK_API_URL. If that is empty, the default
                 value of "https://api.blueink.com/api/v2" is used.
+            raise_exceptions (Default True): raise HTTPError if code != 200. Otherwise
+            return as NormalizedResponse objects.
 
         Returns:
             A Client instance
@@ -64,7 +67,7 @@ class Client:
         if not base_url:
             base_url = DEFAULT_BASE_URL
 
-        self._request_helper = RequestHelper(private_api_key)
+        self._request_helper = RequestHelper(private_api_key, raise_exceptions)
 
         self.bundles = self._Bundles(base_url, self._request_helper)
         self.persons = self._Persons(base_url, self._request_helper)
@@ -113,22 +116,26 @@ class Client:
             files_data = []
             if file_list:
                 for idx, file_dict in enumerate(file_list):
-                    try:
+                    if "file" in file_dict:
+                        print("Actual File")
                         fh = file_dict["file"]
-                    except KeyError:
-                        raise ValueError("Each file dict must have a 'file' key that"
-                                         " is a file-like object")
+                        if not isinstance(fh, io.BufferedReader):
+                            raise ValueError(
+                                f"Bad type for file {idx}. Expected an io.BufferedReader"
+                                f" (e.g. an open file handle)"
+                            )
+                        field_name = f"files[{idx}]"
+                        files_data.append((field_name, (file_dict.get("filename"),
+                                                        fh,
+                                                        file_dict.get("content_type"))))
+                    elif "file_b64" in file_dict:
+                        print("B64 represented File")
 
-                    if not isinstance(fh, io.BufferedReader):
-                        raise ValueError(
-                            f"Bad type for file {idx}. Expected an io.BufferedReader"
-                            f" (e.g. an open file handle)"
-                        )
-
-                    field_name = f"files[{idx}]"
-                    files_data.append((field_name, (file_dict.get("filename"),
-                                                    fh,
-                                                    file_dict.get("content_type"))))
+                        b64 = file_dict["file_b64"]
+                        field_name = f"files[{idx}]"
+                        files_data.append((field_name, (file_dict.get("filename"),
+                                                        b64,
+                                                        file_dict.get("content_type"))))
 
             return files_data
 

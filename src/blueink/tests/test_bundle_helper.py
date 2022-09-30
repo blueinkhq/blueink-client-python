@@ -1,10 +1,20 @@
 import copy
+from base64 import b64encode
+from os.path import basename
 
-from src.blueink import BundleHelper
+from munch import Munch
+
+from src.blueink import BundleHelper, Client
 from src.blueink.utils.testcase import TestCase
 
 
 class TestBundleHelper(TestCase):
+
+    DOCUMENT_CREATE_BY_METHOD = Munch(
+        url="URL",
+        pth="PATH",
+        b64="BASE64",
+    )
 
     BUNDLE_INIT_DATA = {
         "label": "TEST_BUNDLE",
@@ -62,6 +72,9 @@ class TestBundleHelper(TestCase):
     DOCUMENT_01_URL = "https://www.example.com/example1.pdf"
     DOCUMENT_02_URL = "https://www.example.com/example2.pdf"
 
+    REAL_DOCUMENT_PATH = "w4.pdf"
+    REAL_DOCUMENT_URL = "https://www.irs.gov/pub/irs-pdf/fw4.pdf"
+
     def test_base_bundle(self):
         """Test creating a Bundle with no documents, no signers -- just the base Bundle"""
         input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
@@ -72,6 +85,26 @@ class TestBundleHelper(TestCase):
             self.assert_equal(compiled_bundle[key], value)
 
     def test_adding_document_via_url(self):
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        url01 = self.DOCUMENT_01_URL
+        url02 = self.DOCUMENT_02_URL
+
+        bh = BundleHelper(**input_data)
+        bh.add_document_by_url(url01)
+        bh.add_document_by_url(url02)
+
+        compiled_bundle = bh.as_data()
+
+        self.assert_in("documents", compiled_bundle)
+        self.assert_len(compiled_bundle["documents"], 2)
+
+        self.assert_in("file_url", compiled_bundle["documents"][0])
+        self.assert_in("file_url", compiled_bundle["documents"][1])
+
+        self.assert_equal(compiled_bundle["documents"][0]["file_url"], url01)
+        self.assert_equal(compiled_bundle["documents"][1]["file_url"], url02)
+
+    def test_adding_document_via_b64(self):
         input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
         url01 = self.DOCUMENT_01_URL
         url02 = self.DOCUMENT_02_URL
@@ -156,3 +189,76 @@ class TestBundleHelper(TestCase):
             self.assert_equal(compiled_bundle["packets"][0][k], v)
         for k, v in signer02_data.items():
             self.assert_equal(compiled_bundle["packets"][1][k], v)
+
+    def _construct_complete_bundlehelper(self, file_location, method:str) -> BundleHelper:
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        signer01_data = copy.deepcopy(self.SIGNER_01_DATA)
+        signer02_data = copy.deepcopy(self.SIGNER_02_DATA)
+        field01_data = copy.deepcopy(self.FIELD_01_DATA)
+        field02_data = copy.deepcopy(self.FIELD_02_DATA)
+
+        bh = BundleHelper(**input_data)
+        if method == self.DOCUMENT_CREATE_BY_METHOD.url:
+            doc01_key = bh.add_document_by_url(file_location)
+        elif method == self.DOCUMENT_CREATE_BY_METHOD.pth:
+            doc01_key = bh.add_document_by_path(file_location)
+        elif method == self.DOCUMENT_CREATE_BY_METHOD.b64:
+            file = open(file_location, 'rb')
+            filename = basename(file_location)
+            b64str = b64encode(file.read())
+            doc01_key = bh.add_document_by_b64(filename, b64str)
+        else:
+            raise RuntimeError("Invalid Document Add Method")
+
+        self.assert_not_none(doc01_key)
+
+        signer01_key = bh.add_signer(**signer01_data)
+        signer02_key = bh.add_signer(**signer02_data)
+
+        field01_data["document_key"] = doc01_key
+        field01_data["editors"].append(signer01_key)
+        field01_data["editors"].append(signer02_key)
+        bh.add_field(**field01_data)
+
+        field02_data["document_key"] = doc01_key
+        field02_data["editors"].append(signer01_key)
+        bh.add_field(**field02_data)
+
+        return bh
+
+    def test_roundtrip_url(self):
+        bh = self._construct_complete_bundlehelper(
+            file_location=self.REAL_DOCUMENT_URL,
+            method=self.DOCUMENT_CREATE_BY_METHOD.url
+        )
+
+        client = Client(raise_exceptions=False)
+        resp = client.bundles.create_from_bundle_helper(bh)
+
+        self.assert_equal(resp.status, 200, resp.request.url)
+
+    def test_roundtrip_b64(self):
+        bh = self._construct_complete_bundlehelper(
+            file_location=self.REAL_DOCUMENT_PATH,
+            method=self.DOCUMENT_CREATE_BY_METHOD.b64
+        )
+
+        client = Client(raise_exceptions=False)
+        resp = client.bundles.create_from_bundle_helper(bh)
+
+        self.assert_equal(resp.status, 200)
+
+    def test_roundtrip_path(self):
+        bh = self._construct_complete_bundlehelper(
+            file_location=self.REAL_DOCUMENT_PATH,
+            method=self.DOCUMENT_CREATE_BY_METHOD.pth
+        )
+
+        client = Client(raise_exceptions=False)
+        resp = client.bundles.create_from_bundle_helper(bh)
+
+        self.assert_equal(resp.status, 200)
+
+
+
+

@@ -1,4 +1,6 @@
 import io
+from os.path import basename
+from base64 import b64encode
 from typing import List
 
 from .model.bundles import (
@@ -67,36 +69,56 @@ class BundleHelper:
         self._documents[document.key] = document
         return document.key
 
-    def add_document_by_file(self, file: io.BufferedReader, file_name: str, **additional_data) -> str:
-        """
-        Add a document via url, with unique key.
-        :param file_name:
-        :param file:
-        :param additional_data: Optional and will append any additional kwargs to the json of the document
-        :return:
-        """
+    # DEPRECATED, FILE HANDLE IS NOT CLOSED
+    # def add_document_by_file(self, file: io.BufferedReader, file_name: str, **additional_data) -> str:
+    #     """
+    #     Add a document via url, with unique key.
+    #     :param file_name:
+    #     :param file:
+    #     :param additional_data: Optional and will append any additional kwargs to the json of the document
+    #     :return:
+    #     """
+    #
+    #     file_index = len(self.files)
+    #
+    #     if type(file) == io.BufferedReader and file.readable():
+    #         self.files.append({'file': file, "filename": file_name})
+    #     else:
+    #         raise ValueError(f"File unreadable.")
+    #
+    #     document = Document.create(file_index=file_index, **additional_data)
+    #     self._documents[document.key] = document
+    #     return document.key
 
-        file_index = len(self.files)
-
-        if type(file) == io.BufferedReader and file.readable():
-            self.files.append({'file': file, "filename": file_name})
-        else:
-            raise ValueError(f"File unreadable.")
-
-        document = Document.create(file_index=file_index, **additional_data)
-        self._documents[document.key] = document
-        return document.key
-
+    # # DEPRECATED, FILE HANDLE IS NOT CLOSED
+    # def add_document_by_path(self, file_path: str, **additional_data) -> str:
+    #     """
+    #     Add a document via url, returns generated unique key.
+    #     :param file_path:
+    #     :param additional_data: Optional and will append any additional kwargs to the json of the document
+    #     :return: Document instance
+    #     """
+    #
+    #     file = open(file_path, 'rb')
+    #     return self.add_document_by_file(file, file.name, **additional_data)
     def add_document_by_path(self, file_path: str, **additional_data) -> str:
-        """
-        Add a document via url, returns generated unique key.
-        :param file_path:
-        :param additional_data: Optional and will append any additional kwargs to the json of the document
-        :return: Document instance
-        """
+        filename = basename(file_path)
 
         file = open(file_path, 'rb')
-        return self.add_document_by_file(file, file.name, **additional_data)
+        b64str = b64encode(file.read())
+        file.close()
+
+        return self.add_document_by_b64(filename, b64str, **additional_data)
+
+    def add_document_by_b64(self, filename:str, b64str:str, **additional_data):
+        file_index = len(self.files)
+
+
+        self.files.append({'file_b64': b64str, "filename": filename})
+        document = Document.create(file_index=file_index, **additional_data)
+        print(f"doc -- {document.key}")
+        self._documents[document.key] = document
+        return document.key
 
     def add_document_by_bytearray(self, byte_array: bytearray, file_name: str,
                                   **additional_data) -> str:
