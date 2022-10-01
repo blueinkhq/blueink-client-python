@@ -1,7 +1,7 @@
 from typing import List
 
 from src.blueink import endpoints
-from src.blueink.model.webhook import WebhookExtraHeader
+from src.blueink.model.webhook import WebhookExtraHeaderSchema
 from src.blueink.request_helper import NormalizedResponse
 from src.blueink.subclients.subclient import SubClient
 from src.blueink.webhook_helper import WebhookHelper

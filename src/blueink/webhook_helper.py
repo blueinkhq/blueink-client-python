@@ -1,6 +1,7 @@
 from typing import List
 
 from src.blueink.model.webhook import WebhookSchema, WebhookExtraHeaderSchema
+from src.blueink.constants import EVENT_TYPE
 
 
 class WebhookHelper:
@@ -25,6 +26,21 @@ class WebhookHelper:
         self.extra_headers.append(wheh)
         self._extraheader_idx = self._extraheader_idx + 1
         return wheh
+
+    def _validate_event_types(self):
+        for et in self.event_types:
+            if et not in EVENT_TYPE.values():
+                return False
+
+        return True
+
+    def validate(self) -> bool:
+        """
+        """
+        if not self._validate_event_types():
+            return False
+
+        return True
 
     def as_data(self, **kwargs):
         webhook_out = WebhookSchema(
