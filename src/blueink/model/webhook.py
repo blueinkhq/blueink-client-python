@@ -2,7 +2,7 @@ from typing import List, Optional
 from pydantic import BaseModel, validator
 
 
-class WebhookExtraHeader(BaseModel):
+class WebhookExtraHeaderSchema(BaseModel):
     id: str
     webhook: str
     name: str
@@ -10,10 +10,10 @@ class WebhookExtraHeader(BaseModel):
     order: int
 
 
-class Webhook(BaseModel):
+class WebhookSchema(BaseModel):
     id: str
     url: str
     enabled: bool
     json: bool
     event_types: List[str]
-    extra_header: List[WebhookExtraHeader]
+    extra_header: Optional[List[WebhookExtraHeaderSchema]]
