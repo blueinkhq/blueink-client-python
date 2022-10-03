@@ -215,25 +215,15 @@ class TestClientWebhook(TestCase):
         "order": 1,
     }
 
+    # -----------------
+    # Webhook CRUD / Listing
+    # -----------------
     def test_webhook_creation_raw(self):
         data = self.WEBHOOK_01
 
         client = Client(raise_exceptions=False)
         resp = client.webhooks.create_webhook(data=data)
         self.assert_equal(resp.status, 201, resp.data)
-
-    def test_webhook_and_extraheader_creation_raw(self):
-        data = self.WEBHOOK_01
-
-        client = Client(raise_exceptions=False)
-        resp1 = client.webhooks.create_webhook(data=data)
-        self.assert_equal(resp1.status, 201, resp1.data)
-
-        eh_data = deepcopy(self.WEBHOOK_01_EXTRA_HEADER_A)
-        eh_data["webhook"] = resp1.data["id"]
-
-        resp2 = client.webhooks.create_header(eh_data)
-        self.assert_equal(resp2.status, 201, resp2.data)
 
     def test_webhook_listing(self):
         client = Client(raise_exceptions=False)
@@ -317,5 +307,29 @@ class TestClientWebhook(TestCase):
         self.assert_equal(resp3.status, 200, resp3.data)
         self.assert_equal(resp3.data["enabled"], update_data["enabled"])
         self.assert_len(resp3.data["event_types"], len(update_data["event_types"]))
+
+    # -----------------
+    # Extraheader CRUD / Listing
+    # -----------------
+    def test_extraheader_creation_raw(self):
+        data = self.WEBHOOK_01
+
+        client = Client(raise_exceptions=False)
+        resp1 = client.webhooks.create_webhook(data=data)
+        self.assert_equal(resp1.status, 201, resp1.data)
+
+        eh_data = deepcopy(self.WEBHOOK_01_EXTRA_HEADER_A)
+        eh_data["webhook"] = resp1.data["id"]
+
+        resp2 = client.webhooks.create_header(eh_data)
+        self.assert_equal(resp2.status, 201, resp2.data)
+
+    # -----------------
+    # Events / Delivery Listing not tested; no CRUD functionality
+    # -----------------
+
+    # -----------------
+    # Secret testing not implemented, will tamper with whoever runs this test suite
+    # -----------------
 
 
