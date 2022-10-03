@@ -6,7 +6,6 @@ from munch import Munch
 from src.blueink import Client, BundleHelper, PersonHelper
 from src.blueink.constants import EVENT_TYPE
 from src.blueink.utils.testcase import TestCase
-from src.blueink.webhook_helper import WebhookHelper
 
 # -----------------
 # Bundle Subclient Tests
@@ -195,14 +194,23 @@ class TestClientWebhook(TestCase):
         ],
     }
 
+    WEBHOOK_02 = {
+        "url": "https://www.example.com/02/",
+        "enabled": True,
+        "json": True,
+        "event_types": [
+            EVENT_TYPE.EVENT_BUNDLE_LAUNCHED,
+        ],
+    }
+
     WEBHOOK_01_EXTRA_HEADER_A = {
-        "name": "Courage The Cowardly Webhook",
+        "name": "Courage_The_Cowardly_Webhook",
         "value": "Muriel Bagge",
         "order": 0,
     }
 
     WEBHOOK_01_EXTRA_HEADER_B = {
-        "name": "Courage The Cowardly Webhook",
+        "name": "Courage_The_Cowardly_Webhook",
         "value": "Eustace Bagge",
         "order": 1,
     }
@@ -211,34 +219,103 @@ class TestClientWebhook(TestCase):
         data = self.WEBHOOK_01
 
         client = Client(raise_exceptions=False)
-        resp = client.webhooks.create_webhook_raw(data=data)
-        self.assert_equal(resp.status, 201)
+        resp = client.webhooks.create_webhook(data=data)
+        self.assert_equal(resp.status, 201, resp.data)
 
     def test_webhook_and_extraheader_creation_raw(self):
         data = self.WEBHOOK_01
+
         client = Client(raise_exceptions=False)
-        resp1 = client.webhooks.create_webhook_raw(data=data)
-        self.assert_equal(resp1.status, 201)
+        resp1 = client.webhooks.create_webhook(data=data)
+        self.assert_equal(resp1.status, 201, resp1.data)
 
         eh_data = deepcopy(self.WEBHOOK_01_EXTRA_HEADER_A)
         eh_data["webhook"] = resp1.data["id"]
 
         resp2 = client.webhooks.create_header(eh_data)
-        self.assert_equal(resp2.status, 201)
+        self.assert_equal(resp2.status, 201, resp2.data)
 
-    def test_webhook_creation_helper(self):
-        data = self.WEBHOOK_01
-        helper = WebhookHelper(**self.WEBHOOK_01)
-
+    def test_webhook_listing(self):
         client = Client(raise_exceptions=False)
-        resp1 = client.webhooks.create_webhook(helper)
-        self.assert_equal(resp1.status, 201)
+        pre_create = client.webhooks.list_webhooks()
+        self.assert_equal(pre_create.status, 200)
+        pre_create_len = len(pre_create.data)
 
-        wh_eh = helper.add_extra_header(self.WEBHOOK_01_EXTRA_HEADER_A["name"],
-                                        self.WEBHOOK_01_EXTRA_HEADER_A["value"])
-        eh_data = wh_eh.dict()
-        eh_data["webhook"] = resp1.data["id"]
+        data1 = self.WEBHOOK_01
+        resp1 = client.webhooks.create_webhook(data=data1)
+        self.assert_equal(resp1.status, 201, resp1.data)
 
-        resp2 = client.webhooks.create_header(eh_data)
-        self.assert_equal(resp2.status, 201)
+        data2 = self.WEBHOOK_02
+        resp2 = client.webhooks.create_webhook(data=data2)
+        self.assert_equal(resp1.status, 201, resp2.data)
+
+        post_create = client.webhooks.list_webhooks()
+        self.assert_equal(post_create.status, 200)
+        post_create_len = len(post_create.data)
+
+        self.assert_equal(pre_create_len + 2, post_create_len)
+
+    def test_webhook_retrieval(self):
+        client = Client(raise_exceptions=False)
+
+        data1 = self.WEBHOOK_01
+        resp1 = client.webhooks.create_webhook(data=data1)
+        self.assert_equal(resp1.status, 201, resp1.data)
+        self.assert_equal(resp1.data["url"], data1["url"])
+
+        resp2 = client.webhooks.retrieve_webhook(resp1.data.id)
+        self.assert_equal(resp2.status, 200, resp2.data)
+
+        self.assert_equal(resp2.data["url"], data1["url"])
+
+    def test_webhook_delete(self):
+        client = Client(raise_exceptions=False)
+        resp0 = client.webhooks.list_webhooks()
+        self.assert_equal(resp0.status, 200)
+        pre_create_len = len(resp0.data)
+
+        data1 = self.WEBHOOK_01
+        resp1 = client.webhooks.create_webhook(data=data1)
+        self.assert_equal(resp1.status, 201, resp1.data)
+
+        resp2 = client.webhooks.list_webhooks()
+        self.assert_equal(resp2.status, 200)
+        post_create_len = len(resp2.data)
+        self.assert_equal(pre_create_len + 1, post_create_len)
+
+        resp3 = client.webhooks.delete_webhook(resp1.data.id)
+        self.assert_equal(resp3.status, 204, resp3.data)
+
+        resp4 = client.webhooks.list_webhooks()
+        self.assert_equal(resp4.status, 200)
+        post_delete_len = len(resp4.data)
+
+        self.assert_equal(pre_create_len, post_delete_len)
+
+    def test_webhook_update(self):
+        client = Client(raise_exceptions=False)
+
+        data1 = self.WEBHOOK_01
+        resp1 = client.webhooks.create_webhook(data=data1)
+        self.assert_equal(resp1.status, 201, resp1.data)
+        self.assert_equal(resp1.data["url"], data1["url"])
+
+        resp2 = client.webhooks.retrieve_webhook(resp1.data.id)
+        self.assert_equal(resp2.status, 200, resp2.data)
+
+        self.assert_equal(resp2.data["url"], data1["url"])
+        self.assert_equal(resp2.data["enabled"], data1["enabled"])
+        self.assert_len(resp2.data["event_types"], len(data1["event_types"]))
+
+        update_data = {
+            "enabled": False,
+            "event_types": [
+                EVENT_TYPE.EVENT_PACKET_VIEWED
+            ]
+        }
+        resp3 = client.webhooks.update_webhook(resp1.data.id, update_data)
+        self.assert_equal(resp3.status, 200, resp3.data)
+        self.assert_equal(resp3.data["enabled"], update_data["enabled"])
+        self.assert_len(resp3.data["event_types"], len(update_data["event_types"]))
+
 

@@ -1,10 +1,6 @@
-from typing import List
-
 from src.blueink import endpoints
-from src.blueink.model.webhook import WebhookExtraHeaderSchema
 from src.blueink.request_helper import NormalizedResponse
 from src.blueink.subclients.subclient import SubClient
-from src.blueink.webhook_helper import WebhookHelper
 
 
 class WebhookSubClient(SubClient):
@@ -14,13 +10,10 @@ class WebhookSubClient(SubClient):
     # ----------
     # Webhooks
     # ----------
-    def create_webhook_raw(self, data: dict):
+    def create_webhook(self, data: dict):
         url = self.build_url(endpoint=endpoints.WEBHOOKS.CREATE)
 
         return self._requests.post(url, data=data)
-
-    def create_webhook(self, webhook_helper: WebhookHelper, **kwargs):
-        return self.create_webhook_raw(webhook_helper.as_data(**kwargs))
 
     def list_webhooks(self, **query_params) -> NormalizedResponse:
         url = self.build_url(endpoint=endpoints.WEBHOOKS.LIST)
