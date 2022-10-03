@@ -1,17 +1,23 @@
 from base64 import b64encode
+from copy import deepcopy
 from os.path import basename
 
 from munch import Munch
 from src.blueink import Client, BundleHelper, PersonHelper
+from src.blueink.constants import EVENT_TYPE
 from src.blueink.utils.testcase import TestCase
+from src.blueink.webhook_helper import WebhookHelper
 
-
-class TestClient(TestCase):
+# -----------------
+# Bundle Subclient Tests
+# -----------------
+class TestClientBundle(TestCase):
     DOC_METHODS = Munch(
         PATH="PATH",
         URL="URL",
         B64="BASE64"
     )
+
 
     BUNDLE_LABEL_URL = "A URL Bundle Label!"
     BUNDLE_LABEL_PATH = "A PATH Bundle Label!"
@@ -37,23 +43,7 @@ class TestClient(TestCase):
     FIELD01_P = 1
     FIELD01_EDITORS = [SIGNER01_KEY]
 
-
-    # Person Data
-    PERSON_NAME = "JOHN DOE"
-
-    PERSON_MD_KEY01 = "KEY01"
-    PERSON_MD_KEY02 = "KEY02"
-    PERSON_MD_VAL01 = 12
-    PERSON_MD_VAL02 = "VAL"
-    PERSON_METADATA = {
-        PERSON_MD_KEY01: PERSON_MD_VAL01,
-        PERSON_MD_KEY02: PERSON_MD_VAL02,
-    }
-
-    PERSON_PHONES = ["505 555 5555"]
-    PERSON_EMAILS = ["johndoe@example.com"]
-
-    def _bundle_label(self, method:str):
+    def _bundle_label(self, method: str):
         if method == self.DOC_METHODS.PATH:
             return self.BUNDLE_LABEL_PATH
         elif method == self.DOC_METHODS.URL:
@@ -110,7 +100,7 @@ class TestClient(TestCase):
 
         return bh, signer01_key, field01_key
 
-    def _check_bundle_data(self, compiled_bundle:dict, signerkey, fieldkey):
+    def _check_bundle_data(self, compiled_bundle: dict, signerkey, fieldkey):
         self.assert_in("documents", compiled_bundle)
         self.assert_len(compiled_bundle["documents"], 1)
 
@@ -161,6 +151,25 @@ class TestClient(TestCase):
         resp = client.bundles.create_from_bundle_helper(bh)
         self.assert_equal(resp.status, 201)
 
+
+# -----------------
+# Person Subclient Tests
+# -----------------
+class TestClientPerson(TestCase):
+    PERSON_NAME = "JOHN DOE"
+
+    PERSON_MD_KEY01 = "KEY01"
+    PERSON_MD_KEY02 = "KEY02"
+    PERSON_MD_VAL01 = 12
+    PERSON_MD_VAL02 = "VAL"
+    PERSON_METADATA = {
+        PERSON_MD_KEY01: PERSON_MD_VAL01,
+        PERSON_MD_KEY02: PERSON_MD_VAL02,
+    }
+
+    PERSON_PHONES = ["505 555 5555"]
+    PERSON_EMAILS = ["johndoe@example.com"]
+
     def test_person_create(self):
         ph = PersonHelper(name=self.PERSON_NAME,
                           metadata=self.PERSON_METADATA,
@@ -170,3 +179,66 @@ class TestClient(TestCase):
         client = Client(raise_exceptions=False)
         resp = client.persons.create_from_person_helper(ph)
         self.assert_equal(resp.status, 201)
+
+
+# -----------------
+# Webhook Subclient tests
+# -----------------
+class TestClientWebhook(TestCase):
+    WEBHOOK_01 = {
+        "url": "https://www.example.com/01/",
+        "enabled": True,
+        "json": True,
+        "event_types": [
+            EVENT_TYPE.EVENT_BUNDLE_LAUNCHED,
+            EVENT_TYPE.EVENT_BUNDLE_COMPLETE,
+        ],
+    }
+
+    WEBHOOK_01_EXTRA_HEADER_A = {
+        "name": "Courage The Cowardly Webhook",
+        "value": "Muriel Bagge",
+        "order": 0,
+    }
+
+    WEBHOOK_01_EXTRA_HEADER_B = {
+        "name": "Courage The Cowardly Webhook",
+        "value": "Eustace Bagge",
+        "order": 1,
+    }
+
+    def test_webhook_creation_raw(self):
+        data = self.WEBHOOK_01
+
+        client = Client(raise_exceptions=False)
+        resp = client.webhooks.create_webhook_raw(data=data)
+        self.assert_equal(resp.status, 201)
+
+    def test_webhook_and_extraheader_creation_raw(self):
+        data = self.WEBHOOK_01
+        client = Client(raise_exceptions=False)
+        resp1 = client.webhooks.create_webhook_raw(data=data)
+        self.assert_equal(resp1.status, 201)
+
+        eh_data = deepcopy(self.WEBHOOK_01_EXTRA_HEADER_A)
+        eh_data["webhook"] = resp1.data["id"]
+
+        resp2 = client.webhooks.create_header(eh_data)
+        self.assert_equal(resp2.status, 201)
+
+    def test_webhook_creation_helper(self):
+        data = self.WEBHOOK_01
+        helper = WebhookHelper(**self.WEBHOOK_01)
+
+        client = Client(raise_exceptions=False)
+        resp1 = client.webhooks.create_webhook(helper)
+        self.assert_equal(resp1.status, 201)
+
+        wh_eh = helper.add_extra_header(self.WEBHOOK_01_EXTRA_HEADER_A["name"],
+                                        self.WEBHOOK_01_EXTRA_HEADER_A["value"])
+        eh_data = wh_eh.dict()
+        eh_data["webhook"] = resp1.data["id"]
+
+        resp2 = client.webhooks.create_header(eh_data)
+        self.assert_equal(resp2.status, 201)
+

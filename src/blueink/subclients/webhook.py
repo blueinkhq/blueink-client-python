@@ -14,15 +14,13 @@ class WebhookSubClient(SubClient):
     # ----------
     # Webhooks
     # ----------
-    def create_webhook(self, data: dict):
+    def create_webhook_raw(self, data: dict):
         url = self.build_url(endpoint=endpoints.WEBHOOKS.CREATE)
 
         return self._requests.post(url, data=data)
 
     def create_webhook(self, webhook_helper: WebhookHelper, **kwargs):
-        url = self.build_url(endpoint=endpoints.WEBHOOKS.CREATE)
-
-        return self._requests.post(url, data=webhook_helper.as_data(**kwargs))
+        return self.create_webhook_raw(webhook_helper.as_data(**kwargs))
 
     def list_webhooks(self, **query_params) -> NormalizedResponse:
         url = self.build_url(endpoint=endpoints.WEBHOOKS.LIST)
