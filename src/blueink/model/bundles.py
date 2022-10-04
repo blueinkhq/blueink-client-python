@@ -151,6 +151,8 @@ class Document(BaseModel):
 
     # document related
     file_url: Optional[str]
+    filename: Optional[str]
+    file_b64: Optional[str]
     file_index: Optional[int]
     fields: Optional[List[Field]]
 

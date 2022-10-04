@@ -32,15 +32,6 @@ class BundleSubClient(SubClient):
                     files_data.append((field_name, (file_dict.get("filename"),
                                                     fh,
                                                     file_dict.get("content_type"))))
-                elif "file_b64" in file_dict:
-                    print("B64 represented File")
-
-                    b64 = file_dict["file_b64"]
-                    field_name = f"files[{idx}]"
-                    files_data.append((field_name, (file_dict.get("filename"),
-                                                    b64,
-                                                    file_dict.get("content_type"))))
-
         return files_data
 
     def create(self, data: dict,
