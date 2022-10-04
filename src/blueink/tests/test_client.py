@@ -11,7 +11,8 @@ class TestClient(TestCase):
     DOC_METHODS = Munch(
         PATH="PATH",
         URL="URL",
-        B64="BASE64"
+        B64="BASE64",
+        TEMPLATE="TEMPLATE",
     )
 
     BUNDLE_LABEL_URL = "A URL Bundle Label!"
@@ -195,6 +196,39 @@ class TestClient(TestCase):
                                                                  resp.data.id,
                                                                  1)
         self.assert_true(has_all_docs)
+
+    # def test_roundtrip_template(self):
+    #     bh = BundleHelper(self._bundle_label("TEMPLATE"),
+    #                       self.EMAIL_SUBJECT,
+    #                       self.EMAIL_MESSAGE,
+    #                       is_test=True)
+    #
+    #     signer01_key = bh.add_signer(key=self.SIGNER01_KEY,
+    #                                  name=self.SIGNER01_NAME,
+    #                                  email=self.SIGNER01_EMAIL,
+    #                                  phone=self.SIGNER01_PHONE,
+    #                                  deliver_via=self.SIGNER01_DELIVERY)
+    #
+    #     assignments = {
+    #         "signer-1": signer01_key,
+    #     }
+    #     initvals = {
+    #         "inp001-a3Y3q": "MUH INIT VAL"
+    #     }
+    #
+    #     # Add Document
+    #     bh.add_document_template(template_id="e745bb78-7a87-4b9c-b3df-54373a1bb2c3",
+    #                              assignments=assignments,
+    #                              initial_field_values=initvals)
+    #
+    #     client = Client(raise_exceptions=False)
+    #     resp = client.bundles.create_from_bundle_helper(bh)
+    #     self.assert_equal(resp.status, 201)
+    #
+    #     has_all_docs = self._poll_for_successful_file_processing(client,
+    #                                                              resp.data.id,
+    #                                                              1)
+    #     self.assert_true(has_all_docs)
 
     def test_person_create(self):
         ph = PersonHelper(name=self.PERSON_NAME,

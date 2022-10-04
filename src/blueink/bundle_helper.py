@@ -17,14 +17,14 @@ from .model.bundles import (
 
 class BundleHelper:
     def __init__(
-            self,
-            label: str = None,
-            email_subject: str = None,
-            email_message: str = None,
-            in_order: bool = False,
-            is_test: bool = False,
-            custom_key: str = None,
-            team: str = None,
+        self,
+        label: str = None,
+        email_subject: str = None,
+        email_message: str = None,
+        in_order: bool = False,
+        is_test: bool = False,
+        custom_key: str = None,
+        team: str = None,
     ):
         """Helper class to aid building a Bundle.
 
@@ -77,7 +77,7 @@ class BundleHelper:
 
         return self.add_document_by_b64(filename, b64str, **additional_data)
 
-    def add_document_by_b64(self, filename:str, b64str:str, **additional_data):
+    def add_document_by_b64(self, filename: str, b64str: str, **additional_data):
         file_index = len(self.files)
 
         document = Document.create(filename=filename,
@@ -102,22 +102,48 @@ class BundleHelper:
     #     file = io.BufferedReader(bytes, len(byte_array))
     #     return self.add_document_by_file(file, file_name, **additional_data)
 
-    def add_document_template(self, template_id: str, **additional_data) -> str:
-        """
-        Create and add a template reference
-        :param template_id:
-        :param additional_data: Optional and will append any additional kwargs to the json of the template
-        :return:Template object
-        """
-        if template_id in self._documents.keys():
-            raise RuntimeError(f'Document/Template with id {template_id} already added.')
+    def add_document_template(self, template_id: str,
+                              assignments: dict,
+                              initial_field_values: dict,
+                              **additional_data) -> str:
+        """Create and add a template reference
 
-        template = TemplateRef.create(template_id=template_id, **additional_data)
+        Args:
+            template_id: Template UUID from BlueInk
+            assignments: dict going from Role to signer ID
+            initial_field_values: dict going from docfield key to initial value
+
+        Returns:
+            document key
+        """
+
+        if template_id in self._documents.keys():
+            raise RuntimeError(
+                f'Document/Template with id {template_id} already added.')
+
+        assigns = []
+        for role, signer in assignments.items():
+            ref = TemplateRefAssignment.create(role=role, signer=signer)
+            assigns.append(ref)
+
+        vals = []
+        for field_key, init_val in initial_field_values.items():
+            fieldval = TemplateRefFieldValue.create(key=field_key,
+                                                    initial_value=init_val)
+            vals.append(fieldval)
+
+        template = TemplateRef.create(template_id=template_id,
+                                      assignments=assigns,
+                                      field_values=vals,
+                                      **additional_data)
+
         self._documents[template.key] = template
         return template.key
 
-    def add_field(self, document_key: str, x: int, y: int, w: int, h: int, p: int, kind: str,
-                  editors: List[str] = None, label: str = None, v_pattern: str = None, v_min: int = None,
+    def add_field(self, document_key: str, x: int, y: int, w: int, h: int, p: int,
+                  kind: str,
+                  editors: List[str] = None, label: str = None, v_pattern: str = None,
+                  v_min: int = None,
                   v_max: int = None, key=None, **additional_data):
         """Create and add a field to a particular document.
 
@@ -154,8 +180,10 @@ class BundleHelper:
         self._documents[document_key].add_field(field)
         return field.key
 
-    def add_signer(self, name: str, email: str = None, phone: str = None, deliver_via: str = None,
-                   person_id=None, auth_sms: bool = False, auth_selfie: bool = False, auth_id: bool = False,
+    def add_signer(self, name: str, email: str = None, phone: str = None,
+                   deliver_via: str = None,
+                   person_id=None, auth_sms: bool = False, auth_selfie: bool = False,
+                   auth_id: bool = False,
                    order: int = None, key=None, **additional_data):
         """Create and add a signer. With at least an email xor phone number.
 
@@ -192,7 +220,8 @@ class BundleHelper:
         self._packets[packet.key] = packet
         return packet.key
 
-    def assign_role(self, document_key: str, signer_key: str, role: str, **additional_data):
+    def assign_role(self, document_key: str, signer_key: str, role: str,
+                    **additional_data):
         """Assign a signer to a particular role in a template
 
         Args:
@@ -204,9 +233,11 @@ class BundleHelper:
         if document_key not in self._documents:
             raise RuntimeError(f"No document found with key {document_key}!")
         if type(self._documents[document_key]) is not TemplateRef:
-            raise RuntimeError(f"Document found with key {document_key} is not a Template!")
+            raise RuntimeError(
+                f"Document found with key {document_key} is not a Template!")
         if signer_key not in self._packets:
-            raise RuntimeError(f"Signer {signer_key} does not have a corresponding packet")
+            raise RuntimeError(
+                f"Signer {signer_key} does not have a corresponding packet")
 
         assignment = TemplateRefAssignment.create(role, signer_key, **additional_data)
         self._documents[document_key].add_assignment(assignment)
@@ -223,7 +254,8 @@ class BundleHelper:
         if document_key not in self._documents:
             raise RuntimeError(f"No document found with key {document_key}!")
         if type(self._documents[document_key]) is not TemplateRef:
-            raise RuntimeError(f"Document found with key {document_key} is not a Template!")
+            raise RuntimeError(
+                f"Document found with key {document_key} is not a Template!")
 
         field_val = TemplateRefFieldValue.create(key, value, **additional_data)
         self._documents[document_key].field_values.append(field_val)
