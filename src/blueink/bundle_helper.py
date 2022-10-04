@@ -72,15 +72,13 @@ class BundleHelper:
     def add_document_by_path(self, file_path: str, **additional_data) -> str:
         filename = basename(file_path)
 
-        file = open(file_path, 'rb')
-        b64str = b64encode(file.read())
-        file.close()
+        with open(file_path, 'rb') as file:
+            b64str = b64encode(file.read()).decode("utf-8")
 
         return self.add_document_by_b64(filename, b64str, **additional_data)
 
     def add_document_by_b64(self, filename:str, b64str:str, **additional_data):
         file_index = len(self.files)
-
 
         self.files.append({'file_b64': b64str, "filename": filename})
         document = Document.create(file_index=file_index, **additional_data)

@@ -1,5 +1,6 @@
 from base64 import b64encode
 from os.path import basename
+from time import sleep
 
 from munch import Munch
 from src.blueink import Client, BundleHelper, PersonHelper
@@ -37,7 +38,6 @@ class TestClient(TestCase):
     FIELD01_P = 1
     FIELD01_EDITORS = [SIGNER01_KEY]
 
-
     # Person Data
     PERSON_NAME = "JOHN DOE"
 
@@ -53,7 +53,7 @@ class TestClient(TestCase):
     PERSON_PHONES = ["505 555 5555"]
     PERSON_EMAILS = ["johndoe@example.com"]
 
-    def _bundle_label(self, method:str):
+    def _bundle_label(self, method: str):
         if method == self.DOC_METHODS.PATH:
             return self.BUNDLE_LABEL_PATH
         elif method == self.DOC_METHODS.URL:
@@ -81,7 +81,7 @@ class TestClient(TestCase):
         elif method == self.DOC_METHODS.B64:
             file = open(self.REAL_DOCUMENT_PATH, 'rb')
             filename = basename(self.REAL_DOCUMENT_PATH)
-            b64str = b64encode(file.read())
+            b64str = b64encode(file.read()).decode("utf-8")
             file.close()
             doc01_key = bh.add_document_by_b64(filename, b64str)
 
@@ -110,7 +110,7 @@ class TestClient(TestCase):
 
         return bh, signer01_key, field01_key
 
-    def _check_bundle_data(self, compiled_bundle:dict, signerkey, fieldkey):
+    def _check_bundle_data(self, compiled_bundle: dict, signerkey, fieldkey):
         self.assert_in("documents", compiled_bundle)
         self.assert_len(compiled_bundle["documents"], 1)
 
@@ -134,6 +134,26 @@ class TestClient(TestCase):
 
         self.assert_equal(compiled_bundle["packets"][0]["key"], signerkey)
 
+    def _poll_for_successful_file_processing(self, client: Client, bundle_id: str,
+                                             expected_document_count: int,
+                                             max_attempts=5, delay_between_seconds=5):
+        attempt = 0
+        while attempt < max_attempts:
+            attempt = attempt + 1
+            sleep(delay_between_seconds)
+
+            resp = client.bundles.retrieve(bundle_id)
+            if resp.status != 200:
+                print(f"Failed to get bundle {bundle_id} on attempt {attempt}"
+                      f" of {max_attempts}")
+                continue
+
+            ndocs = len(resp.data["documents"])
+            if ndocs == expected_document_count:
+                return True
+
+        return False
+
     def test_roundtrip_url(self):
         bh, sk, fk = self._create_test_bundle_helper(
             method=self.DOC_METHODS.URL
@@ -142,6 +162,11 @@ class TestClient(TestCase):
         client = Client(raise_exceptions=False)
         resp = client.bundles.create_from_bundle_helper(bh)
         self.assert_equal(resp.status, 201)
+
+        has_all_docs = self._poll_for_successful_file_processing(client,
+                                                                 resp.data.id,
+                                                                 1)
+        self.assert_true(has_all_docs)
 
     def test_roundtrip_b64(self):
         bh, sk, fk = self._create_test_bundle_helper(
@@ -152,6 +177,11 @@ class TestClient(TestCase):
         resp = client.bundles.create_from_bundle_helper(bh)
         self.assert_equal(resp.status, 201)
 
+        has_all_docs = self._poll_for_successful_file_processing(client,
+                                                                 resp.data.id,
+                                                                 1)
+        self.assert_true(has_all_docs)
+
     def test_roundtrip_path(self):
         bh, sk, fk = self._create_test_bundle_helper(
             method=self.DOC_METHODS.PATH
@@ -160,6 +190,11 @@ class TestClient(TestCase):
         client = Client(raise_exceptions=False)
         resp = client.bundles.create_from_bundle_helper(bh)
         self.assert_equal(resp.status, 201)
+
+        has_all_docs = self._poll_for_successful_file_processing(client,
+                                                                 resp.data.id,
+                                                                 1)
+        self.assert_true(has_all_docs)
 
     def test_person_create(self):
         ph = PersonHelper(name=self.PERSON_NAME,
