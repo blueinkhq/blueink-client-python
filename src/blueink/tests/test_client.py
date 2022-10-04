@@ -199,7 +199,7 @@ class TestClientWebhook(TestCase):
         "enabled": True,
         "json": True,
         "event_types": [
-            EVENT_TYPE.EVENT_BUNDLE_LAUNCHED,
+            EVENT_TYPE.EVENT_BUNDLE_DOCS_READY,
         ],
     }
 
@@ -229,6 +229,8 @@ class TestClientWebhook(TestCase):
         self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
 
     def test_webhook_listing(self):
+        # Known to fail if > 50 webhooks exist; list_webhooks gives up to 50.
+
         client = Client(raise_exceptions=False)
         pre_create = client.webhooks.list_webhooks()
         self.assert_equal(pre_create.status, 200)
@@ -273,6 +275,8 @@ class TestClientWebhook(TestCase):
         self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
 
     def test_webhook_delete(self):
+        # Known to fail if > 50 webhooks exist; list_webhooks gives up to 50.
+
         client = Client(raise_exceptions=False)
         resp0 = client.webhooks.list_webhooks()
         self.assert_equal(resp0.status, 200)

@@ -51,7 +51,7 @@ class WebhookSubClient(SubClient):
         url = self.build_url(endpoint=endpoints.WEBHOOKS.LIST_HEADERS)
 
         return self._requests.get(url,
-                                  params=self.build_params(query_params=query_params))
+                                  params=self.build_params(**query_params))
 
     def retrieve_header(self, header_id: str) -> NormalizedResponse:
         url = self.build_url(endpoint=endpoints.WEBHOOKS.RETRIEVE_HEADER,

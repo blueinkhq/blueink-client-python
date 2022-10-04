@@ -100,14 +100,14 @@ class RequestHelper:
         self, method, url, data=None, json=None, files=None, params=None, headers=None, content_type=None
     ):
 
-
         response = requests.request(
             method,
             url,
             params=params,
             data=data,
             json=json,
-            headers=self._build_headers(content_type=content_type, more_headers=headers),
+            headers=self._build_headers(content_type=content_type,
+                                        more_headers=headers),
             files=files,
         )
 
