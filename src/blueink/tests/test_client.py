@@ -345,6 +345,44 @@ class TestClientWebhook(TestCase):
         resp_clean1 = client.webhooks.delete_webhook(resp1.data.id)
         self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
 
+    def test_extraheader_listing(self):
+        data1 = self.WEBHOOK_01
+        data2 = self.WEBHOOK_02
+
+        client = Client(raise_exceptions=False)
+        # Create parent webhooks
+        resp1a = client.webhooks.create_webhook(data=data1)
+        self.assert_equal(resp1a.status, 201, resp1a.data)
+
+        resp1b = client.webhooks.create_webhook(data=data2)
+        self.assert_equal(resp1b.status, 201, resp1b.data)
+
+        # setup and create headers under wh 1
+        eh1_data = deepcopy(self.WEBHOOK_01_EXTRA_HEADER_A)
+        eh1_data["webhook"] = resp1a.data["id"]
+        eh2_data = deepcopy(self.WEBHOOK_01_EXTRA_HEADER_B)
+        eh2_data["webhook"] = resp1a.data["id"]
+        resp2a = client.webhooks.create_header(eh1_data)
+        self.assert_equal(resp2a.status, 201, resp2a.data)
+        resp2b = client.webhooks.create_header(eh2_data)
+        self.assert_equal(resp2b.status, 201, resp2b.data)
+
+        # Filter by webhook ID, 2 under wh 1, 0 under wh 2
+        resp4a = client.webhooks.list_headers(webhook=resp1a.data.id)
+        self.assert_equal(resp4a.status, 200, resp4a.data)
+        self.assert_len(resp4a.data, 2)
+
+        resp4b = client.webhooks.list_headers(webhook=resp1b.data.id)
+        self.assert_equal(resp4b.status, 200, resp4b.data)
+        self.assert_len(resp4b.data, 0)
+
+        # Cleanup
+        resp_clean1 = client.webhooks.delete_webhook(resp1a.data.id)
+        self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
+
+        resp_clean2 = client.webhooks.delete_webhook(resp1b.data.id)
+        self.assert_equal(resp_clean2.status, 204, resp_clean2.data)
+
     # -----------------
     # Events / Delivery Listing not tested; no CRUD functionality
     # -----------------
