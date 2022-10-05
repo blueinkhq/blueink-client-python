@@ -292,12 +292,19 @@ Using the `BundleHelper`, you can add files to a Bundle in multiple ways:
 ```python
 bh = BundleHelper(...)
 
-# Add a document using a path to the file in the local filesystem
-doc1_key = bh.add_document_by_path("/path/to/file/fw4.pdf", "application/pdf")
+# 0) Add a document using a URL to a web resource:
+doc0_key = bh.add_document_by_url("https://www.example.com/example.pdf")
 
-# Add a document that you have already read into a Python bytearray object
-pdf_bytearray = read_a_file_into_a_bytearray()
-doc2_key = bh.add_document_by_bytearray(pdf_bytearray, "fw4.pdf", "application/pdf")
+# 1) Add a document using a path to the file in the local filesystem
+doc1_key = bh.add_document_by_path("/path/to/file/example.pdf")
+
+# 2) Add a document using a UTF-8 encoded Base64 string:
+filename, pdf_b64 = read_a_file_into_b64_string()
+doc02_key = bh.add_document_by_b64(filename, pdf_b64)
+
+# 3) Add a document that you have already read into a Python bytearray object
+filename, pdf_bytearray = read_a_file_into_bytearray()
+doc03_key = bh.add_document_by_bytearray(pdf_bytearray, filename)
 ```
 
 
