@@ -16,13 +16,18 @@ class TestClientBundle(TestCase):
         PATH="PATH",
         URL="URL",
         B64="BASE64",
+        BYTES="BYTES",
         TEMPLATE="TEMPLATE",
     )
 
+    BUNDLE_LABELS = {
+        DOC_METHODS.PATH:"A PATH Bundle!",
+        DOC_METHODS.URL: "A URL Bundle!",
+        DOC_METHODS.B64: "A B64 Bundle!",
+        DOC_METHODS.BYTES: "A ByteArray Bundle!",
+        DOC_METHODS.TEMPLATE: "A Template Bundle!",
+    }
 
-    BUNDLE_LABEL_URL = "A URL Bundle Label!"
-    BUNDLE_LABEL_PATH = "A PATH Bundle Label!"
-    BUNDLE_LABEL_B64 = "A B64 Bundle Label!"
     EMAIL_SUBJECT = "A Test Bundle!"
     EMAIL_MESSAGE = "Email Message!"
 
@@ -44,21 +49,13 @@ class TestClientBundle(TestCase):
     FIELD01_P = 1
     FIELD01_EDITORS = [SIGNER01_KEY]
 
-    def _bundle_label(self, method: str):
-        if method == self.DOC_METHODS.PATH:
-            return self.BUNDLE_LABEL_PATH
-        elif method == self.DOC_METHODS.URL:
-            return self.BUNDLE_LABEL_URL
-        elif method == self.DOC_METHODS.B64:
-            return self.BUNDLE_LABEL_B64
-
     def _create_test_bundle_helper(self, method: str) -> (BundleHelper, str, str):
         """
         Returns:
             (BundleHelper, signerkey, fieldkey)
         """
 
-        bh = BundleHelper(self._bundle_label(method),
+        bh = BundleHelper(self.BUNDLE_LABELS[method],
                           self.EMAIL_SUBJECT,
                           self.EMAIL_MESSAGE,
                           is_test=True)
@@ -75,6 +72,13 @@ class TestClientBundle(TestCase):
             b64str = b64encode(file.read()).decode("utf-8")
             file.close()
             doc01_key = bh.add_document_by_b64(filename, b64str)
+        elif method == self.DOC_METHODS.BYTES:
+            filename = basename(self.REAL_DOCUMENT_PATH)
+
+            with open(self.REAL_DOCUMENT_PATH, 'rb') as file:
+                byte_array = bytearray(file.read())
+
+            doc01_key = bh.add_document_by_bytearray(byte_array, filename)
 
         # Add Signer 1
         signer01_key = bh.add_signer(key=self.SIGNER01_KEY,
@@ -176,6 +180,19 @@ class TestClientBundle(TestCase):
     def test_roundtrip_path(self):
         bh, sk, fk = self._create_test_bundle_helper(
             method=self.DOC_METHODS.PATH
+        )
+
+        client = Client(raise_exceptions=False)
+        resp = client.bundles.create_from_bundle_helper(bh)
+        self.assert_equal(resp.status, 201)
+        has_all_docs = self._poll_for_successful_file_processing(client,
+                                                                 resp.data.id,
+                                                                 1)
+        self.assert_true(has_all_docs)
+
+    def test_roundtrip_bytearray(self):
+        bh, sk, fk = self._create_test_bundle_helper(
+            method=self.DOC_METHODS.BYTES
         )
 
         client = Client(raise_exceptions=False)

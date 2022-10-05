@@ -62,7 +62,14 @@ HTTP5xx errors). These come from the `requests` module. If within your applicati
 you already handle exceptions coming out of `requests` then you should be good.
 If you set `raise_exceptions = False` then these  will be returned as
 `NormalizedResponse` objects which are also used for successful communications. See 
-below for information about these objects.
+below for information about these objects. 
+
+```python
+# In your python code, create an instance of the blueink Client
+from blueink import Client
+
+client = Client(raise_exceptions=False)
+```
 
 ### Making API Calls
 
