@@ -5,7 +5,7 @@ from time import sleep
 
 from munch import Munch
 from src.blueink import Client, BundleHelper, PersonHelper
-from src.blueink.constants import EVENT_TYPES
+from src.blueink.constants import EVENT_TYPE
 from src.blueink.utils.testcase import TestCase
 
 # -----------------
@@ -236,10 +236,6 @@ class TestClientPerson(TestCase):
 
     PERSON_PHONES = ["505 555 5555"]
     PERSON_EMAILS = ["johndoe@example.com"]
-
-
-
-
 
     def test_person_create(self):
         ph = PersonHelper(name=self.PERSON_NAME,
