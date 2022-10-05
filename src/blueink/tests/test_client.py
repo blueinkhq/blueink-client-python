@@ -1,19 +1,24 @@
 from base64 import b64encode
+from copy import deepcopy
 from os.path import basename
 from time import sleep
 
 from munch import Munch
 from src.blueink import Client, BundleHelper, PersonHelper
+from src.blueink.constants import EVENT_TYPES
 from src.blueink.utils.testcase import TestCase
 
-
-class TestClient(TestCase):
+# -----------------
+# Bundle Subclient Tests
+# -----------------
+class TestClientBundle(TestCase):
     DOC_METHODS = Munch(
         PATH="PATH",
         URL="URL",
         B64="BASE64",
         TEMPLATE="TEMPLATE",
     )
+
 
     BUNDLE_LABEL_URL = "A URL Bundle Label!"
     BUNDLE_LABEL_PATH = "A PATH Bundle Label!"
@@ -38,21 +43,6 @@ class TestClient(TestCase):
     FIELD01_H = 8
     FIELD01_P = 1
     FIELD01_EDITORS = [SIGNER01_KEY]
-
-    # Person Data
-    PERSON_NAME = "JOHN DOE"
-
-    PERSON_MD_KEY01 = "KEY01"
-    PERSON_MD_KEY02 = "KEY02"
-    PERSON_MD_VAL01 = 12
-    PERSON_MD_VAL02 = "VAL"
-    PERSON_METADATA = {
-        PERSON_MD_KEY01: PERSON_MD_VAL01,
-        PERSON_MD_KEY02: PERSON_MD_VAL02,
-    }
-
-    PERSON_PHONES = ["505 555 5555"]
-    PERSON_EMAILS = ["johndoe@example.com"]
 
     def _bundle_label(self, method: str):
         if method == self.DOC_METHODS.PATH:
@@ -191,7 +181,6 @@ class TestClient(TestCase):
         client = Client(raise_exceptions=False)
         resp = client.bundles.create_from_bundle_helper(bh)
         self.assert_equal(resp.status, 201)
-
         has_all_docs = self._poll_for_successful_file_processing(client,
                                                                  resp.data.id,
                                                                  1)
@@ -230,6 +219,28 @@ class TestClient(TestCase):
     #                                                              1)
     #     self.assert_true(has_all_docs)
 
+# -----------------
+# Person Subclient Tests
+# -----------------
+class TestClientPerson(TestCase):
+    PERSON_NAME = "JOHN DOE"
+
+    PERSON_MD_KEY01 = "KEY01"
+    PERSON_MD_KEY02 = "KEY02"
+    PERSON_MD_VAL01 = 12
+    PERSON_MD_VAL02 = "VAL"
+    PERSON_METADATA = {
+        PERSON_MD_KEY01: PERSON_MD_VAL01,
+        PERSON_MD_KEY02: PERSON_MD_VAL02,
+    }
+
+    PERSON_PHONES = ["505 555 5555"]
+    PERSON_EMAILS = ["johndoe@example.com"]
+
+
+
+
+
     def test_person_create(self):
         ph = PersonHelper(name=self.PERSON_NAME,
                           metadata=self.PERSON_METADATA,
@@ -239,3 +250,221 @@ class TestClient(TestCase):
         client = Client(raise_exceptions=False)
         resp = client.persons.create_from_person_helper(ph)
         self.assert_equal(resp.status, 201)
+
+
+# -----------------
+# Webhook Subclient tests
+# -----------------
+class TestClientWebhook(TestCase):
+    WEBHOOK_01 = {
+        "url": "https://www.example.com/01/",
+        "enabled": True,
+        "json": True,
+        "event_types": [
+            EVENT_TYPE.EVENT_BUNDLE_LAUNCHED,
+            EVENT_TYPE.EVENT_BUNDLE_COMPLETE,
+        ],
+    }
+
+    WEBHOOK_02 = {
+        "url": "https://www.example.com/02/",
+        "enabled": True,
+        "json": True,
+        "event_types": [
+            EVENT_TYPE.EVENT_BUNDLE_DOCS_READY,
+        ],
+    }
+
+    WEBHOOK_01_EXTRA_HEADER_A = {
+        "name": "Courage_The_Cowardly_Webhook",
+        "value": "Muriel Bagge",
+        "order": 0,
+    }
+
+    WEBHOOK_01_EXTRA_HEADER_B = {
+        "name": "Courage_The_Cowardly_Webhook",
+        "value": "Eustace Bagge",
+        "order": 1,
+    }
+
+    # -----------------
+    # Webhook CRUD / Listing
+    # -----------------
+    def test_webhook_creation_raw(self):
+        data = self.WEBHOOK_01
+
+        client = Client(raise_exceptions=False)
+        resp1 = client.webhooks.create_webhook(data=data)
+        self.assert_equal(resp1.status, 201, resp1.data)
+
+        resp_clean1 = client.webhooks.delete_webhook(resp1.data.id)
+        self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
+
+    def test_webhook_listing(self):
+        # Known to fail if > 50 webhooks exist; list_webhooks gives up to 50.
+
+        client = Client(raise_exceptions=False)
+        pre_create = client.webhooks.list_webhooks()
+        self.assert_equal(pre_create.status, 200)
+        pre_create_len = len(pre_create.data)
+
+        data1 = self.WEBHOOK_01
+        resp1 = client.webhooks.create_webhook(data=data1)
+        self.assert_equal(resp1.status, 201, resp1.data)
+
+        data2 = self.WEBHOOK_02
+        resp2 = client.webhooks.create_webhook(data=data2)
+        self.assert_equal(resp1.status, 201, resp2.data)
+
+        post_create = client.webhooks.list_webhooks()
+        self.assert_equal(post_create.status, 200)
+        post_create_len = len(post_create.data)
+
+        self.assert_equal(pre_create_len + 2, post_create_len)
+
+        # Cleanup
+        resp_clean1 = client.webhooks.delete_webhook(resp1.data.id)
+        self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
+
+        resp_clean2 = client.webhooks.delete_webhook(resp2.data.id)
+        self.assert_equal(resp_clean2.status, 204, resp_clean2.data)
+
+    def test_webhook_retrieval(self):
+        client = Client(raise_exceptions=False)
+
+        data1 = self.WEBHOOK_01
+        resp1 = client.webhooks.create_webhook(data=data1)
+        self.assert_equal(resp1.status, 201, resp1.data)
+        self.assert_equal(resp1.data["url"], data1["url"])
+
+        resp2 = client.webhooks.retrieve_webhook(resp1.data.id)
+        self.assert_equal(resp2.status, 200, resp2.data)
+
+        self.assert_equal(resp2.data["url"], data1["url"])
+
+        # Cleanup
+        resp_clean1 = client.webhooks.delete_webhook(resp1.data.id)
+        self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
+
+    def test_webhook_delete(self):
+        # Known to fail if > 50 webhooks exist; list_webhooks gives up to 50.
+
+        client = Client(raise_exceptions=False)
+        resp0 = client.webhooks.list_webhooks()
+        self.assert_equal(resp0.status, 200)
+        pre_create_len = len(resp0.data)
+
+        data1 = self.WEBHOOK_01
+        resp1 = client.webhooks.create_webhook(data=data1)
+        self.assert_equal(resp1.status, 201, resp1.data)
+
+        resp2 = client.webhooks.list_webhooks()
+        self.assert_equal(resp2.status, 200)
+        post_create_len = len(resp2.data)
+        self.assert_equal(pre_create_len + 1, post_create_len)
+
+        resp3 = client.webhooks.delete_webhook(resp1.data.id)
+        self.assert_equal(resp3.status, 204, resp3.data)
+
+        resp4 = client.webhooks.list_webhooks()
+        self.assert_equal(resp4.status, 200)
+        post_delete_len = len(resp4.data)
+
+        self.assert_equal(pre_create_len, post_delete_len)
+
+    def test_webhook_update(self):
+        client = Client(raise_exceptions=False)
+
+        data1 = self.WEBHOOK_01
+        resp1 = client.webhooks.create_webhook(data=data1)
+        self.assert_equal(resp1.status, 201, resp1.data)
+        self.assert_equal(resp1.data["url"], data1["url"])
+
+        resp2 = client.webhooks.retrieve_webhook(resp1.data.id)
+        self.assert_equal(resp2.status, 200, resp2.data)
+
+        self.assert_equal(resp2.data["url"], data1["url"])
+        self.assert_equal(resp2.data["enabled"], data1["enabled"])
+        self.assert_len(resp2.data["event_types"], len(data1["event_types"]))
+
+        update_data = {
+            "enabled": False,
+            "event_types": [
+                EVENT_TYPE.EVENT_PACKET_VIEWED
+            ]
+        }
+        resp3 = client.webhooks.update_webhook(resp1.data.id, update_data)
+        self.assert_equal(resp3.status, 200, resp3.data)
+        self.assert_equal(resp3.data["enabled"], update_data["enabled"])
+        self.assert_len(resp3.data["event_types"], len(update_data["event_types"]))
+
+        # Cleanup
+        resp_clean1 = client.webhooks.delete_webhook(resp1.data.id)
+        self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
+    # -----------------
+    # Extraheader CRUD / Listing
+    # -----------------
+    def test_extraheader_creation_raw(self):
+        data = self.WEBHOOK_01
+
+        client = Client(raise_exceptions=False)
+        resp1 = client.webhooks.create_webhook(data=data)
+        self.assert_equal(resp1.status, 201, resp1.data)
+
+        eh_data = deepcopy(self.WEBHOOK_01_EXTRA_HEADER_A)
+        eh_data["webhook"] = resp1.data["id"]
+
+        resp2 = client.webhooks.create_header(eh_data)
+        self.assert_equal(resp2.status, 201, resp2.data)
+
+        # Cleanup
+        resp_clean1 = client.webhooks.delete_webhook(resp1.data.id)
+        self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
+
+    def test_extraheader_listing(self):
+        data1 = self.WEBHOOK_01
+        data2 = self.WEBHOOK_02
+
+        client = Client(raise_exceptions=False)
+        # Create parent webhooks
+        resp1a = client.webhooks.create_webhook(data=data1)
+        self.assert_equal(resp1a.status, 201, resp1a.data)
+
+        resp1b = client.webhooks.create_webhook(data=data2)
+        self.assert_equal(resp1b.status, 201, resp1b.data)
+
+        # setup and create headers under wh 1
+        eh1_data = deepcopy(self.WEBHOOK_01_EXTRA_HEADER_A)
+        eh1_data["webhook"] = resp1a.data["id"]
+        eh2_data = deepcopy(self.WEBHOOK_01_EXTRA_HEADER_B)
+        eh2_data["webhook"] = resp1a.data["id"]
+        resp2a = client.webhooks.create_header(eh1_data)
+        self.assert_equal(resp2a.status, 201, resp2a.data)
+        resp2b = client.webhooks.create_header(eh2_data)
+        self.assert_equal(resp2b.status, 201, resp2b.data)
+
+        # Filter by webhook ID, 2 under wh 1, 0 under wh 2
+        resp4a = client.webhooks.list_headers(webhook=resp1a.data.id)
+        self.assert_equal(resp4a.status, 200, resp4a.data)
+        self.assert_len(resp4a.data, 2)
+
+        resp4b = client.webhooks.list_headers(webhook=resp1b.data.id)
+        self.assert_equal(resp4b.status, 200, resp4b.data)
+        self.assert_len(resp4b.data, 0)
+
+        # Cleanup
+        resp_clean1 = client.webhooks.delete_webhook(resp1a.data.id)
+        self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
+
+        resp_clean2 = client.webhooks.delete_webhook(resp1b.data.id)
+        self.assert_equal(resp_clean2.status, 204, resp_clean2.data)
+
+    # -----------------
+    # Events / Delivery Listing not tested; no CRUD functionality
+    # -----------------
+
+    # -----------------
+    # Secret testing not implemented, will tamper with whoever runs this test suite
+    # -----------------
+
+
