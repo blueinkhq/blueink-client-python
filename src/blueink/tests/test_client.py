@@ -310,14 +310,14 @@ class TestClientWebhook(TestCase):
         resp1 = client.webhooks.create_webhook(data=data)
         self.assert_equal(resp1.status, 201, resp1.data)
 
-        resp_clean1 = client.webhooks.delete_webhook(resp1.data.id)
+        resp_clean1 = client.webhooks.delete(resp1.data.id)
         self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
 
     def test_webhook_listing(self):
         # Known to fail if > 50 webhooks exist; list_webhooks gives up to 50.
 
         client = Client(raise_exceptions=False)
-        pre_create = client.webhooks.list_webhooks()
+        pre_create = client.webhooks.list()
         self.assert_equal(pre_create.status, 200)
         pre_create_len = len(pre_create.data)
 
@@ -329,17 +329,17 @@ class TestClientWebhook(TestCase):
         resp2 = client.webhooks.create_webhook(data=data2)
         self.assert_equal(resp1.status, 201, resp2.data)
 
-        post_create = client.webhooks.list_webhooks()
+        post_create = client.webhooks.list()
         self.assert_equal(post_create.status, 200)
         post_create_len = len(post_create.data)
 
         self.assert_equal(pre_create_len + 2, post_create_len)
 
         # Cleanup
-        resp_clean1 = client.webhooks.delete_webhook(resp1.data.id)
+        resp_clean1 = client.webhooks.delete(resp1.data.id)
         self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
 
-        resp_clean2 = client.webhooks.delete_webhook(resp2.data.id)
+        resp_clean2 = client.webhooks.delete(resp2.data.id)
         self.assert_equal(resp_clean2.status, 204, resp_clean2.data)
 
     def test_webhook_retrieval(self):
@@ -350,20 +350,20 @@ class TestClientWebhook(TestCase):
         self.assert_equal(resp1.status, 201, resp1.data)
         self.assert_equal(resp1.data["url"], data1["url"])
 
-        resp2 = client.webhooks.retrieve_webhook(resp1.data.id)
+        resp2 = client.webhooks.retrieve(resp1.data.id)
         self.assert_equal(resp2.status, 200, resp2.data)
 
         self.assert_equal(resp2.data["url"], data1["url"])
 
         # Cleanup
-        resp_clean1 = client.webhooks.delete_webhook(resp1.data.id)
+        resp_clean1 = client.webhooks.delete(resp1.data.id)
         self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
 
     def test_webhook_delete(self):
         # Known to fail if > 50 webhooks exist; list_webhooks gives up to 50.
 
         client = Client(raise_exceptions=False)
-        resp0 = client.webhooks.list_webhooks()
+        resp0 = client.webhooks.list()
         self.assert_equal(resp0.status, 200)
         pre_create_len = len(resp0.data)
 
@@ -371,15 +371,15 @@ class TestClientWebhook(TestCase):
         resp1 = client.webhooks.create_webhook(data=data1)
         self.assert_equal(resp1.status, 201, resp1.data)
 
-        resp2 = client.webhooks.list_webhooks()
+        resp2 = client.webhooks.list()
         self.assert_equal(resp2.status, 200)
         post_create_len = len(resp2.data)
         self.assert_equal(pre_create_len + 1, post_create_len)
 
-        resp3 = client.webhooks.delete_webhook(resp1.data.id)
+        resp3 = client.webhooks.delete(resp1.data.id)
         self.assert_equal(resp3.status, 204, resp3.data)
 
-        resp4 = client.webhooks.list_webhooks()
+        resp4 = client.webhooks.list()
         self.assert_equal(resp4.status, 200)
         post_delete_len = len(resp4.data)
 
@@ -393,7 +393,7 @@ class TestClientWebhook(TestCase):
         self.assert_equal(resp1.status, 201, resp1.data)
         self.assert_equal(resp1.data["url"], data1["url"])
 
-        resp2 = client.webhooks.retrieve_webhook(resp1.data.id)
+        resp2 = client.webhooks.retrieve(resp1.data.id)
         self.assert_equal(resp2.status, 200, resp2.data)
 
         self.assert_equal(resp2.data["url"], data1["url"])
@@ -406,13 +406,13 @@ class TestClientWebhook(TestCase):
                 EVENT_TYPE.EVENT_PACKET_VIEWED
             ]
         }
-        resp3 = client.webhooks.update_webhook(resp1.data.id, update_data)
+        resp3 = client.webhooks.update(resp1.data.id, update_data)
         self.assert_equal(resp3.status, 200, resp3.data)
         self.assert_equal(resp3.data["enabled"], update_data["enabled"])
         self.assert_len(resp3.data["event_types"], len(update_data["event_types"]))
 
         # Cleanup
-        resp_clean1 = client.webhooks.delete_webhook(resp1.data.id)
+        resp_clean1 = client.webhooks.delete(resp1.data.id)
         self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
     # -----------------
     # Extraheader CRUD / Listing
@@ -431,7 +431,7 @@ class TestClientWebhook(TestCase):
         self.assert_equal(resp2.status, 201, resp2.data)
 
         # Cleanup
-        resp_clean1 = client.webhooks.delete_webhook(resp1.data.id)
+        resp_clean1 = client.webhooks.delete(resp1.data.id)
         self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
 
     def test_extraheader_listing(self):
@@ -466,10 +466,10 @@ class TestClientWebhook(TestCase):
         self.assert_len(resp4b.data, 0)
 
         # Cleanup
-        resp_clean1 = client.webhooks.delete_webhook(resp1a.data.id)
+        resp_clean1 = client.webhooks.delete(resp1a.data.id)
         self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
 
-        resp_clean2 = client.webhooks.delete_webhook(resp1b.data.id)
+        resp_clean2 = client.webhooks.delete(resp1b.data.id)
         self.assert_equal(resp_clean2.status, 204, resp_clean2.data)
 
     # -----------------

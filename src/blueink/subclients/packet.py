@@ -13,6 +13,7 @@ class PacketSubClient(SubClient):
         Args:
             packet_id: the ID of the Packet
             data: the updated field values for the Packet
+* Update via ```client.webhooks.update(...)```
 
         Returns:
             A NormalizedResponse, with the updated packet as `data`
