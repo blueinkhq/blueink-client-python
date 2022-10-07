@@ -13,6 +13,7 @@ from src.blueink.utils.testcase import TestCase
 # -----------------
 class TestClientBundle(TestCase):
     DOC_METHODS = Munch(
+        FILE="FILE",
         PATH="PATH",
         URL="URL",
         B64="BASE64",
@@ -26,6 +27,7 @@ class TestClientBundle(TestCase):
         DOC_METHODS.B64: "A B64 Bundle!",
         DOC_METHODS.BYTES: "A ByteArray Bundle!",
         DOC_METHODS.TEMPLATE: "A Template Bundle!",
+        DOC_METHODS.FILE: "A FILE Bundle!",
     }
 
     EMAIL_SUBJECT = "A Test Bundle!"
@@ -72,6 +74,9 @@ class TestClientBundle(TestCase):
             b64str = b64encode(file.read()).decode("utf-8")
             file.close()
             doc01_key = bh.add_document_by_b64(filename, b64str)
+        elif method == self.DOC_METHODS.FILE:
+            with open(self.REAL_DOCUMENT_PATH, 'rb') as file:
+                doc01_key = bh.add_document_by_file(file)
         elif method == self.DOC_METHODS.BYTES:
             filename = basename(self.REAL_DOCUMENT_PATH)
 
@@ -172,6 +177,19 @@ class TestClientBundle(TestCase):
         resp = client.bundles.create_from_bundle_helper(bh)
         self.assert_equal(resp.status, 201)
 
+        has_all_docs = self._poll_for_successful_file_processing(client,
+                                                                 resp.data.id,
+                                                                 1)
+        self.assert_true(has_all_docs)
+
+    def test_roundtrip_file(self):
+        bh, sk, fk = self._create_test_bundle_helper(
+            method=self.DOC_METHODS.FILE
+        )
+
+        client = Client(raise_exceptions=False)
+        resp = client.bundles.create_from_bundle_helper(bh)
+        self.assert_equal(resp.status, 201)
         has_all_docs = self._poll_for_successful_file_processing(client,
                                                                  resp.data.id,
                                                                  1)

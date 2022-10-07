@@ -89,6 +89,24 @@ class BundleHelper:
 
         return self.add_document_by_b64(filename, b64str, **additional_data)
 
+    def add_document_by_file(self, file: io.FileIO, **additional_data) -> str:
+        """Add a file using a file path. File context used, should safely open/close file
+
+        Args:
+            file:
+            additional_data:
+
+        Returns:
+            Document Key
+        """
+        filename = file.name
+
+        file.seek(0)
+        b64str = b64encode(file.read()).decode("utf-8")
+        file.flush()
+
+        return self.add_document_by_b64(filename, b64str, **additional_data)
+
     def add_document_by_b64(self, filename: str, b64str: str, **additional_data):
         """Add a file using a b64 string; utf-8 encoded
 
