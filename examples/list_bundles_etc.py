@@ -18,10 +18,7 @@ for bundle in response.data[:10]:
     print(f"{bundle.id} {bundle.status}")
 
 print("\n*********************\nList Bundles - filtering by multiple statuses")
-statuses = ",".join([
-    constants.BUNDLE_STATUS.COMPLETE,
-    constants.BUNDLE_STATUS.STARTED
-])
+statuses = ",".join([constants.BUNDLE_STATUS.COMPLETE, constants.BUNDLE_STATUS.STARTED])
 response = client.bundles.list(status__in=statuses)
 print(f"Retrieved {len(response.data)} Complete or Started Bundles")
 print(f"Here are the first 10:")

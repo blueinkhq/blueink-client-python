@@ -24,19 +24,23 @@ template_id = input("\nPlease enter template ID: ")
 response = client.templates.retrieve(template_id)
 template = response.data
 
-bh = BundleHelper(label="Example from Template",
-                  email_subject="Here is your example Bundle",
-                  email_message="Please sign. This bundle was created from a template",
-                  is_test=True)
+bh = BundleHelper(
+    label="Example from Template",
+    email_subject="Here is your example Bundle",
+    email_message="Please sign. This bundle was created from a template",
+    is_test=True,
+)
 
 doc_key = bh.add_document_template(template_id)
 
-signer_key = bh.add_signer(name="Homer Simpson",
-                        email="Homer.Simpson@example.com",
-                        phone="505-555-5555",
-                        deliver_via=constants.DELIVER_VIA.EMAIL)
+signer_key = bh.add_signer(
+    name="Homer Simpson",
+    email="Homer.Simpson@example.com",
+    phone="505-555-5555",
+    deliver_via=constants.DELIVER_VIA.EMAIL,
+)
 
-bh.assign_role(doc_key, signer_key, template['roles'][0])
+bh.assign_role(doc_key, signer_key, template["roles"][0])
 
 # FIXME - collect some initial data for fields
 

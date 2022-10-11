@@ -6,7 +6,12 @@ from munch import Munch
 
 from . import endpoints
 from .bundle_helper import BundleHelper
-from .constants import BUNDLE_STATUS, DEFAULT_BASE_URL, ENV_BLUEINK_API_URL, ENV_BLUEINK_PRIVATE_API_KEY
+from .constants import (
+    BUNDLE_STATUS,
+    DEFAULT_BASE_URL,
+    ENV_BLUEINK_API_URL,
+    ENV_BLUEINK_PRIVATE_API_KEY,
+)
 from .paginator import PaginatedIterator
 from .person_helper import PersonHelper
 from .request_helper import NormalizedResponse, RequestHelper
@@ -85,13 +90,15 @@ class Client:
             """
             # All of our current endpoints take 1 parameter, max
             if len(kwargs) > 1:
-                raise ValueError('Only one interpolation parameter is allowed')
+                raise ValueError("Only one interpolation parameter is allowed")
 
             try:
                 url = endpoints.URLBuilder(self._base_url, endpoint).build(**kwargs)
             except KeyError:
                 arg_name = list(kwargs.keys())[0]
-                raise ValueError(f'Invalid substitution argument "{arg_name}" provided for endpoint "{endpoint}"')
+                raise ValueError(
+                    f'Invalid substitution argument "{arg_name}" provided for endpoint "{endpoint}"'
+                )
 
             return url
 
@@ -106,7 +113,9 @@ class Client:
                     try:
                         fh = file_dict["file"]
                     except KeyError:
-                        raise ValueError("Each file dict must have a 'file' key that is a file-like object")
+                        raise ValueError(
+                            "Each file dict must have a 'file' key that is a file-like object"
+                        )
 
                     if not isinstance(fh, io.BufferedReader):
                         raise ValueError(
@@ -114,7 +123,16 @@ class Client:
                         )
 
                     field_name = f"files[{idx}]"
-                    files_data.append((field_name, (file_dict.get("filename"), fh, file_dict.get("content_type"))))
+                    files_data.append(
+                        (
+                            field_name,
+                            (
+                                file_dict.get("filename"),
+                                fh,
+                                file_dict.get("content_type"),
+                            ),
+                        )
+                    )
 
             return files_data
 
@@ -139,11 +157,15 @@ class Client:
 
                 bundle_request_data = {"bundle_request": json.dumps(data)}
 
-                response = self._requests.post(url, data=bundle_request_data, files=files_data)
+                response = self._requests.post(
+                    url, data=bundle_request_data, files=files_data
+                )
 
             return response
 
-        def create_from_bundle_helper(self, bundle_helper: BundleHelper) -> NormalizedResponse:
+        def create_from_bundle_helper(
+            self, bundle_helper: BundleHelper
+        ) -> NormalizedResponse:
             """
             Post a Bundle to the BlueInk application. Convenience method as bundle_helper has files/filenames if
             creating a Bundle that way
@@ -154,7 +176,9 @@ class Client:
             files = bundle_helper.files
             return self.create(data=data, files=files)
 
-        def paged_list(self, page=1, per_page=50, related_data=False, **query_params) -> PaginatedIterator:
+        def paged_list(
+            self, page=1, per_page=50, related_data=False, **query_params
+        ) -> PaginatedIterator:
             """
             returns an iterable object such that you can do
 
@@ -167,14 +191,18 @@ class Client:
             :param query_params: Additional query params to be put onto the request
             :return:
             """
-            iterator = PaginatedIterator(paged_api_function=self.list,
-                                         page=page,
-                                         per_page=per_page,
-                                         related_data=related_data,
-                                         **query_params)
+            iterator = PaginatedIterator(
+                paged_api_function=self.list,
+                page=page,
+                per_page=per_page,
+                related_data=related_data,
+                **query_params,
+            )
             return iterator
 
-        def list(self, page=None, per_page=None, related_data=False, **query_params) -> NormalizedResponse:
+        def list(
+            self, page=None, per_page=None, related_data=False, **query_params
+        ) -> NormalizedResponse:
             """
             Returns a list of bundles
             :param page: (optional)
@@ -184,7 +212,9 @@ class Client:
             :return:
             """
             url = self.build_url(endpoints.BUNDLES.LIST)
-            response = self._requests.get(url, params=_build_params(page, per_page, **query_params))
+            response = self._requests.get(
+                url, params=_build_params(page, per_page, **query_params)
+            )
 
             if related_data:
                 for bundle in response.data:
@@ -275,7 +305,9 @@ class Client:
             url = self.build_url(endpoints.PERSONS.CREATE)
             return self._requests.post(url, json=data)
 
-        def create_from_person_helper(self, person_helper: PersonHelper, **kwargs) -> NormalizedResponse:
+        def create_from_person_helper(
+            self, person_helper: PersonHelper, **kwargs
+        ) -> NormalizedResponse:
             """
             Creates a person.
             :param person_helper: PersonHelper setup of a person
@@ -296,10 +328,12 @@ class Client:
             :return:
             """
 
-            iterator = PaginatedIterator(paged_api_function=self.list,
-                                         page=page,
-                                         per_page=per_page,
-                                         **query_params)
+            iterator = PaginatedIterator(
+                paged_api_function=self.list,
+                page=page,
+                per_page=per_page,
+                **query_params,
+            )
             return iterator
 
         def list(self, page=None, per_page=None, **query_params) -> NormalizedResponse:
@@ -311,7 +345,9 @@ class Client:
             :return:
             """
             url = self.build_url(endpoints.PERSONS.LIST)
-            return self._requests.get(url, params=_build_params(page, per_page, **query_params))
+            return self._requests.get(
+                url, params=_build_params(page, per_page, **query_params)
+            )
 
         def retrieve(self, person_id: str) -> NormalizedResponse:
             """
@@ -322,7 +358,9 @@ class Client:
             url = self.build_url(endpoints.PERSONS.RETRIEVE, person_id=person_id)
             return self._requests.get(url)
 
-        def update(self, person_id: str, data: dict, partial=False) -> NormalizedResponse:
+        def update(
+            self, person_id: str, data: dict, partial=False
+        ) -> NormalizedResponse:
             """
             :param person_id:
             :param data: a full dictionary representation of person
@@ -405,10 +443,12 @@ class Client:
             :param query_params: Additional query params to be put onto the request
             :return:
             """
-            iterator = PaginatedIterator(paged_api_function=self.list,
-                                         page=page,
-                                         per_page=per_page,
-                                         **query_params)
+            iterator = PaginatedIterator(
+                paged_api_function=self.list,
+                page=page,
+                per_page=per_page,
+                **query_params,
+            )
             return iterator
 
         def list(self, page=None, per_page=None, **query_params) -> NormalizedResponse:
@@ -420,7 +460,9 @@ class Client:
             :return:
             """
             url = self.build_url(endpoints.TEMPLATES.LIST)
-            return self._requests.get(url, params=_build_params(page, per_page, **query_params))
+            return self._requests.get(
+                url, params=_build_params(page, per_page, **query_params)
+            )
 
         def retrieve(self, template_id: str) -> NormalizedResponse:
             """
