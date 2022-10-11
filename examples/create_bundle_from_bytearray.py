@@ -15,7 +15,12 @@ with open(fw4_path, "rb") as pdf_file:
 
 print("\n*********************")
 print("Bundle Creation via file upload")
-bh = BundleHelper(label="label2022b",email_subject="Subject",email_message="MessageText",is_test=True)
+bh = BundleHelper(
+    label="label2022b",
+    email_subject="Subject",
+    email_message="MessageText",
+    is_test=True,
+)
 
 bh.add_cc("Homer.Simpson@example.com")
 doc_key = bh.add_document_by_bytearray(pdf_bytearray, "fw4.pdf", "application/pdf")
