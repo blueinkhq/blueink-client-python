@@ -1,7 +1,6 @@
 from copy import deepcopy
-from pprint import pprint
-
 from requests.exceptions import HTTPError
+from pprint import pprint
 
 from src.blueink.client import Client
 from src.blueink.person_helper import PersonHelper

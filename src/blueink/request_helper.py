@@ -1,4 +1,5 @@
 import requests
+
 from munch import munchify
 
 from .constants import BLUEINK_PAGINATION_HEADER

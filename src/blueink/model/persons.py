@@ -1,6 +1,5 @@
-from typing import List, Optional
-
 from pydantic import BaseModel, EmailStr
+from typing import Optional, List
 
 
 class ContactChannelSchema(BaseModel):
