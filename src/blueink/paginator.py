@@ -35,9 +35,11 @@ class PaginatedIterator:
             raise StopIteration
 
         try:
-            api_response: NormalizedResponse = self._paged_func(page=self.next_page,
-                                                                per_page=self._items_per_page,
-                                                                **self._paged_func_args)
+            api_response: NormalizedResponse = self._paged_func(
+                page=self.next_page,
+                per_page=self._items_per_page,
+                **self._paged_func_args
+            )
         except HTTPError:
             raise StopIteration
 
@@ -49,4 +51,3 @@ class PaginatedIterator:
 
         self.next_page = self.next_page + 1
         return api_response
-

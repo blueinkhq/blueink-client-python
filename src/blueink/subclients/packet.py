@@ -7,20 +7,20 @@ class PacketSubClient(SubClient):
     def update(self, packet_id: str, data: dict) -> NormalizedResponse:
         """Update a Packet
 
-        Note: this always performs a partial update (PATCH) because that is
-        the only method supported by the Blueink API for this endpoint
+                Note: this always performs a partial update (PATCH) because that is
+                the only method supported by the Blueink API for this endpoint
 
-        Args:
-            packet_id: the ID of the Packet
-            data: the updated field values for the Packet
-* Update via ```client.webhooks.update(...)```
+                Args:
+                    packet_id: the ID of the Packet
+                    data: the updated field values for the Packet
+        * Update via ```client.webhooks.update(...)```
 
-        Returns:
-            A NormalizedResponse, with the updated packet as `data`
+                Returns:
+                    A NormalizedResponse, with the updated packet as `data`
 
-        Raises:
-             exceptions.RequestException (or a more specific exception class)
-             if an error occured
+                Raises:
+                     exceptions.RequestException (or a more specific exception class)
+                     if an error occured
         """
         url = self.build_url(endpoints.PACKETS.UPDATE, packet_id=packet_id)
         return self._requests.patch(url, json=data)

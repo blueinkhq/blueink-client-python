@@ -8,7 +8,7 @@ class ContactChannelSchema(BaseModel):
     kind: Optional[str]
 
     class Config:
-        extra = 'allow'
+        extra = "allow"
 
 
 class PersonSchema(BaseModel):
@@ -17,6 +17,4 @@ class PersonSchema(BaseModel):
     channels: Optional[List[ContactChannelSchema]]
 
     class Config:
-        extra = 'allow'
-
-
+        extra = "allow"

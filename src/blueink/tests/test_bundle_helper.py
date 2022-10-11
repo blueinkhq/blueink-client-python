@@ -56,7 +56,7 @@ class TestBundleHelper(TestCase):
         "p": 1,
         "kind": "inp",
         "editors": [],
-        "label": "MY_INPUT_01"
+        "label": "MY_INPUT_01",
     }
 
     FIELD_02_DATA = {
@@ -67,7 +67,7 @@ class TestBundleHelper(TestCase):
         "p": 1,
         "kind": "inp",
         "editors": [],
-        "label": "MY_INPUT_02"
+        "label": "MY_INPUT_02",
     }
 
     DOCUMENT_01_URL = "https://www.example.com/example1.pdf"
@@ -132,7 +132,6 @@ class TestBundleHelper(TestCase):
         signer02_data = copy.deepcopy(self.SIGNER_02_DATA)
         field01_data = copy.deepcopy(self.FIELD_01_DATA)
         field02_data = copy.deepcopy(self.FIELD_02_DATA)
-
 
         bh = BundleHelper(**input_data)
         doc01_key = bh.add_document_by_url(url01)

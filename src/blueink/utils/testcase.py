@@ -1,5 +1,4 @@
 class TestCase:
-
     def assert_true(self, val):
         if val is None:
             assert False, f"{val} is None, not True"

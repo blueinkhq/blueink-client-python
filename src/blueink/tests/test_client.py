@@ -22,7 +22,7 @@ class TestClientBundle(TestCase):
     )
 
     BUNDLE_LABELS = {
-        DOC_METHODS.PATH:"A PATH Bundle!",
+        DOC_METHODS.PATH: "A PATH Bundle!",
         DOC_METHODS.URL: "A URL Bundle!",
         DOC_METHODS.B64: "A B64 Bundle!",
         DOC_METHODS.BYTES: "A ByteArray Bundle!",
@@ -57,10 +57,12 @@ class TestClientBundle(TestCase):
             (BundleHelper, signerkey, fieldkey)
         """
 
-        bh = BundleHelper(self.BUNDLE_LABELS[method],
-                          self.EMAIL_SUBJECT,
-                          self.EMAIL_MESSAGE,
-                          is_test=True)
+        bh = BundleHelper(
+            self.BUNDLE_LABELS[method],
+            self.EMAIL_SUBJECT,
+            self.EMAIL_MESSAGE,
+            is_test=True,
+        )
 
         # Add Document
         doc01_key = None
@@ -69,44 +71,47 @@ class TestClientBundle(TestCase):
         elif method == self.DOC_METHODS.URL:
             doc01_key = bh.add_document_by_url(self.REAL_DOCUMENT_URL)
         elif method == self.DOC_METHODS.B64:
-            file = open(self.REAL_DOCUMENT_PATH, 'rb')
+            file = open(self.REAL_DOCUMENT_PATH, "rb")
             filename = basename(self.REAL_DOCUMENT_PATH)
             b64str = b64encode(file.read()).decode("utf-8")
             file.close()
             doc01_key = bh.add_document_by_b64(filename, b64str)
         elif method == self.DOC_METHODS.FILE:
-            with open(self.REAL_DOCUMENT_PATH, 'rb') as file:
+            with open(self.REAL_DOCUMENT_PATH, "rb") as file:
                 doc01_key = bh.add_document_by_file(file)
         elif method == self.DOC_METHODS.BYTES:
             filename = basename(self.REAL_DOCUMENT_PATH)
 
-            with open(self.REAL_DOCUMENT_PATH, 'rb') as file:
+            with open(self.REAL_DOCUMENT_PATH, "rb") as file:
                 byte_array = bytearray(file.read())
 
             doc01_key = bh.add_document_by_bytearray(byte_array, filename)
 
         # Add Signer 1
-        signer01_key = bh.add_signer(key=self.SIGNER01_KEY,
-                                     name=self.SIGNER01_NAME,
-                                     email=self.SIGNER01_EMAIL,
-                                     phone=self.SIGNER01_PHONE,
-                                     deliver_via=self.SIGNER01_DELIVERY)
+        signer01_key = bh.add_signer(
+            key=self.SIGNER01_KEY,
+            name=self.SIGNER01_NAME,
+            email=self.SIGNER01_EMAIL,
+            phone=self.SIGNER01_PHONE,
+            deliver_via=self.SIGNER01_DELIVERY,
+        )
 
         # Add Field
-        field01_key = bh.add_field(document_key=doc01_key,
-                                   x=self.FIELD01_X,
-                                   y=self.FIELD01_Y,
-                                   w=self.FIELD01_W,
-                                   h=self.FIELD01_H,
-                                   p=self.FIELD01_P,
-                                   kind=self.FIELD01_KIND,
-                                   editors=self.FIELD01_EDITORS,
-                                   label=self.FIELD01_LABEL
-                                   )
+        field01_key = bh.add_field(
+            document_key=doc01_key,
+            x=self.FIELD01_X,
+            y=self.FIELD01_Y,
+            w=self.FIELD01_W,
+            h=self.FIELD01_H,
+            p=self.FIELD01_P,
+            kind=self.FIELD01_KIND,
+            editors=self.FIELD01_EDITORS,
+            label=self.FIELD01_LABEL,
+        )
 
-        self._check_bundle_data(bh.as_data(),
-                                signerkey=signer01_key,
-                                fieldkey=field01_key)
+        self._check_bundle_data(
+            bh.as_data(), signerkey=signer01_key, fieldkey=field01_key
+        )
 
         return bh, signer01_key, field01_key
 
@@ -134,9 +139,14 @@ class TestClientBundle(TestCase):
 
         self.assert_equal(compiled_bundle["packets"][0]["key"], signerkey)
 
-    def _poll_for_successful_file_processing(self, client: Client, bundle_id: str,
-                                             expected_document_count: int,
-                                             max_attempts=5, delay_between_seconds=5):
+    def _poll_for_successful_file_processing(
+        self,
+        client: Client,
+        bundle_id: str,
+        expected_document_count: int,
+        max_attempts=5,
+        delay_between_seconds=5,
+    ):
         attempt = 0
         while attempt < max_attempts:
             attempt = attempt + 1
@@ -144,8 +154,10 @@ class TestClientBundle(TestCase):
 
             resp = client.bundles.retrieve(bundle_id)
             if resp.status != 200:
-                print(f"Failed to get bundle {bundle_id} on attempt {attempt}"
-                      f" of {max_attempts}")
+                print(
+                    f"Failed to get bundle {bundle_id} on attempt {attempt}"
+                    f" of {max_attempts}"
+                )
                 continue
 
             ndocs = len(resp.data["documents"])
@@ -155,70 +167,60 @@ class TestClientBundle(TestCase):
         return False
 
     def test_roundtrip_url(self):
-        bh, sk, fk = self._create_test_bundle_helper(
-            method=self.DOC_METHODS.URL
-        )
+        bh, sk, fk = self._create_test_bundle_helper(method=self.DOC_METHODS.URL)
 
         client = Client(raise_exceptions=False)
         resp = client.bundles.create_from_bundle_helper(bh)
         self.assert_equal(resp.status, 201)
 
-        has_all_docs = self._poll_for_successful_file_processing(client,
-                                                                 resp.data.id,
-                                                                 1)
+        has_all_docs = self._poll_for_successful_file_processing(
+            client, resp.data.id, 1
+        )
         self.assert_true(has_all_docs)
 
     def test_roundtrip_b64(self):
-        bh, sk, fk = self._create_test_bundle_helper(
-            method=self.DOC_METHODS.B64
-        )
+        bh, sk, fk = self._create_test_bundle_helper(method=self.DOC_METHODS.B64)
 
         client = Client(raise_exceptions=False)
         resp = client.bundles.create_from_bundle_helper(bh)
         self.assert_equal(resp.status, 201)
 
-        has_all_docs = self._poll_for_successful_file_processing(client,
-                                                                 resp.data.id,
-                                                                 1)
+        has_all_docs = self._poll_for_successful_file_processing(
+            client, resp.data.id, 1
+        )
         self.assert_true(has_all_docs)
 
     def test_roundtrip_file(self):
-        bh, sk, fk = self._create_test_bundle_helper(
-            method=self.DOC_METHODS.FILE
-        )
+        bh, sk, fk = self._create_test_bundle_helper(method=self.DOC_METHODS.FILE)
 
         client = Client(raise_exceptions=False)
         resp = client.bundles.create_from_bundle_helper(bh)
         self.assert_equal(resp.status, 201)
-        has_all_docs = self._poll_for_successful_file_processing(client,
-                                                                 resp.data.id,
-                                                                 1)
+        has_all_docs = self._poll_for_successful_file_processing(
+            client, resp.data.id, 1
+        )
         self.assert_true(has_all_docs)
 
     def test_roundtrip_path(self):
-        bh, sk, fk = self._create_test_bundle_helper(
-            method=self.DOC_METHODS.PATH
-        )
+        bh, sk, fk = self._create_test_bundle_helper(method=self.DOC_METHODS.PATH)
 
         client = Client(raise_exceptions=False)
         resp = client.bundles.create_from_bundle_helper(bh)
         self.assert_equal(resp.status, 201)
-        has_all_docs = self._poll_for_successful_file_processing(client,
-                                                                 resp.data.id,
-                                                                 1)
+        has_all_docs = self._poll_for_successful_file_processing(
+            client, resp.data.id, 1
+        )
         self.assert_true(has_all_docs)
 
     def test_roundtrip_bytearray(self):
-        bh, sk, fk = self._create_test_bundle_helper(
-            method=self.DOC_METHODS.BYTES
-        )
+        bh, sk, fk = self._create_test_bundle_helper(method=self.DOC_METHODS.BYTES)
 
         client = Client(raise_exceptions=False)
         resp = client.bundles.create_from_bundle_helper(bh)
         self.assert_equal(resp.status, 201)
-        has_all_docs = self._poll_for_successful_file_processing(client,
-                                                                 resp.data.id,
-                                                                 1)
+        has_all_docs = self._poll_for_successful_file_processing(
+            client, resp.data.id, 1
+        )
         self.assert_true(has_all_docs)
 
     # def test_roundtrip_template(self):
@@ -254,6 +256,7 @@ class TestClientBundle(TestCase):
     #                                                              1)
     #     self.assert_true(has_all_docs)
 
+
 # -----------------
 # Person Subclient Tests
 # -----------------
@@ -273,10 +276,12 @@ class TestClientPerson(TestCase):
     PERSON_EMAILS = ["johndoe@example.com"]
 
     def test_person_create(self):
-        ph = PersonHelper(name=self.PERSON_NAME,
-                          metadata=self.PERSON_METADATA,
-                          phones=self.PERSON_PHONES,
-                          emails=self.PERSON_EMAILS)
+        ph = PersonHelper(
+            name=self.PERSON_NAME,
+            metadata=self.PERSON_METADATA,
+            phones=self.PERSON_PHONES,
+            emails=self.PERSON_EMAILS,
+        )
 
         client = Client(raise_exceptions=False)
         resp = client.persons.create_from_person_helper(ph)
@@ -420,9 +425,7 @@ class TestClientWebhook(TestCase):
 
         update_data = {
             "enabled": False,
-            "event_types": [
-                EVENT_TYPE.EVENT_PACKET_VIEWED
-            ]
+            "event_types": [EVENT_TYPE.EVENT_PACKET_VIEWED],
         }
         resp3 = client.webhooks.update(resp1.data.id, update_data)
         self.assert_equal(resp3.status, 200, resp3.data)
@@ -432,6 +435,7 @@ class TestClientWebhook(TestCase):
         # Cleanup
         resp_clean1 = client.webhooks.delete(resp1.data.id)
         self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
+
     # -----------------
     # Extraheader CRUD / Listing
     # -----------------
@@ -497,5 +501,3 @@ class TestClientWebhook(TestCase):
     # -----------------
     # Secret testing not implemented, will tamper with whoever runs this test suite
     # -----------------
-
-

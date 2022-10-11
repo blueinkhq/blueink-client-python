@@ -20,10 +20,10 @@ class WebhookSchema(BaseModel):
     event_types: List[str]
     extra_headers: Optional[List[WebhookExtraHeaderSchema]]
 
-    @validator('event_types')
+    @validator("event_types")
     def validate_event_types(cls, event_types):
         for event_type in event_types:
-            assert event_type in EVENT_TYPE.values(),\
-                f'subscription event_type \'{event_type}\' not allowed. Must be one of ' \
-                f'{EVENT_TYPE.values()}'
-
+            assert event_type in EVENT_TYPE.values(), (
+                f"subscription event_type '{event_type}' not allowed. Must be one of "
+                f"{EVENT_TYPE.values()}"
+            )
