@@ -1,7 +1,7 @@
 import sys
 from pprint import pprint
 
-from src.blueink import Client, constants, exceptions, BundleHelper
+from src.blueink import BundleHelper, Client, constants, exceptions
 
 print("\n*********************")
 print("Bundle Creation via URL")

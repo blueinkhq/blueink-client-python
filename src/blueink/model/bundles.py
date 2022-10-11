@@ -1,7 +1,8 @@
 import random
 import string
 from typing import List, Optional
-from pydantic import BaseModel, validator, EmailStr
+
+from pydantic import BaseModel, EmailStr, validator
 
 from ..constants import DELIVER_VIA, FIELD_KIND
 
