@@ -12,8 +12,8 @@ class ValidationError(RuntimeError):
 
 
 def generate_key(type, length=5):
-    slug = ''.join(random.choice(string.ascii_letters) for i in range(length))
-    return f'{type}_{slug}'
+    slug = "".join(random.choice(string.ascii_letters) for i in range(length))
+    return f"{type}_{slug}"
 
 
 class Field(BaseModel):
@@ -31,25 +31,20 @@ class Field(BaseModel):
     editors: Optional[List[str]]
 
     class Config:
-        extra = 'allow'
+        extra = "allow"
 
     @classmethod
     def create(cls, x, y, w, h, page, kind, key=None, **kwargs):
         if not key:
-            key = generate_key('field', 5)
-        obj = Field(key=key,
-                    x=x,
-                    y=y,
-                    w=w,
-                    h=h,
-                    page=page,
-                    kind=kind,
-                    **kwargs)
+            key = generate_key("field", 5)
+        obj = Field(key=key, x=x, y=y, w=w, h=h, page=page, kind=kind, **kwargs)
         return obj
 
-    @validator('kind')
+    @validator("kind")
     def kind_is_allowed(cls, v):
-        assert v in FIELD_KIND.values(), f'Field Kind \'{v}\' not allowed. Must be one of {FIELD_KIND.values()}'
+        assert (
+            v in FIELD_KIND.values()
+        ), f"Field Kind '{v}' not allowed. Must be one of {FIELD_KIND.values()}"
         return v
 
     def add_editor(self, editor: str):
@@ -71,22 +66,22 @@ class Packet(BaseModel):
     order: Optional[str]
 
     class Config:
-        extra = 'allow'
+        extra = "allow"
 
-    @validator('deliver_via')
+    @validator("deliver_via")
     def deliver_via_is_allowed(cls, v):
         if v is not None:
-            assert v in DELIVER_VIA.values(), f'deliver_via \'{v}\' not allowed. Must be None' \
-                                              f' or one of {DELIVER_VIA.values()}'
+            assert v in DELIVER_VIA.values(), (
+                f"deliver_via '{v}' not allowed. Must be None"
+                f" or one of {DELIVER_VIA.values()}"
+            )
         return v
 
     @classmethod
     def create(cls, name, key=None, **kwargs):
         if not key:
-            key = generate_key('packet', 5)
-        obj = Packet(key=key,
-                     name=name,
-                     **kwargs)
+            key = generate_key("packet", 5)
+        obj = Packet(key=key, name=name, **kwargs)
         return obj
 
 
@@ -95,13 +90,11 @@ class TemplateRefAssignment(BaseModel):
     signer: str = ...
 
     class Config:
-        extra = 'allow'
+        extra = "allow"
 
     @classmethod
     def create(cls, role, signer, **kwargs):
-        obj = TemplateRefAssignment(role=role,
-                                    signer=signer,
-                                    **kwargs)
+        obj = TemplateRefAssignment(role=role, signer=signer, **kwargs)
         return obj
 
 
@@ -110,13 +103,11 @@ class TemplateRefFieldValue(BaseModel):
     initial_value: str = ...
 
     class Config:
-        extra = 'allow'
+        extra = "allow"
 
     @classmethod
     def create(cls, key, initial_value, **kwargs):
-        obj = TemplateRefFieldValue(key=key,
-                                    initial_value=initial_value,
-                                    **kwargs)
+        obj = TemplateRefFieldValue(key=key, initial_value=initial_value, **kwargs)
         return obj
 
 
@@ -126,12 +117,12 @@ class TemplateRef(BaseModel):
     field_values: Optional[List[TemplateRefFieldValue]]
 
     class Config:
-        extra = 'allow'
+        extra = "allow"
 
     @classmethod
     def create(cls, key=None, **kwargs):
         if not key:
-            key = generate_key('tmpl', 5)
+            key = generate_key("tmpl", 5)
         obj = TemplateRef(key=key, **kwargs)
         return obj
 
@@ -155,12 +146,12 @@ class Document(BaseModel):
     fields: Optional[List[Field]]
 
     class Config:
-        extra = 'allow'
+        extra = "allow"
 
     @classmethod
     def create(cls, key=None, **kwargs):
         if not key:
-            key = generate_key('doc', 5)
+            key = generate_key("doc", 5)
         obj = Document(key=key, **kwargs)
         return obj
 
@@ -188,13 +179,11 @@ class Bundle(BaseModel):
     team: Optional[str]
 
     class Config:
-        extra = 'allow'
+        extra = "allow"
 
     @classmethod
     def create(cls, packets: List[Packet], documents: List[Document], **kwargs):
-        obj = Bundle(packets=packets,
-                     documents=documents,
-                     **kwargs)
+        obj = Bundle(packets=packets, documents=documents, **kwargs)
         return obj
 
     def add_packet(self, packet: Packet):
@@ -206,5 +195,3 @@ class Bundle(BaseModel):
         if self.documents is None:
             self.documents = []
         self.documents.append(document)
-
-

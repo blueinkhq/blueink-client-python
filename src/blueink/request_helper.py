@@ -97,7 +97,15 @@ class RequestHelper:
         return hdrs
 
     def _make_request(
-        self, method, url, data=None, json=None, files=None, params=None, headers=None, content_type=None
+        self,
+        method,
+        url,
+        data=None,
+        json=None,
+        files=None,
+        params=None,
+        headers=None,
+        content_type=None,
     ):
 
         response = requests.request(
@@ -106,8 +114,9 @@ class RequestHelper:
             params=params,
             data=data,
             json=json,
-            headers=self._build_headers(content_type=content_type,
-                                        more_headers=headers),
+            headers=self._build_headers(
+                content_type=content_type, more_headers=headers
+            ),
             files=files,
         )
 

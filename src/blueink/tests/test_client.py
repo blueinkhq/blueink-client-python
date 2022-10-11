@@ -11,12 +11,7 @@ from src.blueink.utils.testcase import TestCase
 # Bundle Subclient Tests
 # -----------------
 class TestClientBundle(TestCase):
-    DOC_METHODS = Munch(
-        PATH="PATH",
-        URL="URL",
-        B64="BASE64"
-    )
-
+    DOC_METHODS = Munch(PATH="PATH", URL="URL", B64="BASE64")
 
     BUNDLE_LABEL_URL = "A URL Bundle Label!"
     BUNDLE_LABEL_PATH = "A PATH Bundle Label!"
@@ -56,10 +51,12 @@ class TestClientBundle(TestCase):
             (BundleHelper, signerkey, fieldkey)
         """
 
-        bh = BundleHelper(self._bundle_label(method),
-                          self.EMAIL_SUBJECT,
-                          self.EMAIL_MESSAGE,
-                          is_test=True)
+        bh = BundleHelper(
+            self._bundle_label(method),
+            self.EMAIL_SUBJECT,
+            self.EMAIL_MESSAGE,
+            is_test=True,
+        )
 
         # Add Document
         doc01_key = None
@@ -68,34 +65,37 @@ class TestClientBundle(TestCase):
         elif method == self.DOC_METHODS.URL:
             doc01_key = bh.add_document_by_url(self.REAL_DOCUMENT_URL)
         elif method == self.DOC_METHODS.B64:
-            file = open(self.REAL_DOCUMENT_PATH, 'rb')
+            file = open(self.REAL_DOCUMENT_PATH, "rb")
             filename = basename(self.REAL_DOCUMENT_PATH)
             b64str = b64encode(file.read())
             file.close()
             doc01_key = bh.add_document_by_b64(filename, b64str)
 
         # Add Signer 1
-        signer01_key = bh.add_signer(key=self.SIGNER01_KEY,
-                                     name=self.SIGNER01_NAME,
-                                     email=self.SIGNER01_EMAIL,
-                                     phone=self.SIGNER01_PHONE,
-                                     deliver_via=self.SIGNER01_DELIVERY)
+        signer01_key = bh.add_signer(
+            key=self.SIGNER01_KEY,
+            name=self.SIGNER01_NAME,
+            email=self.SIGNER01_EMAIL,
+            phone=self.SIGNER01_PHONE,
+            deliver_via=self.SIGNER01_DELIVERY,
+        )
 
         # Add Field
-        field01_key = bh.add_field(document_key=doc01_key,
-                                   x=self.FIELD01_X,
-                                   y=self.FIELD01_Y,
-                                   w=self.FIELD01_W,
-                                   h=self.FIELD01_H,
-                                   p=self.FIELD01_P,
-                                   kind=self.FIELD01_KIND,
-                                   editors=self.FIELD01_EDITORS,
-                                   label=self.FIELD01_LABEL
-                                   )
+        field01_key = bh.add_field(
+            document_key=doc01_key,
+            x=self.FIELD01_X,
+            y=self.FIELD01_Y,
+            w=self.FIELD01_W,
+            h=self.FIELD01_H,
+            p=self.FIELD01_P,
+            kind=self.FIELD01_KIND,
+            editors=self.FIELD01_EDITORS,
+            label=self.FIELD01_LABEL,
+        )
 
-        self._check_bundle_data(bh.as_data(),
-                                signerkey=signer01_key,
-                                fieldkey=field01_key)
+        self._check_bundle_data(
+            bh.as_data(), signerkey=signer01_key, fieldkey=field01_key
+        )
 
         return bh, signer01_key, field01_key
 
@@ -124,27 +124,21 @@ class TestClientBundle(TestCase):
         self.assert_equal(compiled_bundle["packets"][0]["key"], signerkey)
 
     def test_roundtrip_url(self):
-        bh, sk, fk = self._create_test_bundle_helper(
-            method=self.DOC_METHODS.URL
-        )
+        bh, sk, fk = self._create_test_bundle_helper(method=self.DOC_METHODS.URL)
 
         client = Client(raise_exceptions=False)
         resp = client.bundles.create_from_bundle_helper(bh)
         self.assert_equal(resp.status, 201)
 
     def test_roundtrip_b64(self):
-        bh, sk, fk = self._create_test_bundle_helper(
-            method=self.DOC_METHODS.B64
-        )
+        bh, sk, fk = self._create_test_bundle_helper(method=self.DOC_METHODS.B64)
 
         client = Client(raise_exceptions=False)
         resp = client.bundles.create_from_bundle_helper(bh)
         self.assert_equal(resp.status, 201)
 
     def test_roundtrip_path(self):
-        bh, sk, fk = self._create_test_bundle_helper(
-            method=self.DOC_METHODS.PATH
-        )
+        bh, sk, fk = self._create_test_bundle_helper(method=self.DOC_METHODS.PATH)
 
         client = Client(raise_exceptions=False)
         resp = client.bundles.create_from_bundle_helper(bh)
@@ -170,10 +164,12 @@ class TestClientPerson(TestCase):
     PERSON_EMAILS = ["johndoe@example.com"]
 
     def test_person_create(self):
-        ph = PersonHelper(name=self.PERSON_NAME,
-                          metadata=self.PERSON_METADATA,
-                          phones=self.PERSON_PHONES,
-                          emails=self.PERSON_EMAILS)
+        ph = PersonHelper(
+            name=self.PERSON_NAME,
+            metadata=self.PERSON_METADATA,
+            phones=self.PERSON_PHONES,
+            emails=self.PERSON_EMAILS,
+        )
 
         client = Client(raise_exceptions=False)
         resp = client.persons.create_from_person_helper(ph)
@@ -317,9 +313,7 @@ class TestClientWebhook(TestCase):
 
         update_data = {
             "enabled": False,
-            "event_types": [
-                EVENT_TYPE.EVENT_PACKET_VIEWED
-            ]
+            "event_types": [EVENT_TYPE.EVENT_PACKET_VIEWED],
         }
         resp3 = client.webhooks.update_webhook(resp1.data.id, update_data)
         self.assert_equal(resp3.status, 200, resp3.data)
@@ -329,6 +323,7 @@ class TestClientWebhook(TestCase):
         # Cleanup
         resp_clean1 = client.webhooks.delete_webhook(resp1.data.id)
         self.assert_equal(resp_clean1.status, 204, resp_clean1.data)
+
     # -----------------
     # Extraheader CRUD / Listing
     # -----------------
@@ -394,5 +389,3 @@ class TestClientWebhook(TestCase):
     # -----------------
     # Secret testing not implemented, will tamper with whoever runs this test suite
     # -----------------
-
-
