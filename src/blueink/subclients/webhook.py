@@ -11,9 +11,14 @@ class WebhookSubClient(SubClient):
     # ----------
     # Webhooks
     # ----------
-    def create_webhook(self, url: str, event_types:List[str],
-                       extra_headers: List[WebhookExtraHeader], enabled: bool = True,
-                       json: bool = True):
+    def create_webhook(
+        self,
+        url: str,
+        event_types: List[str],
+        extra_headers: List[WebhookExtraHeader],
+        enabled: bool = True,
+        json: bool = True,
+    ):
         raise RuntimeError("Not Implemented")
 
     def list_webhooks(self):

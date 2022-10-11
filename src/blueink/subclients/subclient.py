@@ -25,14 +25,16 @@ class SubClient:
         """
         # All of our current endpoints take 1 parameter, max
         if len(kwargs) > 1:
-            raise ValueError('Only one interpolation parameter is allowed')
+            raise ValueError("Only one interpolation parameter is allowed")
 
         try:
             url = endpoints.URLBuilder(self._base_url, endpoint).build(**kwargs)
         except KeyError:
             arg_name = list(kwargs.keys())[0]
-            raise ValueError(f'Invalid substitution argument "{arg_name}"'
-                             f' provided for endpoint "{endpoint}"')
+            raise ValueError(
+                f'Invalid substitution argument "{arg_name}"'
+                f' provided for endpoint "{endpoint}"'
+            )
 
         return url
 

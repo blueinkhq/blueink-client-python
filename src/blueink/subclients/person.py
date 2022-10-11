@@ -24,8 +24,9 @@ class PersonSubClient(SubClient):
         url = self.build_url(endpoints.PERSONS.CREATE)
         return self._requests.post(url, json=data)
 
-    def create_from_person_helper(self, person_helper: PersonHelper,
-                                  **kwargs) -> NormalizedResponse:
+    def create_from_person_helper(
+        self, person_helper: PersonHelper, **kwargs
+    ) -> NormalizedResponse:
         """Create a person using PersonHelper convenience object
 
         Args:
@@ -36,8 +37,9 @@ class PersonSubClient(SubClient):
         """
         return self.create(person_helper.as_dict(**kwargs))
 
-    def paged_list(self, page: int = 1, per_page: int = 50,
-                   **query_params) -> PaginatedIterator:
+    def paged_list(
+        self, page: int = 1, per_page: int = 50, **query_params
+    ) -> PaginatedIterator:
         """Return an iterable object such that you may lazily fetch a number of
         Persons (signers)
 
@@ -54,14 +56,14 @@ class PersonSubClient(SubClient):
             PaginatedIterator object
         """
 
-        iterator = PaginatedIterator(paged_api_function=self.list,
-                                     page=page,
-                                     per_page=per_page,
-                                     **query_params)
+        iterator = PaginatedIterator(
+            paged_api_function=self.list, page=page, per_page=per_page, **query_params
+        )
         return iterator
 
-    def list(self, page: int = None, per_page: int = None,
-             **query_params) -> NormalizedResponse:
+    def list(
+        self, page: int = None, per_page: int = None, **query_params
+    ) -> NormalizedResponse:
         """Return a list of persons (signers).
 
         Args:
@@ -73,10 +75,9 @@ class PersonSubClient(SubClient):
             NormalizedResponse object
         """
         url = self.build_url(endpoints.PERSONS.LIST)
-        return self._requests.get(url,
-                                  params=self.build_params(page,
-                                                           per_page,
-                                                           **query_params))
+        return self._requests.get(
+            url, params=self.build_params(page, per_page, **query_params)
+        )
 
     def retrieve(self, person_id: str) -> NormalizedResponse:
         """Retrieve details on a singular person
@@ -90,8 +91,9 @@ class PersonSubClient(SubClient):
         url = self.build_url(endpoints.PERSONS.RETRIEVE, person_id=person_id)
         return self._requests.get(url)
 
-    def update(self, person_id: str, data: dict,
-               partial: bool = False) -> NormalizedResponse:
+    def update(
+        self, person_id: str, data: dict, partial: bool = False
+    ) -> NormalizedResponse:
         """Update a Person (signer)'s record
 
         Args:

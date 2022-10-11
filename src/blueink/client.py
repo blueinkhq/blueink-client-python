@@ -3,19 +3,24 @@ from os import environ
 from src.blueink.constants import (
     DEFAULT_BASE_URL,
     ENV_BLUEINK_API_URL,
-    ENV_BLUEINK_PRIVATE_API_KEY
+    ENV_BLUEINK_PRIVATE_API_KEY,
 )
 from src.blueink.request_helper import RequestHelper
 from src.blueink.subclients.bundle import BundleSubClient
 from src.blueink.subclients.packet import PacketSubClient
 from src.blueink.subclients.person import PersonSubClient
 from src.blueink.subclients.template import TemplateSubClient
+
 # from src.blueink.subclients.webhook import WebhookSubClient
 
 
 class Client:
-    def __init__(self, private_api_key: str = None, base_url: str = None,
-                 raise_exceptions: bool = True):
+    def __init__(
+        self,
+        private_api_key: str = None,
+        base_url: str = None,
+        raise_exceptions: bool = True,
+    ):
         """Initialize a Client instance to access the Blueink eSignature API
 
         Args:
@@ -58,5 +63,3 @@ class Client:
         self.packets = PacketSubClient(base_url, self._request_helper)
         self.templates = TemplateSubClient(base_url, self._request_helper)
         # self.webhooks = WebhookSubClient(base_url, self._request_helper)
-
-

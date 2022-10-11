@@ -8,8 +8,9 @@ class TemplateSubClient(SubClient):
     def __init__(self, base_url, private_api_key):
         super().__init__(base_url, private_api_key)
 
-    def paged_list(self, page: int = 1, per_page: int = 50,
-                   **query_params) -> PaginatedIterator:
+    def paged_list(
+        self, page: int = 1, per_page: int = 50, **query_params
+    ) -> PaginatedIterator:
         """return an iterable object containing a list of templates
 
         Typical Usage:
@@ -24,14 +25,14 @@ class TemplateSubClient(SubClient):
         Returns:
             PaginatedIterator object
         """
-        iterator = PaginatedIterator(paged_api_function=self.list,
-                                     page=page,
-                                     per_page=per_page,
-                                     **query_params)
+        iterator = PaginatedIterator(
+            paged_api_function=self.list, page=page, per_page=per_page, **query_params
+        )
         return iterator
 
-    def list(self, page: int = None, per_page: int = None,
-             **query_params) -> NormalizedResponse:
+    def list(
+        self, page: int = None, per_page: int = None, **query_params
+    ) -> NormalizedResponse:
         """Return a list of Templates.
 
         Args:
@@ -43,9 +44,9 @@ class TemplateSubClient(SubClient):
             NormalizedResponse object
         """
         url = self.build_url(endpoints.TEMPLATES.LIST)
-        return self._requests.get(url, params=self.build_params(page,
-                                                                per_page,
-                                                                **query_params))
+        return self._requests.get(
+            url, params=self.build_params(page, per_page, **query_params)
+        )
 
     def retrieve(self, template_id: str) -> NormalizedResponse:
         """Return a singular Template by id.

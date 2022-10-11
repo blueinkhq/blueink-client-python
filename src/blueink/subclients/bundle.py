@@ -29,14 +29,22 @@ class BundleSubClient(SubClient):
                             f" (e.g. an open file handle)"
                         )
                     field_name = f"files[{idx}]"
-                    files_data.append((field_name, (file_dict.get("filename"),
-                                                    fh,
-                                                    file_dict.get("content_type"))))
+                    files_data.append(
+                        (
+                            field_name,
+                            (
+                                file_dict.get("filename"),
+                                fh,
+                                file_dict.get("content_type"),
+                            ),
+                        )
+                    )
         return files_data
 
-    def create(self, data: dict,
-               files: List[io.BufferedReader] = []) -> NormalizedResponse:
-        """ Post a Bundle to the BlueInk application.
+    def create(
+        self, data: dict, files: List[io.BufferedReader] = []
+    ) -> NormalizedResponse:
+        """Post a Bundle to the BlueInk application.
 
         Args:
             data: raw data for Bundle, expressed as a python dict
@@ -59,15 +67,14 @@ class BundleSubClient(SubClient):
 
             bundle_request_data = {"bundle_request": json.dumps(data)}
 
-            response = self._requests.post(url,
-                                           data=bundle_request_data,
-                                           files=files_data)
+            response = self._requests.post(
+                url, data=bundle_request_data, files=files_data
+            )
 
         return response
 
-    def create_from_bundle_helper(self,
-                                  bdl_helper: BundleHelper) -> NormalizedResponse:
-        """ Post a Bundle to the BlueInk application.
+    def create_from_bundle_helper(self, bdl_helper: BundleHelper) -> NormalizedResponse:
+        """Post a Bundle to the BlueInk application.
 
         Provided as a convenience to simplify posting of a Bundle. This is the
         recommended way to create a Bundle.
@@ -83,8 +90,13 @@ class BundleSubClient(SubClient):
         files = bdl_helper.files
         return self.create(data=data, files=files)
 
-    def paged_list(self, page: int = 1, per_page: int = 50,
-                   related_data: bool = False, **query_params) -> PaginatedIterator:
+    def paged_list(
+        self,
+        page: int = 1,
+        per_page: int = 50,
+        related_data: bool = False,
+        **query_params,
+    ) -> PaginatedIterator:
         """Returns an iterable object such that you may lazily fetch a number of
         Bundles
 
@@ -101,16 +113,23 @@ class BundleSubClient(SubClient):
         Returns:
             PaginatedIterator object, compliant with python iterables
         """
-        iterator = PaginatedIterator(paged_api_function=self.list,
-                                     page=page,
-                                     per_page=per_page,
-                                     related_data=related_data,
-                                     **query_params)
+        iterator = PaginatedIterator(
+            paged_api_function=self.list,
+            page=page,
+            per_page=per_page,
+            related_data=related_data,
+            **query_params,
+        )
         return iterator
 
-    def list(self, page: int = None, per_page: int = None,
-             related_data: bool = False, **query_params) -> NormalizedResponse:
-        """ Returns a list of bundles
+    def list(
+        self,
+        page: int = None,
+        per_page: int = None,
+        related_data: bool = False,
+        **query_params,
+    ) -> NormalizedResponse:
+        """Returns a list of bundles
 
         Args:
             page: which page to fetch
@@ -122,10 +141,9 @@ class BundleSubClient(SubClient):
             NormalizedResponse object
         """
         url = self.build_url(endpoints.BUNDLES.LIST)
-        response = self._requests.get(url,
-                                      params=self.build_params(page,
-                                                           per_page,
-                                                           **query_params))
+        response = self._requests.get(
+            url, params=self.build_params(page, per_page, **query_params)
+        )
 
         if related_data:
             for bundle in response.data:
@@ -148,8 +166,9 @@ class BundleSubClient(SubClient):
                 data_response = self.list_data(bundle_id)
                 bundle.data = data_response.data
 
-    def retrieve(self, bundle_id: str,
-                 related_data: bool = False) -> NormalizedResponse:
+    def retrieve(
+        self, bundle_id: str, related_data: bool = False
+    ) -> NormalizedResponse:
         """Request a single bundle
 
         Args:

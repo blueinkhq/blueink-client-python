@@ -3,7 +3,7 @@ from src.blueink.utils.testcase import TestCase
 
 
 class TestPersonHelper(TestCase):
-    NAME="JOHN DOE"
+    NAME = "JOHN DOE"
 
     MD_KEY01 = "KEY01"
     MD_KEY02 = "KEY02"
@@ -17,7 +17,7 @@ class TestPersonHelper(TestCase):
     PHONES = ["505 555 5555"]
     EMAILS = ["johndoe@example.com"]
 
-    def _check_values(self, data:dict):
+    def _check_values(self, data: dict):
         self.assert_equal(data["name"], self.NAME)
 
         self.assert_in("channels", data)
@@ -38,7 +38,6 @@ class TestPersonHelper(TestCase):
         self.assert_true(has_email)
         self.assert_true(has_phone)
 
-
         self.assert_in("metadata", data)
         self.assert_len(data["metadata"], 2)
         self.assert_in(self.MD_KEY01, data["metadata"])
@@ -56,10 +55,11 @@ class TestPersonHelper(TestCase):
         self._check_values(ph.as_dict())
 
     def test_all_in_one(self):
-        ph = PersonHelper(name=self.NAME,
-                          metadata=self.METADATA,
-                          phones=self.PHONES,
-                          emails=self.EMAILS)
+        ph = PersonHelper(
+            name=self.NAME,
+            metadata=self.METADATA,
+            phones=self.PHONES,
+            emails=self.EMAILS,
+        )
 
         self._check_values(ph.as_dict())
-
