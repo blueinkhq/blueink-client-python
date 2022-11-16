@@ -10,7 +10,7 @@ includes examples for many common use cases.
 Additional resources that might be useful include:
 
 * Examples at [blueink-client-python-examples](https://github.com/blueinkhq/blueink-client-python-examples)
-repo on GitHub
+repo on GitHub.
 * The detailed [Blueink API Documentation](https://blueink.com/r/api-docs/), for
   details on the data returned by each API call.
 
