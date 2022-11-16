@@ -87,21 +87,6 @@ class BundleHelper:
         self._documents[document.key] = document
         return document.key
 
-    # def add_document_by_bytearray(self, byte_array: bytearray, file_name: str,
-    #                               **additional_data) -> str:
-    #     '''
-    #     Add a document via url, with unique key.
-    #     :param byte_array:
-    #     :param file_name:
-    #     :param mime_type:
-    #     :param additional_data: Optional and will append any additional kwargs to the json of the document
-    #     :return:
-    #     '''
-    #
-    #     bytes = io.BytesIO(byte_array)
-    #     file = io.BufferedReader(bytes, len(byte_array))
-    #     return self.add_document_by_file(file, file_name, **additional_data)
-
     def add_document_template(
         self,
         template_id: str,
