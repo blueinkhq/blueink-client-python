@@ -56,7 +56,6 @@ class Client:
             base_url = DEFAULT_BASE_URL
 
         self._request_helper = RequestHelper(private_api_key, raise_exceptions)
-
         self.bundles = BundleSubClient(base_url, self._request_helper)
         self.persons = PersonSubClient(base_url, self._request_helper)
         self.packets = PacketSubClient(base_url, self._request_helper)
