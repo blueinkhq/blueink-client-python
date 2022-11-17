@@ -1,6 +1,6 @@
 import io
-from os.path import basename
 from base64 import b64encode
+from os.path import basename
 from typing import List
 
 from .model.bundles import (
@@ -80,12 +80,27 @@ class BundleHelper:
     def add_document_by_b64(self, filename: str, b64str: str, **additional_data):
         file_index = len(self.files)
 
-        document = Document.create(
-            filename=filename, file_b64=b64str, **additional_data
-        )
+        self.files.append({"file_b64": b64str, "filename": filename})
+        document = Document.create(file_index=file_index, **additional_data)
         print(f"doc -- {document.key}")
         self._documents[document.key] = document
         return document.key
+
+    def add_document_by_bytearray(
+        self, byte_array: bytearray, file_name: str, **additional_data
+    ) -> str:
+        """
+        Add a document via url, with unique key.
+
+        Args:
+            byte_array:
+            file_name:
+            mime_type:
+            additional_data: Optional and will append any additional kwargs to the json of the document
+        """
+        bytes = io.BytesIO(byte_array)
+        file = io.BufferedReader(bytes, len(byte_array))
+        return self.add_document_by_file(file, file_name, **additional_data)
 
     def add_document_template(
         self,
@@ -104,7 +119,6 @@ class BundleHelper:
         Returns:
             document key
         """
-
         if template_id in self._documents.keys():
             raise RuntimeError(
                 f"Document/Template with id {template_id} already added."

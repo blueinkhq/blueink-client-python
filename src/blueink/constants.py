@@ -87,3 +87,13 @@ V_PATTERN = Munch(
     SSN="ssn",
     ZIP_CODE="zip_code",
 )
+
+EVENT_TYPE = Munch(
+    EVENT_BUNDLE_LAUNCHED="bundle_sent",
+    EVENT_BUNDLE_COMPLETE="bundle_complete",
+    EVENT_BUNDLE_DOCS_READY="bundle_docs_ready",
+    EVENT_BUNDLE_ERROR="bundle_error",
+    EVENT_BUNDLE_CANCELLED="bundle_cancelled",
+    EVENT_PACKET_VIEWED="packet_viewed",
+    EVENT_PACKET_COMPLETE="packet_complete",
+)

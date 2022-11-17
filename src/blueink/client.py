@@ -10,8 +10,7 @@ from src.blueink.subclients.bundle import BundleSubClient
 from src.blueink.subclients.packet import PacketSubClient
 from src.blueink.subclients.person import PersonSubClient
 from src.blueink.subclients.template import TemplateSubClient
-
-# from src.blueink.subclients.webhook import WebhookSubClient
+from src.blueink.subclients.webhook import WebhookSubClient
 
 
 class Client:
@@ -57,9 +56,8 @@ class Client:
             base_url = DEFAULT_BASE_URL
 
         self._request_helper = RequestHelper(private_api_key, raise_exceptions)
-
         self.bundles = BundleSubClient(base_url, self._request_helper)
         self.persons = PersonSubClient(base_url, self._request_helper)
         self.packets = PacketSubClient(base_url, self._request_helper)
         self.templates = TemplateSubClient(base_url, self._request_helper)
-        # self.webhooks = WebhookSubClient(base_url, self._request_helper)
+        self.webhooks = WebhookSubClient(base_url, self._request_helper)
