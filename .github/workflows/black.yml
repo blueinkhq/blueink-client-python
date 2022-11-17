@@ -1,4 +1,4 @@
-name: Black Linting
+name: Style Checks
 
 on: [push, pull_request]
 
