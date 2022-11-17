@@ -79,10 +79,9 @@ class BundleHelper:
 
     def add_document_by_b64(self, filename: str, b64str: str, **additional_data):
         file_index = len(self.files)
-
-        self.files.append({"file_b64": b64str, "filename": filename})
-        document = Document.create(file_index=file_index, **additional_data)
-        print(f"doc -- {document.key}")
+        document = Document.create(
+            filename=filename, file_b64=b64str, **additional_data
+        )
         self._documents[document.key] = document
         return document.key
 
