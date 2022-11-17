@@ -62,7 +62,14 @@ HTTP5xx errors). These come from the `requests` module. If within your applicati
 you already handle exceptions coming out of `requests` then you should be good.
 If you set `raise_exceptions = False` then these  will be returned as
 `NormalizedResponse` objects which are also used for successful communications. See 
-below for information about these objects.
+below for information about these objects. 
+
+```python
+# In your python code, create an instance of the blueink Client
+from blueink import Client
+
+client = Client(raise_exceptions=False)
+```
 
 ### Making API Calls
 
@@ -218,6 +225,62 @@ for paged_response in iterator:
         print(bundle.id)
 ```
 
+## Client Method Index
+Parameters can be found using autocomplete within your IDE. Creates/Updates take a
+Python dictionary as the data field, unless special named methods like 
+```create_from_bundle_helper``` indicate otherwise. List methods can take query params 
+as kwargs.
+
+### Bundle Related
+* Create via ```client.bundles.create(...)``` or ```client.bundles.create_from_bundle_helper(...)```
+* List via ```client.bundles.list(...)``` or ```client.bundles.paged_list(...)``` 
+* Retrieve via ```client.bundles.retrieve(...)```
+* Cancel via ```client.bundles.cancel(...)```
+* List Events via ```client.bundles.list_events(...)```
+* List Files via ```client.bundles.list_files(...)```
+* List Data via ```client.bundles.list_data(...)```
+
+### Person Related
+* Create via ```client.persons.create(...)``` or ```client.persons.create_from_person_helper(...)```
+* List via ```client.persons.list(...)``` or ```client.persons.paged_list(...)``` 
+* Retrieve via ```client.persons.retrieve(...)```
+* Delete via ```client.persons.delete(...)```
+* Update via ```client.persons.update(...)```
+
+### Packet Related
+* Update via ```client.packets.update(...)```
+* Create Embedded Signing URL via ```client.packets.embed_url(...)```
+* Retrieve COE via ```client.packets.retrieve_coe(...)```
+* Remind via ```client.packets.remind(...)```
+
+### Template Related
+* List via ```client.templates.list(...)``` or ```client.templates.paged_list(...)``` 
+* Retrieve via ```client.templates.retrieve(...)```
+
+### Webhook Related
+
+#### Webhook Client Methods
+* Create via ```client.webhooks.create(...)```
+* List via ```client.webhooks.list(...)```
+* Retrieve via ```client.webhooks.retrieve(...)```
+* Delete via ```client.webhooks.delete(...)```
+* Update via ```client.webhooks.update(...)```
+
+#### WebhookExtraHeader Client Methods
+* Create via ```client.webhooks.create_header(...)```
+* List via ```client.webhooks.list_headers(...)```
+* Retrieve via ```client.webhooks.retrieve_header(...)```
+* Delete via ```client.webhooks.delete_header(...)```
+* Update via ```client.webhooks.update_header(...)```
+
+#### WebhookEvent Client Methods
+* List via ```client.webhooks.list_events(...)```
+* Retrieve via ```client.webhooks.retrieve_event(...)```
+
+#### WebhookDelivery Client Methods
+* List via ```client.webhooks.list_deliveries(...)```
+* Retrieve via ```client.webhooks.retrieve_delivery(...)```
+
 ## Detailed Guide and Examples
 
 ### Bundles
@@ -285,12 +348,24 @@ Using the `BundleHelper`, you can add files to a Bundle in multiple ways:
 ```python
 bh = BundleHelper(...)
 
-# Add a document using a path to the file in the local filesystem
-doc1_key = bh.add_document_by_path("/path/to/file/fw4.pdf", "application/pdf")
+# 0) Add a document using a URL to a web resource:
+doc0_key = bh.add_document_by_url("https://www.example.com/example.pdf")
 
-# Add a document that you have already read into a Python bytearray object
-pdf_bytearray = read_a_file_into_a_bytearray()
-doc2_key = bh.add_document_by_bytearray(pdf_bytearray, "fw4.pdf", "application/pdf")
+# 1) Add a document using a path to the file in the local filesystem
+doc1_key = bh.add_document_by_path("/path/to/file/example.pdf")
+
+# 2) Add a document using a UTF-8 encoded Base64 string:
+filename, pdf_b64 = read_a_file_into_b64_string()
+doc02_key = bh.add_document_by_b64(filename, pdf_b64)
+
+# 3) Add a document that you have already read into a Python bytearray object
+filename, pdf_bytearray = read_a_file_into_bytearray()
+doc03_key = bh.add_document_by_bytearray(pdf_bytearray, filename)
+
+# 4) Add a document as a File object. Make sure to use 'with' or suitably close the file
+#    after creating the document.
+with open("/path/to/file/example.pdf", 'rb') as file:
+    doc04_key = bh.add_document_by_file(file)
 ```
 
 
@@ -335,7 +410,6 @@ Creating a person is similar to a creating a Bundle. There is a PersonHelper to 
 create a person
 
 ```python
-import json
 from copy import deepcopy
 from requests.exceptions import HTTPError
 from pprint import pprint
@@ -458,7 +532,7 @@ except Exception as e:
 # Perform a partial update to change the name again
 third_name = {"name": "Third Name"}
 try:
-    result = client.persons.partial_update(result.data.id, third_name)
+    result = client.persons.update(result.data.id, third_name, True)
     pprint(f"Result Partial Update: {result.status}: {result.data}")
 except HTTPError as e:
     print(e)
@@ -498,8 +572,6 @@ except HTTPError as e:
 except Exception as e:
     print("Error:")
     print(e)
-
-
 ```
 
 ### Packets
@@ -535,4 +607,104 @@ for page in client.templates.paged_list():
 template_response = client.templates.retrieve(template_id)
 
 
+```
+### Webhooks
+
+Webhooks can be interacted with via several methods. Webhooks also have related objects, such as 
+```WebhookExtraHeaders```, ```WebhookEvents```, and ```WebhookDeliveries``` which have their own
+methods to interact with.
+
+```python
+from copy import deepcopy
+
+from requests import HTTPError
+from src.blueink import Client
+from src.blueink.constants import EVENT_TYPE
+
+WEBHOOK_01 = {
+    "url": "https://www.example.com/01/",
+    "enabled": True,
+    "json": True,
+    "event_types": [
+        EVENT_TYPE.EVENT_BUNDLE_LAUNCHED,
+        EVENT_TYPE.EVENT_BUNDLE_COMPLETE,
+    ]
+}
+
+WEBHOOK_01_UPDATE = {
+    "enabled": False,
+    "event_types": [
+        EVENT_TYPE.EVENT_PACKET_VIEWED
+    ]
+}
+
+WEBHOOK_01_EXTRA_HEADER_A = {
+    "name": "Courage_The_Cowardly_Webhook",
+    "value": "Muriel Bagge",
+    "order": 0,
+}
+
+client = Client()
+
+# --------------
+# Attempt posting a new Webhook
+# --------------
+try:
+    create_resp = client.webhooks.create(data=WEBHOOK_01)
+    webhook = create_resp.data
+    print(f"Created webhook {webhook.id}")
+except HTTPError as e:
+    print("Error Creating Webhook: ")
+    print(e)
+
+# --------------
+# Update Webhook
+# --------------
+try:
+    update_resp = client.webhooks.update(webhook.id, WEBHOOK_01_UPDATE)
+    webhook = update_resp.data
+    print(f"Updated webhook {webhook.id}")
+except HTTPError as e:
+    print("Error Updating Webhook: ")
+    print(e)
+
+# --------------
+# Create and add an ExtraHeader to the above Webhook
+# --------------
+extra_header_data = deepcopy(WEBHOOK_01_EXTRA_HEADER_A)
+extra_header_data["webhook"] = webhook.id
+try:
+    header_create_resp = client.webhooks.create_header(data=extra_header_data)
+    header = header_create_resp.data
+    print(f"Added ExtraHeader {header} to {webhook.id}")
+except HTTPError as e:
+    print("Error Creating ExtraHeader: ")
+    print(e)
+
+
+# --------------
+# List Webhooks
+# --------------
+try:
+    list_resp = client.webhooks.list()
+    webhook_list = list_resp.data
+
+    print(f"Found {len(webhook_list)} Webhooks")
+    for wh in webhook_list:
+        print(f" - Webhook ID: {wh.id} to {wh.url}")
+
+
+except HTTPError as e:
+    print("Error Listing Webhooks: ")
+    print(e)
+
+# --------------
+# Delete webhook
+# --------------
+try:
+    delete_resp = client.webhooks.delete(webhook.id)
+    print(f"Deleted Webhook {webhook.id}")
+except HTTPError as e:
+    print(f"Error Deleting Webhooks {webhook.id}")
+    print(e)
 ```

@@ -10,31 +10,31 @@ class WebhookSubClient(SubClient):
     # ----------
     # Webhooks
     # ----------
-    def create_webhook(self, data: dict):
+    def create(self, data: dict):
         url = self.build_url(endpoint=endpoints.WEBHOOKS.CREATE)
 
         return self._requests.post(url, data=data)
 
-    def list_webhooks(self, **query_params) -> NormalizedResponse:
+    def list(self, **query_params) -> NormalizedResponse:
         url = self.build_url(endpoint=endpoints.WEBHOOKS.LIST)
 
         return self._requests.get(
             url, params=self.build_params(query_params=query_params)
         )
 
-    def retrieve_webhook(self, webhook_id: str) -> NormalizedResponse:
+    def retrieve(self, webhook_id: str) -> NormalizedResponse:
         url = self.build_url(
             endpoint=endpoints.WEBHOOKS.RETRIEVE, webhook_id=webhook_id
         )
 
         return self._requests.get(url)
 
-    def delete_webhook(self, webhook_id: str) -> NormalizedResponse:
+    def delete(self, webhook_id: str) -> NormalizedResponse:
         url = self.build_url(endpoint=endpoints.WEBHOOKS.DELETE, webhook_id=webhook_id)
 
         return self._requests.delete(url)
 
-    def update_webhook(self, webhook_id: str, data: dict) -> NormalizedResponse:
+    def update(self, webhook_id: str, data: dict) -> NormalizedResponse:
         url = self.build_url(endpoint=endpoints.WEBHOOKS.UPDATE, webhook_id=webhook_id)
 
         return self._requests.patch(url, data=data)
