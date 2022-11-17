@@ -9,7 +9,8 @@ includes examples for many common use cases.
 
 Additional resources that might be useful include:
 
-* Examples in the `examples/` directory of this repository
+* Examples at [blueink-client-python-examples](https://github.com/blueinkhq/blueink-client-python-examples)
+repo on GitHub
 * The detailed [Blueink API Documentation](https://blueink.com/r/api-docs/), for
   details on the data returned by each API call.
 
@@ -54,6 +55,14 @@ from blueink import Client
 
 client = Client("YOUR_PRIVATE_API_KEY")
 ```
+
+The Client also has two modes of operations. By default the Client will raise HTTPError
+exceptions whenever there's an issue between the client and server (eg. HTTP4xx,
+HTTP5xx errors). These come from the `requests` module. If within your application
+you already handle exceptions coming out of `requests` then you should be good.
+If you set `raise_exceptions = False` then these  will be returned as
+`NormalizedResponse` objects which are also used for successful communications. See 
+below for information about these objects.
 
 ### Making API Calls
 

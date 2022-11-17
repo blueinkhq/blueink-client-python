@@ -1,4 +1,7 @@
 import io
+from os.path import basename
+from base64 import b64encode
+from typing import List
 
 from .model.bundles import (
     Bundle,
@@ -23,6 +26,19 @@ class BundleHelper:
         custom_key: str = None,
         team: str = None,
     ):
+        """Helper class to aid building a Bundle.
+
+        After documents/signers/fields added, use as_data() or as_json() to compile the Bundle either as a python dict or json string.
+
+        Args:
+            label:
+            email_subject:
+            email_message:
+            in_order:
+            is_test:
+            custom_key:
+            team:
+        """
         self._label = label
         self._in_order = in_order
         self._email_subj = email_subject
@@ -53,74 +69,66 @@ class BundleHelper:
         self._documents[document.key] = document
         return document.key
 
-    def add_document_by_file(
-        self, file: io.BufferedReader, file_name: str, mime_type: str, **additional_data
-    ) -> str:
-        """
-        Add a document via url, with unique key.
-        :param mime_type:
-        :param file_name:
-        :param file:
-        :param additional_data: Optional and will append any additional kwargs to the json of the document
-        :return:
-        """
+    def add_document_by_path(self, file_path: str, **additional_data) -> str:
+        filename = basename(file_path)
 
+        with open(file_path, "rb") as file:
+            b64str = b64encode(file.read()).decode("utf-8")
+
+        return self.add_document_by_b64(filename, b64str, **additional_data)
+
+    def add_document_by_b64(self, filename: str, b64str: str, **additional_data):
         file_index = len(self.files)
 
-        if type(file) == io.BufferedReader and file.readable():
-            self.files.append(
-                {"file": file, "filename": file_name, "content_type": mime_type}
-            )
-        else:
-            raise ValueError(f"File unreadable.")
-
-        document = Document.create(file_index=file_index, **additional_data)
+        document = Document.create(
+            filename=filename, file_b64=b64str, **additional_data
+        )
+        print(f"doc -- {document.key}")
         self._documents[document.key] = document
         return document.key
 
-    def add_document_by_path(
-        self, file_path: str, mime_type: str = None, **additional_data
+    def add_document_template(
+        self,
+        template_id: str,
+        assignments: dict,
+        initial_field_values: dict,
+        **additional_data,
     ) -> str:
-        """
-        Add a document via url, returns generated unique key.
-        :param mime_type:
-        :param file_path:
-        :param additional_data: Optional and will append any additional kwargs to the json of the document
-        :return: Document instance
+        """Create and add a template reference
+
+        Args:
+            template_id: Template UUID from BlueInk
+            assignments: dict going from Role to signer ID
+            initial_field_values: dict going from docfield key to initial value
+
+        Returns:
+            document key
         """
 
-        file = open(file_path, "rb")
-        return self.add_document_by_file(file, file.name, mime_type, **additional_data)
-
-    def add_document_by_bytearray(
-        self, byte_array: bytearray, file_name: str, mime_type: str, **additional_data
-    ) -> str:
-        """
-        Add a document via url, with unique key.
-        :param byte_array:
-        :param file_name:
-        :param mime_type:
-        :param additional_data: Optional and will append any additional kwargs to the json of the document
-        :return:
-        """
-
-        bytes = io.BytesIO(byte_array)
-        file = io.BufferedReader(bytes, len(byte_array))
-        return self.add_document_by_file(file, file_name, mime_type, **additional_data)
-
-    def add_document_template(self, template_id: str, **additional_data) -> str:
-        """
-        Create and add a template reference
-        :param template_id:
-        :param additional_data: Optional and will append any additional kwargs to the json of the template
-        :return:Template object
-        """
         if template_id in self._documents.keys():
             raise RuntimeError(
                 f"Document/Template with id {template_id} already added."
             )
 
-        template = TemplateRef.create(template_id=template_id, **additional_data)
+        assigns = []
+        for role, signer in assignments.items():
+            ref = TemplateRefAssignment.create(role=role, signer=signer)
+            assigns.append(ref)
+
+        vals = []
+        for field_key, init_val in initial_field_values.items():
+            fieldval = TemplateRefFieldValue.create(
+                key=field_key, initial_value=init_val
+            )
+            vals.append(fieldval)
+
+        template = TemplateRef.create(
+            template_id=template_id,
+            assignments=assigns,
+            field_values=vals,
+            **additional_data,
+        )
+
         self._documents[template.key] = template
         return template.key
 
@@ -133,7 +141,7 @@ class BundleHelper:
         h: int,
         p: int,
         kind: str,
-        editors: [str] = None,
+        editors: List[str] = None,
         label: str = None,
         v_pattern: str = None,
         v_min: int = None,
@@ -141,24 +149,26 @@ class BundleHelper:
         key=None,
         **additional_data,
     ):
-        """
-        Create and add a field
-        :param document:
-        :param x:
-        :param y:
-        :param w:
-        :param h:
-        :param p:
-        :param kind:
+        """Create and add a field to a particular document.
 
-        :param label: Optional
-        :param v_pattern: Optional
-        :param v_min: Optional
-        :param v_max: Optional
-        :param editors: Optional
-        :param key: Optional
-        :param additional_data: Optional and will append any additional kwargs to the json of the field
-        :return: Field object
+        Args
+            document:
+            x:
+            y:
+            w:
+            h:
+            p:
+            kind:
+            label: Optional
+            v_pattern: Optional
+            v_min: Optional
+            v_max: Optional
+            editors: Optional
+            key: Optional
+            additional_data: Optional and will append any additional kwargs to the json of the field
+
+        Returns:
+             Field key [str]
         """
         if document_key not in self._documents:
             raise RuntimeError(f"No document found with key {document_key}!")
@@ -197,22 +207,23 @@ class BundleHelper:
         key=None,
         **additional_data,
     ):
-        """
-        Create and add a signer.
-        This should have at least an email xor phone number.
+        """Create and add a signer. With at least an email xor phone number.
 
-        :param key:
-        :param person_id: Optional
-        :param name: Optional
-        :param email: Optional
-        :param phone: Optional
-        :param auth_sms: Optional
-        :param auth_selfie: Optional
-        :param auth_id: Optional
-        :param deliver_via: Optional
-        :param order: Optional
-        :param additional_data: Optional and will append any additional kwargs to the json of the signer
-        :return: Packet instance
+        Args:
+            key:
+            person_id: Optional
+            name: Optional
+            email: Optional
+            phone: Optional
+            auth_sms: Optional
+            auth_selfie: Optional
+            auth_id: Optional
+            deliver_via: Optional
+            order: Optional
+            additional_data: Optional and will append any additional kwargs to the json of the signer
+
+        Returns:
+             Packet key
         """
         if phone is None and email is None:
             raise ValidationError("Packet must have either an email or phone number")
@@ -236,13 +247,13 @@ class BundleHelper:
     def assign_role(
         self, document_key: str, signer_key: str, role: str, **additional_data
     ):
-        """
-        Assigns a signer to a particular role in a template
-        :param document_key:
-        :param signer_key:
-        :param role:
-        :param additional_data: Optional and will append any additional kwargs to the json of the ref assignment
-        :return:
+        """Assign a signer to a particular role in a template
+
+        Args:
+            document_key:
+            signer_key:
+            role:
+            additional_data: Optional and will append any additional kwargs to the json of the ref assignment
         """
         if document_key not in self._documents:
             raise RuntimeError(f"No document found with key {document_key}!")
@@ -259,13 +270,13 @@ class BundleHelper:
         self._documents[document_key].add_assignment(assignment)
 
     def set_value(self, document_key: str, key: str, value: str, **additional_data):
-        """
-        Sets a field's value in a document.
-        :param document_key:
-        :param key:
-        :param value:
-        :param additional_data: Optional and will append any additional kwargs to the json of the field value
-        :return:
+        """Set a field's value in a document.
+
+        Args:
+            document_key:
+            key:
+            value:
+            additional_data: Optional and will append any additional kwargs to the json of the field value
         """
         if document_key not in self._documents:
             raise RuntimeError(f"No document found with key {document_key}!")
@@ -303,17 +314,25 @@ class BundleHelper:
         return bundle_out
 
     def as_data(self, **additional_data):
-        """
-        Returns a Bundle as a python dictionary
-        :return:
+        """Return a Bundle as a python dictionary
+
+        Args:
+            additional_data: extra data to append to a bundle, as a dict
+
+        Returns:
+            Bundle as dictionary
         """
         bundle = self._compile_bundle(**additional_data)
         return bundle.dict(exclude_unset=True, exclude_none=True)
 
     def as_json(self, **additional_data):
-        """
-        Returns a Bundle as a python dictionary
-        :return:
+        """Return a Bundle as a json
+
+        Args:
+            additional_data: extra data to append to a bundle, as a dict
+
+        Returns:
+            Bundle as json
         """
         bundle = self._compile_bundle(**additional_data)
         return bundle.json(exclude_unset=True, exclude_none=True)

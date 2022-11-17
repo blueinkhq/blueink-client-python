@@ -1,6 +1,7 @@
 import requests
 
 from munch import munchify
+from requests import Request, Session
 
 from .constants import BLUEINK_PAGINATION_HEADER
 
@@ -43,7 +44,7 @@ class NormalizedResponse:
             self.data = response.content
 
         self.request = response.request
-        self.status = response.status_code
+        self.status: int = response.status_code
         self.original_response = response
 
         # Pagination
@@ -55,8 +56,9 @@ class NormalizedResponse:
 
 
 class RequestHelper:
-    def __init__(self, private_api_key):
+    def __init__(self, private_api_key, raise_exceptions=False):
         self._private_api_key = private_api_key
+        self._raise_exceptions = raise_exceptions
 
     def delete(self, url, **kwargs):
         return self._make_request("delete", url, **kwargs)
@@ -105,6 +107,7 @@ class RequestHelper:
         headers=None,
         content_type=None,
     ):
+
         response = requests.request(
             method,
             url,
@@ -116,5 +119,7 @@ class RequestHelper:
             ),
             files=files,
         )
-        response.raise_for_status()
+
+        if self._raise_exceptions:
+            response.raise_for_status()
         return NormalizedResponse(response)
