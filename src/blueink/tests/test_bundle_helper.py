@@ -1,12 +1,9 @@
 import copy
-from base64 import b64encode
-from os.path import basename
 
 from munch import Munch
 
-from src.blueink import BundleHelper, Client
-from src.blueink.person_helper import PersonHelper
-from src.blueink.utils.testcase import TestCase
+from blueink.bundle_helper import BundleHelper
+from blueink.utils.testcase import TestCase
 
 
 class TestBundleHelper(TestCase):

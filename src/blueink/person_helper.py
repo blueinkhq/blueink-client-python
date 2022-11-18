@@ -1,6 +1,6 @@
 from typing import List
 
-from .model.persons import ContactChannelSchema, PersonSchema
+from blueink.model.persons import ContactChannelSchema, PersonSchema
 
 
 class PersonHelper:

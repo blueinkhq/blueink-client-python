@@ -1,7 +1,8 @@
 from typing import List, Optional
-from pydantic import BaseModel, validator, Field
 
-from src.blueink.constants import EVENT_TYPE
+from pydantic import BaseModel, Field, validator
+
+from blueink.constants import EVENT_TYPE
 
 
 class WebhookExtraHeaderSchema(BaseModel):

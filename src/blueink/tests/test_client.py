@@ -5,9 +5,9 @@ from time import sleep
 
 from munch import Munch
 
-from src.blueink import BundleHelper, Client, PersonHelper
-from src.blueink.constants import EVENT_TYPE
-from src.blueink.utils.testcase import TestCase
+from blueink import BundleHelper, Client, PersonHelper
+from blueink.constants import EVENT_TYPE
+from blueink.utils.testcase import TestCase
 
 
 class TestClient(TestCase):

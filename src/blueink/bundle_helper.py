@@ -3,7 +3,7 @@ from base64 import b64encode
 from os.path import basename
 from typing import List
 
-from .model.bundles import (
+from blueink.model.bundles import (
     Bundle,
     Document,
     Field,

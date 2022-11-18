@@ -1,6 +1,6 @@
-from src.blueink import endpoints
-from src.blueink.request_helper import NormalizedResponse
-from src.blueink.subclients.subclient import SubClient
+from blueink import endpoints
+from blueink.request_helper import NormalizedResponse
+from blueink.subclients.subclient import SubClient
 
 
 class WebhookSubClient(SubClient):

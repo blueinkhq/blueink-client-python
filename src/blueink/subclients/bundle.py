@@ -4,12 +4,12 @@ from typing import List
 
 from munch import Munch
 
-from src.blueink import endpoints
-from src.blueink.bundle_helper import BundleHelper
-from src.blueink.constants import BUNDLE_STATUS
-from src.blueink.paginator import PaginatedIterator
-from src.blueink.request_helper import NormalizedResponse
-from src.blueink.subclients.subclient import SubClient
+from blueink import endpoints
+from blueink.bundle_helper import BundleHelper
+from blueink.constants import BUNDLE_STATUS
+from blueink.paginator import PaginatedIterator
+from blueink.request_helper import NormalizedResponse
+from blueink.subclients.subclient import SubClient
 
 
 class BundleSubClient(SubClient):

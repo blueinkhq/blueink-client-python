@@ -1,5 +1,5 @@
-from src.blueink.person_helper import PersonHelper
-from src.blueink.utils.testcase import TestCase
+from blueink.person_helper import PersonHelper
+from blueink.utils.testcase import TestCase
 
 
 class TestPersonHelper(TestCase):
