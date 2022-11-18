@@ -1,7 +1,8 @@
 # blueink-client-python
 ![Tests](https://github.com/blueinkhq/blueink-client-python/actions/workflows/helper-tests.yml/badge.svg)
 ![Style Checks](https://github.com/blueinkhq/blueink-client-python/actions/workflows/style-checks.yml/badge.svg)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![PyPI version](https://badge.fury.io/py/blueink-client-python.svg)](https://pypi.org/project/blueink-client-python/)
+![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
 
 A Python client library for the BlueInk eSignature API.
 
