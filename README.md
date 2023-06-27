@@ -1,11 +1,15 @@
 # blueink-client-python
+![Tests](https://github.com/blueinkhq/blueink-client-python/actions/workflows/helper-tests.yml/badge.svg)
+![Style Checks](https://github.com/blueinkhq/blueink-client-python/actions/workflows/style-checks.yml/badge.svg)
+[![PyPI version](https://badge.fury.io/py/blueink-client-python.svg)](https://pypi.org/project/blueink-client-python/)
+![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
 
 A Python client library for the BlueInk eSignature API.
 
 ## Overview
 
 This README provides a narrative overview of using the Blueink Python client, and
-includes examples for many common use cases. 
+includes examples for many common use cases.
 
 Additional resources that might be useful include:
 
@@ -31,7 +35,7 @@ pip install blueink-client-python
 
 Requests to the Blueink API are made via an instance of the `blueink.Client` class. The
 `blueink.Client` needs a Blueink private API key. By default the Client looks for
-the private key in an environment variable named `BLUEINK_PRIVATE_API_KEY`. 
+the private key in an environment variable named `BLUEINK_PRIVATE_API_KEY`.
 
 ```bash
 # In your shell, or in .bashrc or similar
@@ -61,8 +65,8 @@ exceptions whenever there's an issue between the client and server (eg. HTTP4xx,
 HTTP5xx errors). These come from the `requests` module. If within your application
 you already handle exceptions coming out of `requests` then you should be good.
 If you set `raise_exceptions = False` then these  will be returned as
-`NormalizedResponse` objects which are also used for successful communications. See 
-below for information about these objects. 
+`NormalizedResponse` objects which are also used for successful communications. See
+below for information about these objects.
 
 ```python
 # In your python code, create an instance of the blueink Client
@@ -84,16 +88,17 @@ for bundle in bundles:
   print(bundle.id)
 ```
 
-The Client class follows a RESTful pattern for making API calls, like so: 
+The Client class follows a RESTful pattern for making API calls, like so:
 `client.[resource].[method]`.
 
 The supported "resources" are:
  * `bundles`
  * `persons`
- * `packets` 
+ * `packets`
  * `templates`
+ * `webhooks`
 
- The methods correspond to common REST operations: 
+ The methods correspond to common REST operations:
  * `list()`
  * `retrieve()`
  * `create()`
@@ -101,9 +106,9 @@ The supported "resources" are:
  * `delete()`
 
 However, note that:
-* Not all resources support all methods. 
-* Some resources support one-off methods that are unique to that resource. 
-  For example the `bundles` resource allows you to retrieve a list of events on 
+* Not all resources support all methods.
+* Some resources support one-off methods that are unique to that resource.
+  For example the `bundles` resource allows you to retrieve a list of events on
   the Bundle by calling `client.bundles.list_events()`.
 
 Detailed documentation for each resource is below.
@@ -115,18 +120,18 @@ the following attributes.
 
 * **response.data**
 
-  The json data returned via the API call is accessible via the `data` attribute. The 
-  `data` attribute supports dictionary access and dot-notation access (for convenience 
+  The json data returned via the API call is accessible via the `data` attribute. The
+  `data` attribute supports dictionary access and dot-notation access (for convenience
   and less typing).
 
   ```python
   response = client.bundles.retrieve("some bundle ID")
-  
+
   bundle_data = response.data
   print(bundle_data['id'])  # dictionary-style access
   print(bundle_data.id)     # dot notation access
   ```
-  
+
 * **response.request**
 
   The request that led to this response. Under-the-hood, the Blueink client library
@@ -135,19 +140,19 @@ the following attributes.
 
 * **response.original_response**
 
-  Similarly, if you need access to the original response as returned by 
+  Similarly, if you need access to the original response as returned by
   the Python Requests library, it's accessible as `original_response`.
 
 * **response.pagination**
 
-  Most API calls that return a list of data returned paginated results. If so, 
-  information about the pagination is included in the `pagination` attribute. 
+  Most API calls that return a list of data returned paginated results. If so,
+  information about the pagination is included in the `pagination` attribute.
 
   Pagination Example:
 
   ```python
   response = client.persons.list()
-  
+
   pagination = response.pagination
   print(pagination.page_number, ' - current page number')
   print(pagination.total_pages, ' - total pages')
@@ -162,7 +167,7 @@ See "Requests that Return Lists > Pagination" below.
 #### Filtering and Searching
 
 Some Blueink [API endpoints](https://blueink.com/r/api-docs/) support searching and / or
-filtering. In those cases, you can pass querystring parameters to the `list(...)` or 
+filtering. In those cases, you can pass querystring parameters to the `list(...)` or
 `paged_list(...)` method on those resources.
 
 For example:
@@ -184,7 +189,7 @@ statuses = ",".join([
 response = client.bundles.list(status__in=statuses)
 complete_or_started_bundles = response.data
 
-# Retrieve Bundles matching a search of "example.com" (which will match signer email 
+# Retrieve Bundles matching a search of "example.com" (which will match signer email
 # addresses). We can pass pagination parameters too.
 response = client.bundles.list(per_page=10, page=2, search="example.com")
 matching_bundles = response.data
@@ -199,19 +204,19 @@ for paged_response in iterator:
 #### Pagination
 
 Blueink API calls that return a list of results are paginated - ie, if there
-are a lot of results, you need to make multiple requests to retrieve all of those 
-results, including a `page_number` parameter (and optionally a `page_size` parameter) 
+are a lot of results, you need to make multiple requests to retrieve all of those
+results, including a `page_number` parameter (and optionally a `page_size` parameter)
 in each request.
 
-The details of Blueink pagination scheme can be found in the 
+The details of Blueink pagination scheme can be found in the
 [API documentation](https://blueink.com/r/api-docs/pagination/):
 
 This client library provides convenience methods to make looping over
 paginated results easier. Whenever there is a `list()` method available for a resource,
 there is a corresponding `paged_list()` method available that returns a
-`PaginatedIterator` helper class to make processing the results easier. 
+`PaginatedIterator` helper class to make processing the results easier.
 
-You can mostly ignore the details of how the `PaginatedIterator` works. Instead, here 
+You can mostly ignore the details of how the `PaginatedIterator` works. Instead, here
 is an example of looping over a paginated set of Bundles:
 
 ```python
@@ -227,13 +232,13 @@ for paged_response in iterator:
 
 ## Client Method Index
 Parameters can be found using autocomplete within your IDE. Creates/Updates take a
-Python dictionary as the data field, unless special named methods like 
-```create_from_bundle_helper``` indicate otherwise. List methods can take query params 
+Python dictionary as the data field, unless special named methods like
+```create_from_bundle_helper``` indicate otherwise. List methods can take query params
 as kwargs.
 
 ### Bundle Related
 * Create via ```client.bundles.create(...)``` or ```client.bundles.create_from_bundle_helper(...)```
-* List via ```client.bundles.list(...)``` or ```client.bundles.paged_list(...)``` 
+* List via ```client.bundles.list(...)``` or ```client.bundles.paged_list(...)```
 * Retrieve via ```client.bundles.retrieve(...)```
 * Cancel via ```client.bundles.cancel(...)```
 * List Events via ```client.bundles.list_events(...)```
@@ -242,7 +247,7 @@ as kwargs.
 
 ### Person Related
 * Create via ```client.persons.create(...)``` or ```client.persons.create_from_person_helper(...)```
-* List via ```client.persons.list(...)``` or ```client.persons.paged_list(...)``` 
+* List via ```client.persons.list(...)``` or ```client.persons.paged_list(...)```
 * Retrieve via ```client.persons.retrieve(...)```
 * Delete via ```client.persons.delete(...)```
 * Update via ```client.persons.update(...)```
@@ -254,7 +259,7 @@ as kwargs.
 * Remind via ```client.packets.remind(...)```
 
 ### Template Related
-* List via ```client.templates.list(...)``` or ```client.templates.paged_list(...)``` 
+* List via ```client.templates.list(...)``` or ```client.templates.paged_list(...)```
 * Retrieve via ```client.templates.retrieve(...)```
 
 ### Webhook Related
@@ -266,18 +271,18 @@ as kwargs.
 * Delete via ```client.webhooks.delete(...)```
 * Update via ```client.webhooks.update(...)```
 
-####WebhookExtraHeader Client Methods
+#### WebhookExtraHeader Client Methods
 * Create via ```client.webhooks.create_header(...)```
 * List via ```client.webhooks.list_headers(...)```
 * Retrieve via ```client.webhooks.retrieve_header(...)```
 * Delete via ```client.webhooks.delete_header(...)```
 * Update via ```client.webhooks.update_header(...)```
 
-####WebhookEvent Client Methods
+#### WebhookEvent Client Methods
 * List via ```client.webhooks.list_events(...)```
 * Retrieve via ```client.webhooks.retrieve_event(...)```
 
-####WebhookDelivery Client Methods
+#### WebhookDelivery Client Methods
 * List via ```client.webhooks.list_deliveries(...)```
 * Retrieve via ```client.webhooks.retrieve_delivery(...)```
 
@@ -287,8 +292,8 @@ as kwargs.
 
 #### Creating Bundles with the BundleHelper
 
-When creating a Bundle via the API, you need to pass quite a bit of data in the 
-`client.bundle.create(...)` request. To ease the construction of that data, this 
+When creating a Bundle via the API, you need to pass quite a bit of data in the
+`client.bundle.create(...)` request. To ease the construction of that data, this
 library provides a `BundleHelper` class.
 
 Below is an example of using `BundleHelper` to create a Bundle with 1 document,
@@ -610,7 +615,7 @@ template_response = client.templates.retrieve(template_id)
 ```
 ### Webhooks
 
-Webhooks can be interacted with via several methods. Webhooks also have related objects, such as 
+Webhooks can be interacted with via several methods. Webhooks also have related objects, such as
 ```WebhookExtraHeaders```, ```WebhookEvents```, and ```WebhookDeliveries``` which have their own
 methods to interact with.
 
@@ -650,7 +655,7 @@ client = Client()
 # Attempt posting a new Webhook
 # --------------
 try:
-    create_resp = client.webhooks.create_webhook(data=WEBHOOK_01)
+    create_resp = client.webhooks.create(data=WEBHOOK_01)
     webhook = create_resp.data
     print(f"Created webhook {webhook.id}")
 except HTTPError as e:

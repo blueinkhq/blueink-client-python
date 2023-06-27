@@ -1,6 +1,6 @@
-from src.blueink import endpoints
-from src.blueink.request_helper import NormalizedResponse
-from src.blueink.subclients.subclient import SubClient
+from blueink import endpoints
+from blueink.request_helper import NormalizedResponse
+from blueink.subclients.subclient import SubClient
 
 
 class WebhookSubClient(SubClient):
@@ -10,7 +10,7 @@ class WebhookSubClient(SubClient):
     # ----------
     # Webhooks
     # ----------
-    def create_webhook(self, data: dict):
+    def create(self, data: dict):
         url = self.build_url(endpoint=endpoints.WEBHOOKS.CREATE)
 
         return self._requests.post(url, data=data)

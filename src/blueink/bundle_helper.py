@@ -1,9 +1,9 @@
 import io
-from os.path import basename
 from base64 import b64encode
+from os.path import basename
 from typing import List
 
-from .model.bundles import (
+from blueink.model.bundles import (
     Bundle,
     Document,
     Field,
@@ -164,7 +164,6 @@ class BundleHelper:
         Returns:
             document key
         """
-
         if template_id in self._documents.keys():
             raise RuntimeError(
                 f"Document/Template with id {template_id} already added."

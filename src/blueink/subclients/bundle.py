@@ -4,12 +4,12 @@ from typing import List
 
 from munch import Munch
 
-from src.blueink import endpoints
-from src.blueink.bundle_helper import BundleHelper
-from src.blueink.constants import BUNDLE_STATUS
-from src.blueink.paginator import PaginatedIterator
-from src.blueink.request_helper import NormalizedResponse
-from src.blueink.subclients.subclient import SubClient
+from blueink import endpoints
+from blueink.bundle_helper import BundleHelper
+from blueink.constants import BUNDLE_STATUS
+from blueink.paginator import PaginatedIterator
+from blueink.request_helper import NormalizedResponse
+from blueink.subclients.subclient import SubClient
 
 
 class BundleSubClient(SubClient):
@@ -21,7 +21,6 @@ class BundleSubClient(SubClient):
         if file_list:
             for idx, file_dict in enumerate(file_list):
                 if "file" in file_dict:
-                    print("Actual File")
                     fh = file_dict["file"]
                     if not isinstance(fh, io.BufferedReader):
                         raise ValueError(
@@ -39,6 +38,20 @@ class BundleSubClient(SubClient):
                             ),
                         )
                     )
+                elif "file_b64" in file_dict:
+                    b64 = file_dict["file_b64"]
+                    field_name = f"files[{idx}]"
+                    files_data.append(
+                        (
+                            field_name,
+                            (
+                                file_dict.get("filename"),
+                                b64,
+                                file_dict.get("content_type"),
+                            ),
+                        )
+                    )
+
         return files_data
 
     def create(

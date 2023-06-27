@@ -1,9 +1,8 @@
 import requests
-
 from munch import munchify
 from requests import Request, Session
 
-from .constants import BLUEINK_PAGINATION_HEADER
+from blueink.constants import BLUEINK_PAGINATION_HEADER
 
 
 class Pagination:

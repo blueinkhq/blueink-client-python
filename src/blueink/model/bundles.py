@@ -1,9 +1,10 @@
 import random
 import string
 from typing import List, Optional
-from pydantic import BaseModel, validator, EmailStr
 
-from ..constants import DELIVER_VIA, FIELD_KIND
+from pydantic import BaseModel, EmailStr, validator
+
+from blueink.constants import DELIVER_VIA, FIELD_KIND
 
 
 class ValidationError(RuntimeError):

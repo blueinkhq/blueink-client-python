@@ -4,9 +4,11 @@ from os.path import basename
 from time import sleep
 
 from munch import Munch
-from src.blueink import Client, BundleHelper, PersonHelper
-from src.blueink.constants import EVENT_TYPE
-from src.blueink.utils.testcase import TestCase
+
+from blueink import BundleHelper, Client, PersonHelper
+from blueink.constants import EVENT_TYPE
+from blueink.utils.testcase import TestCase
+
 
 # -----------------
 # Bundle Subclient Tests
@@ -330,7 +332,7 @@ class TestClientWebhook(TestCase):
         data = self.WEBHOOK_01
 
         client = Client(raise_exceptions=False)
-        resp1 = client.webhooks.create_webhook(data=data)
+        resp1 = client.webhooks.create(data=data)
         self.assert_equal(resp1.status, 201, resp1.data)
 
         resp_clean1 = client.webhooks.delete(resp1.data.id)
@@ -345,11 +347,11 @@ class TestClientWebhook(TestCase):
         pre_create_len = len(pre_create.data)
 
         data1 = self.WEBHOOK_01
-        resp1 = client.webhooks.create_webhook(data=data1)
+        resp1 = client.webhooks.create(data=data1)
         self.assert_equal(resp1.status, 201, resp1.data)
 
         data2 = self.WEBHOOK_02
-        resp2 = client.webhooks.create_webhook(data=data2)
+        resp2 = client.webhooks.create(data=data2)
         self.assert_equal(resp1.status, 201, resp2.data)
 
         post_create = client.webhooks.list()
@@ -369,7 +371,7 @@ class TestClientWebhook(TestCase):
         client = Client(raise_exceptions=False)
 
         data1 = self.WEBHOOK_01
-        resp1 = client.webhooks.create_webhook(data=data1)
+        resp1 = client.webhooks.create(data=data1)
         self.assert_equal(resp1.status, 201, resp1.data)
         self.assert_equal(resp1.data["url"], data1["url"])
 
@@ -391,7 +393,7 @@ class TestClientWebhook(TestCase):
         pre_create_len = len(resp0.data)
 
         data1 = self.WEBHOOK_01
-        resp1 = client.webhooks.create_webhook(data=data1)
+        resp1 = client.webhooks.create(data=data1)
         self.assert_equal(resp1.status, 201, resp1.data)
 
         resp2 = client.webhooks.list()
@@ -412,7 +414,7 @@ class TestClientWebhook(TestCase):
         client = Client(raise_exceptions=False)
 
         data1 = self.WEBHOOK_01
-        resp1 = client.webhooks.create_webhook(data=data1)
+        resp1 = client.webhooks.create(data=data1)
         self.assert_equal(resp1.status, 201, resp1.data)
         self.assert_equal(resp1.data["url"], data1["url"])
 
@@ -443,7 +445,7 @@ class TestClientWebhook(TestCase):
         data = self.WEBHOOK_01
 
         client = Client(raise_exceptions=False)
-        resp1 = client.webhooks.create_webhook(data=data)
+        resp1 = client.webhooks.create(data=data)
         self.assert_equal(resp1.status, 201, resp1.data)
 
         eh_data = deepcopy(self.WEBHOOK_01_EXTRA_HEADER_A)
@@ -462,10 +464,10 @@ class TestClientWebhook(TestCase):
 
         client = Client(raise_exceptions=False)
         # Create parent webhooks
-        resp1a = client.webhooks.create_webhook(data=data1)
+        resp1a = client.webhooks.create(data=data1)
         self.assert_equal(resp1a.status, 201, resp1a.data)
 
-        resp1b = client.webhooks.create_webhook(data=data2)
+        resp1b = client.webhooks.create(data=data2)
         self.assert_equal(resp1b.status, 201, resp1b.data)
 
         # setup and create headers under wh 1

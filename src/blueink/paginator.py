@@ -1,6 +1,6 @@
 from requests.exceptions import HTTPError
 
-from .request_helper import NormalizedResponse
+from blueink.request_helper import NormalizedResponse
 
 
 class PaginatedIterator:

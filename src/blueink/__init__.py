@@ -1,8 +1,8 @@
 from requests import exceptions
 
-from .client import Client
-from .bundle_helper import BundleHelper
-from .person_helper import PersonHelper
-from . import constants
+import blueink.constants
+from blueink.bundle_helper import BundleHelper
+from blueink.client import Client
+from blueink.person_helper import PersonHelper
 
 __all__ = ["Client", "BundleHelper", "PersonHelper", "exceptions", "constants"]

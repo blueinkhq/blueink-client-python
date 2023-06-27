@@ -1,16 +1,16 @@
 from os import environ
 
-from src.blueink.constants import (
+from blueink.constants import (
     DEFAULT_BASE_URL,
     ENV_BLUEINK_API_URL,
     ENV_BLUEINK_PRIVATE_API_KEY,
 )
-from src.blueink.request_helper import RequestHelper
-from src.blueink.subclients.bundle import BundleSubClient
-from src.blueink.subclients.packet import PacketSubClient
-from src.blueink.subclients.person import PersonSubClient
-from src.blueink.subclients.template import TemplateSubClient
-from src.blueink.subclients.webhook import WebhookSubClient
+from blueink.request_helper import RequestHelper
+from blueink.subclients.bundle import BundleSubClient
+from blueink.subclients.packet import PacketSubClient
+from blueink.subclients.person import PersonSubClient
+from blueink.subclients.template import TemplateSubClient
+from blueink.subclients.webhook import WebhookSubClient
 
 
 class Client:

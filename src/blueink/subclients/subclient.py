@@ -1,5 +1,5 @@
-from src.blueink import endpoints
-from src.blueink.request_helper import RequestHelper
+from blueink import endpoints
+from blueink.request_helper import RequestHelper
 
 
 class SubClient:
