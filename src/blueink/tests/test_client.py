@@ -10,17 +10,28 @@ from blueink.constants import EVENT_TYPE
 from blueink.utils.testcase import TestCase
 
 
-class TestClient(TestCase):
+# -----------------
+# Bundle Subclient Tests
+# -----------------
+class TestClientBundle(TestCase):
     DOC_METHODS = Munch(
+        FILE="FILE",
         PATH="PATH",
         URL="URL",
         B64="BASE64",
+        BYTES="BYTES",
         TEMPLATE="TEMPLATE",
     )
 
-    BUNDLE_LABEL_URL = "A URL Bundle Label!"
-    BUNDLE_LABEL_PATH = "A PATH Bundle Label!"
-    BUNDLE_LABEL_B64 = "A B64 Bundle Label!"
+    BUNDLE_LABELS = {
+        DOC_METHODS.PATH: "A PATH Bundle!",
+        DOC_METHODS.URL: "A URL Bundle!",
+        DOC_METHODS.B64: "A B64 Bundle!",
+        DOC_METHODS.BYTES: "A ByteArray Bundle!",
+        DOC_METHODS.TEMPLATE: "A Template Bundle!",
+        DOC_METHODS.FILE: "A FILE Bundle!",
+    }
+
     EMAIL_SUBJECT = "A Test Bundle!"
     EMAIL_MESSAGE = "Email Message!"
 
@@ -42,29 +53,6 @@ class TestClient(TestCase):
     FIELD01_P = 1
     FIELD01_EDITORS = [SIGNER01_KEY]
 
-    # Person Data
-    PERSON_NAME = "JOHN DOE"
-
-    PERSON_MD_KEY01 = "KEY01"
-    PERSON_MD_KEY02 = "KEY02"
-    PERSON_MD_VAL01 = 12
-    PERSON_MD_VAL02 = "VAL"
-    PERSON_METADATA = {
-        PERSON_MD_KEY01: PERSON_MD_VAL01,
-        PERSON_MD_KEY02: PERSON_MD_VAL02,
-    }
-
-    PERSON_PHONES = ["505 555 5555"]
-    PERSON_EMAILS = ["johndoe@example.com"]
-
-    def _bundle_label(self, method: str):
-        if method == self.DOC_METHODS.PATH:
-            return self.BUNDLE_LABEL_PATH
-        elif method == self.DOC_METHODS.URL:
-            return self.BUNDLE_LABEL_URL
-        elif method == self.DOC_METHODS.B64:
-            return self.BUNDLE_LABEL_B64
-
     def _create_test_bundle_helper(self, method: str) -> (BundleHelper, str, str):
         """
         Returns:
@@ -72,7 +60,7 @@ class TestClient(TestCase):
         """
 
         bh = BundleHelper(
-            self._bundle_label(method),
+            self.BUNDLE_LABELS[method],
             self.EMAIL_SUBJECT,
             self.EMAIL_MESSAGE,
             is_test=True,
@@ -90,6 +78,16 @@ class TestClient(TestCase):
             b64str = b64encode(file.read()).decode("utf-8")
             file.close()
             doc01_key = bh.add_document_by_b64(filename, b64str)
+        elif method == self.DOC_METHODS.FILE:
+            with open(self.REAL_DOCUMENT_PATH, "rb") as file:
+                doc01_key = bh.add_document_by_file(file)
+        elif method == self.DOC_METHODS.BYTES:
+            filename = basename(self.REAL_DOCUMENT_PATH)
+
+            with open(self.REAL_DOCUMENT_PATH, "rb") as file:
+                byte_array = bytearray(file.read())
+
+            doc01_key = bh.add_document_by_bytearray(byte_array, filename)
 
         # Add Signer 1
         signer01_key = bh.add_signer(
@@ -194,13 +192,34 @@ class TestClient(TestCase):
         )
         self.assert_true(has_all_docs)
 
+    def test_roundtrip_file(self):
+        bh, sk, fk = self._create_test_bundle_helper(method=self.DOC_METHODS.FILE)
+
+        client = Client(raise_exceptions=False)
+        resp = client.bundles.create_from_bundle_helper(bh)
+        self.assert_equal(resp.status, 201)
+        has_all_docs = self._poll_for_successful_file_processing(
+            client, resp.data.id, 1
+        )
+        self.assert_true(has_all_docs)
+
     def test_roundtrip_path(self):
         bh, sk, fk = self._create_test_bundle_helper(method=self.DOC_METHODS.PATH)
 
         client = Client(raise_exceptions=False)
         resp = client.bundles.create_from_bundle_helper(bh)
         self.assert_equal(resp.status, 201)
+        has_all_docs = self._poll_for_successful_file_processing(
+            client, resp.data.id, 1
+        )
+        self.assert_true(has_all_docs)
 
+    def test_roundtrip_bytearray(self):
+        bh, sk, fk = self._create_test_bundle_helper(method=self.DOC_METHODS.BYTES)
+
+        client = Client(raise_exceptions=False)
+        resp = client.bundles.create_from_bundle_helper(bh)
+        self.assert_equal(resp.status, 201)
         has_all_docs = self._poll_for_successful_file_processing(
             client, resp.data.id, 1
         )

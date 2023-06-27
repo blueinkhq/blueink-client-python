@@ -59,17 +59,29 @@ class BundleHelper:
         self._cc_emails.append(email)
 
     def add_document_by_url(self, url: str, **additional_data) -> str:
-        """
-        Add a document via url.
-        :param url:
-            :param additional_data: Optional and will append any additional kwargs to the json of the document
-        :return: Document instance
+        """Add a file using a URL
+
+        Args:
+            url:
+            additional_data:
+
+        Returns:
+            Document Key
         """
         document = Document.create(file_url=url, **additional_data)
         self._documents[document.key] = document
         return document.key
 
     def add_document_by_path(self, file_path: str, **additional_data) -> str:
+        """Add a file using a file path. File context used, should safely open/close file
+
+        Args:
+            file_path:
+            additional_data:
+
+        Returns:
+            Document Key
+        """
         filename = basename(file_path)
 
         with open(file_path, "rb") as file:
@@ -77,29 +89,63 @@ class BundleHelper:
 
         return self.add_document_by_b64(filename, b64str, **additional_data)
 
+    def add_document_by_file(self, file: io.FileIO, **additional_data) -> str:
+        """Add a file using a file path. File context used, should safely open/close file
+
+        Args:
+            file:
+            additional_data:
+
+        Returns:
+            Document Key
+        """
+        filename = file.name
+
+        file.seek(0)
+        b64str = b64encode(file.read()).decode("utf-8")
+        file.flush()
+
+        return self.add_document_by_b64(filename, b64str, **additional_data)
+
     def add_document_by_b64(self, filename: str, b64str: str, **additional_data):
+        """Add a file using a b64 string; utf-8 encoded
+
+        Args:
+            filename:
+            b64str:
+            additional_data:
+
+        Returns:
+            Document Key
+        """
         file_index = len(self.files)
+
         document = Document.create(
             filename=filename, file_b64=b64str, **additional_data
         )
+        print(f"doc -- {document.key}")
         self._documents[document.key] = document
         return document.key
 
     def add_document_by_bytearray(
-        self, byte_array: bytearray, file_name: str, **additional_data
+        self, byte_array: bytearray, filename: str, **additional_data
     ) -> str:
-        """
-        Add a document via url, with unique key.
+        """Add a file using a python bytearray object
 
         Args:
             byte_array:
-            file_name:
-            mime_type:
-            additional_data: Optional and will append any additional kwargs to the json of the document
+            filename:
+            additional_data:
+
+        Returns:
+            Document Key
         """
+
         bytes = io.BytesIO(byte_array)
-        file = io.BufferedReader(bytes, len(byte_array))
-        return self.add_document_by_file(file, file_name, **additional_data)
+        with io.BufferedReader(bytes, len(byte_array)) as file:
+            b64str = b64encode(file.read()).decode("utf-8")
+
+        return self.add_document_by_b64(filename, b64str, **additional_data)
 
     def add_document_template(
         self,

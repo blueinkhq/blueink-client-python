@@ -120,5 +120,6 @@ class RequestHelper:
         )
 
         if self._raise_exceptions:
+            # print(response.content)
             response.raise_for_status()
         return NormalizedResponse(response)
