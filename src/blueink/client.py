@@ -55,10 +55,12 @@ class Client:
         if not base_url:
             base_url = DEFAULT_BASE_URL
 
+        self._base_url = base_url
+
         self._request_helper = RequestHelper(private_api_key, raise_exceptions)
 
-        self.bundles = BundleSubClient(base_url, self._request_helper)
-        self.persons = PersonSubClient(base_url, self._request_helper)
-        self.packets = PacketSubClient(base_url, self._request_helper)
-        self.templates = TemplateSubClient(base_url, self._request_helper)
-        self.webhooks = WebhookSubClient(base_url, self._request_helper)
+        self.bundles = BundleSubClient(self._base_url, self._request_helper)
+        self.persons = PersonSubClient(self._base_url, self._request_helper)
+        self.packets = PacketSubClient(self._base_url, self._request_helper)
+        self.templates = TemplateSubClient(self._base_url, self._request_helper)
+        self.webhooks = WebhookSubClient(self._base_url, self._request_helper)
