@@ -19,6 +19,7 @@ class Client:
         private_api_key: str = None,
         base_url: str = None,
         raise_exceptions: bool = True,
+        security_headers: dict = None,
     ):
         """Initialize a Client instance to access the Blueink eSignature API
 
@@ -29,6 +30,7 @@ class Client:
             base_url: override the API base URL. If not supplied, we check the
                 environment variable BLUEINK_API_URL. If that is empty, the default
                 value of "https://api.blueink.com/api/v2" is used.
+            security_headers: Place for additional security headers, likely unnecessary
             raise_exceptions (Default True): raise HTTPError if code != 200. Otherwise
             return as NormalizedResponse objects.
 
@@ -44,9 +46,9 @@ class Client:
 
         if not private_api_key:
             raise ValueError(
-                "A Blueink Private API Key must be provided on Client initialization"
-                " or specified via the environment variable"
-                " {ENV_BLUEINK_PRIVATE_API_KEY}"
+                f"A Blueink Private API Key must be provided on Client initialization"
+                f" or specified via the environment variable"
+                f" {ENV_BLUEINK_PRIVATE_API_KEY}"
             )
 
         if not base_url:
@@ -57,7 +59,11 @@ class Client:
 
         self._base_url = base_url
 
-        self._request_helper = RequestHelper(private_api_key, raise_exceptions)
+        self._request_helper = RequestHelper(
+            private_api_key,
+            raise_exceptions,
+            security_headers=security_headers,
+        )
 
         self.bundles = BundleSubClient(self._base_url, self._request_helper)
         self.persons = PersonSubClient(self._base_url, self._request_helper)

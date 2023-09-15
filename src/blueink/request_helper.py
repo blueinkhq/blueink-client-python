@@ -1,6 +1,5 @@
 import requests
 from munch import munchify
-from requests import Request, Session
 
 from blueink.constants import BLUEINK_PAGINATION_HEADER
 
@@ -55,9 +54,13 @@ class NormalizedResponse:
 
 
 class RequestHelper:
-    def __init__(self, private_api_key, raise_exceptions=False):
+    def __init__(
+        self, private_api_key, raise_exceptions=False, security_headers: dict = None
+    ):
+
         self._private_api_key = private_api_key
         self._raise_exceptions = raise_exceptions
+        self._security_headers = security_headers
 
     def delete(self, url, **kwargs):
         return self._make_request("delete", url, **kwargs)
@@ -87,6 +90,9 @@ class RequestHelper:
         hdrs = {}
         if more_headers:
             hdrs.update(more_headers)
+
+        if self._security_headers:
+            hdrs.update(self._security_headers)
 
         hdrs["Authorization"] = f"Token {self._private_api_key}"
 
@@ -120,6 +126,6 @@ class RequestHelper:
         )
 
         if self._raise_exceptions:
-            # print(response.content)
             response.raise_for_status()
+
         return NormalizedResponse(response)
