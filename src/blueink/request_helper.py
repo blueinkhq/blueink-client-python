@@ -1,8 +1,7 @@
 import requests
-
 from munch import munchify
 
-from .constants import BLUEINK_PAGINATION_HEADER
+from blueink.constants import BLUEINK_PAGINATION_HEADER
 
 
 class Pagination:
@@ -43,7 +42,7 @@ class NormalizedResponse:
             self.data = response.content
 
         self.request = response.request
-        self.status = response.status_code
+        self.status: int = response.status_code
         self.original_response = response
 
         # Pagination
@@ -55,8 +54,13 @@ class NormalizedResponse:
 
 
 class RequestHelper:
-    def __init__(self, private_api_key):
+    def __init__(
+        self, private_api_key, raise_exceptions=False, security_headers: dict = None
+    ):
+
         self._private_api_key = private_api_key
+        self._raise_exceptions = raise_exceptions
+        self._security_headers = security_headers
 
     def delete(self, url, **kwargs):
         return self._make_request("delete", url, **kwargs)
@@ -87,6 +91,9 @@ class RequestHelper:
         if more_headers:
             hdrs.update(more_headers)
 
+        if self._security_headers:
+            hdrs.update(self._security_headers)
+
         hdrs["Authorization"] = f"Token {self._private_api_key}"
 
         if content_type is not None:
@@ -95,16 +102,30 @@ class RequestHelper:
         return hdrs
 
     def _make_request(
-        self, method, url, data=None, json=None, files=None, params=None, headers=None, content_type=None
+        self,
+        method,
+        url,
+        data=None,
+        json=None,
+        files=None,
+        params=None,
+        headers=None,
+        content_type=None,
     ):
+
         response = requests.request(
             method,
             url,
             params=params,
             data=data,
             json=json,
-            headers=self._build_headers(content_type=content_type, more_headers=headers),
+            headers=self._build_headers(
+                content_type=content_type, more_headers=headers
+            ),
             files=files,
         )
-        response.raise_for_status()
+
+        if self._raise_exceptions:
+            response.raise_for_status()
+
         return NormalizedResponse(response)

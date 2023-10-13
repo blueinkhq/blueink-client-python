@@ -1,15 +1,20 @@
 # blueink-client-python
+![Tests](https://github.com/blueinkhq/blueink-client-python/actions/workflows/helper-tests.yml/badge.svg)
+![Style Checks](https://github.com/blueinkhq/blueink-client-python/actions/workflows/style-checks.yml/badge.svg)
+[![PyPI version](https://badge.fury.io/py/blueink-client-python.svg)](https://pypi.org/project/blueink-client-python/)
+![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
 
 A Python client library for the BlueInk eSignature API.
 
 ## Overview
 
 This README provides a narrative overview of using the Blueink Python client, and
-includes examples for many common use cases. 
+includes examples for many common use cases.
 
 Additional resources that might be useful include:
 
-* Examples in the `examples/` directory of this repository
+* Examples at [blueink-client-python-examples](https://github.com/blueinkhq/blueink-client-python-examples)
+repo on GitHub.
 * The detailed [Blueink API Documentation](https://blueink.com/r/api-docs/), for
   details on the data returned by each API call.
 
@@ -30,7 +35,7 @@ pip install blueink-client-python
 
 Requests to the Blueink API are made via an instance of the `blueink.Client` class. The
 `blueink.Client` needs a Blueink private API key. By default the Client looks for
-the private key in an environment variable named `BLUEINK_PRIVATE_API_KEY`. 
+the private key in an environment variable named `BLUEINK_PRIVATE_API_KEY`.
 
 ```bash
 # In your shell, or in .bashrc or similar
@@ -55,6 +60,21 @@ from blueink import Client
 client = Client("YOUR_PRIVATE_API_KEY")
 ```
 
+The Client also has two modes of operations. By default the Client will raise HTTPError
+exceptions whenever there's an issue between the client and server (eg. HTTP4xx,
+HTTP5xx errors). These come from the `requests` module. If within your application
+you already handle exceptions coming out of `requests` then you should be good.
+If you set `raise_exceptions = False` then these  will be returned as
+`NormalizedResponse` objects which are also used for successful communications. See
+below for information about these objects.
+
+```python
+# In your python code, create an instance of the blueink Client
+from blueink import Client
+
+client = Client(raise_exceptions=False)
+```
+
 ### Making API Calls
 
 Making API calls with a client instance is easy. For example, to retrieve a list of
@@ -68,26 +88,27 @@ for bundle in bundles:
   print(bundle.id)
 ```
 
-The Client class follows a RESTful pattern for making API calls, like so: 
+The Client class follows a RESTful pattern for making API calls, like so:
 `client.[resource].[method]`.
 
 The supported "resources" are:
  * `bundles`
  * `persons`
- * `packets` 
+ * `packets`
  * `templates`
+ * `webhooks`
 
- The methods correspond to common REST operations: 
- * `list`
- * `retrieve`
- * `create`
- * `update`
- * `delete`.
+ The methods correspond to common REST operations:
+ * `list()`
+ * `retrieve()`
+ * `create()`
+ * `update()`
+ * `delete()`
 
 However, note that:
-* Not all resources support all methods. 
-* Some resources support one-off methods that are unique to that resource. 
-  For example the `bundles` resource allows you to retrieve a list of events on 
+* Not all resources support all methods.
+* Some resources support one-off methods that are unique to that resource.
+  For example the `bundles` resource allows you to retrieve a list of events on
   the Bundle by calling `client.bundles.list_events()`.
 
 Detailed documentation for each resource is below.
@@ -99,18 +120,18 @@ the following attributes.
 
 * **response.data**
 
-  The json data returned via the API call is accessible via the data attribute. The data
-  attribute supports dictionary access and dot-notation access (for convenience and less
-  typing)
+  The json data returned via the API call is accessible via the `data` attribute. The
+  `data` attribute supports dictionary access and dot-notation access (for convenience
+  and less typing).
 
   ```python
   response = client.bundles.retrieve("some bundle ID")
-  
+
   bundle_data = response.data
   print(bundle_data['id'])  # dictionary-style access
   print(bundle_data.id)     # dot notation access
   ```
-  
+
 * **response.request**
 
   The request that led to this response. Under-the-hood, the Blueink client library
@@ -119,19 +140,19 @@ the following attributes.
 
 * **response.original_response**
 
-  Similarly, if you need access to the original response as returned by 
-  Python Requests library, it's accessible as `original_response`.
+  Similarly, if you need access to the original response as returned by
+  the Python Requests library, it's accessible as `original_response`.
 
 * **response.pagination**
 
-  Most API calls that return a list of data returned paginated results. If so, 
-  information about the pagination is included in the `pagination` attribute. 
+  Most API calls that return a list of data returned paginated results. If so,
+  information about the pagination is included in the `pagination` attribute.
 
   Pagination Example:
 
   ```python
   response = client.persons.list()
-  
+
   pagination = response.pagination
   print(pagination.page_number, ' - current page number')
   print(pagination.total_pages, ' - total pages')
@@ -139,24 +160,63 @@ the following attributes.
   print(pagination.total_results, ' - total results')
   ```
 
-See [Lists and Pagination](lists-and-pagination) below.
+See "Requests that Return Lists > Pagination" below.
 
-### Lists and Pagination
+### Requests that Return Lists
+
+#### Filtering and Searching
+
+Some Blueink [API endpoints](https://blueink.com/r/api-docs/) support searching and / or
+filtering. In those cases, you can pass querystring parameters to the `list(...)` or
+`paged_list(...)` method on those resources.
+
+For example:
+
+```python
+from blueink import Client, constants
+
+client = Client()
+
+# Retrieve Bundles with a status of "Complete"
+response = client.bundles.list(status=constants.BUNDLE_STATUS.COMPLETE)
+complete_bundles = response.data
+
+# Retrieve Bundles with a status or "Complete" or "Started"
+statuses = ",".join([
+    constants.BUNDLE_STATUS.COMPLETE,
+    constants.BUNDLE_STATUS.STARTED
+])
+response = client.bundles.list(status__in=statuses)
+complete_or_started_bundles = response.data
+
+# Retrieve Bundles matching a search of "example.com" (which will match signer email
+# addresses). We can pass pagination parameters too.
+response = client.bundles.list(per_page=10, page=2, search="example.com")
+matching_bundles = response.data
+
+# Filtering / searching works with pagination iterators / paged_list() calls as well
+iterator = client.bundles.paged_list(search="example.com")
+for paged_response in iterator:
+    for bundle in paged_response.data:
+        print(bundle.id)
+```
+
+#### Pagination
 
 Blueink API calls that return a list of results are paginated - ie, if there
-are a lot of results, you need to make multiple requests to retrieve all of those 
-results, including a page_number parameter (and optionally a page_size parameter) 
+are a lot of results, you need to make multiple requests to retrieve all of those
+results, including a `page_number` parameter (and optionally a `page_size` parameter)
 in each request.
 
-The details of Blueink pagination scheme can be found in the 
-[API documentation](/r/api-docs/pagination/):
+The details of Blueink pagination scheme can be found in the
+[API documentation](https://blueink.com/r/api-docs/pagination/):
 
 This client library provides convenience methods to make looping over
 paginated results easier. Whenever there is a `list()` method available for a resource,
 there is a corresponding `paged_list()` method available that returns a
-`PaginatedIterator` helper class to make processing the results easier. 
+`PaginatedIterator` helper class to make processing the results easier.
 
-You can mostly ignore the details of how the `PaginatedIterator` works. Instead, here 
+You can mostly ignore the details of how the `PaginatedIterator` works. Instead, here
 is an example of looping over a paginated set of Bundles:
 
 ```python
@@ -170,15 +230,71 @@ for paged_response in iterator:
         print(bundle.id)
 ```
 
+## Client Method Index
+Parameters can be found using autocomplete within your IDE. Creates/Updates take a
+Python dictionary as the data field, unless special named methods like
+```create_from_bundle_helper``` indicate otherwise. List methods can take query params
+as kwargs.
+
+### Bundle Related
+* Create via ```client.bundles.create(...)``` or ```client.bundles.create_from_bundle_helper(...)```
+* List via ```client.bundles.list(...)``` or ```client.bundles.paged_list(...)```
+* Retrieve via ```client.bundles.retrieve(...)```
+* Cancel via ```client.bundles.cancel(...)```
+* List Events via ```client.bundles.list_events(...)```
+* List Files via ```client.bundles.list_files(...)```
+* List Data via ```client.bundles.list_data(...)```
+
+### Person Related
+* Create via ```client.persons.create(...)``` or ```client.persons.create_from_person_helper(...)```
+* List via ```client.persons.list(...)``` or ```client.persons.paged_list(...)```
+* Retrieve via ```client.persons.retrieve(...)```
+* Delete via ```client.persons.delete(...)```
+* Update via ```client.persons.update(...)```
+
+### Packet Related
+* Update via ```client.packets.update(...)```
+* Create Embedded Signing URL via ```client.packets.embed_url(...)```
+* Retrieve COE via ```client.packets.retrieve_coe(...)```
+* Remind via ```client.packets.remind(...)```
+
+### Template Related
+* List via ```client.templates.list(...)``` or ```client.templates.paged_list(...)```
+* Retrieve via ```client.templates.retrieve(...)```
+
+### Webhook Related
+
+#### Webhook Client Methods
+* Create via ```client.webhooks.create(...)```
+* List via ```client.webhooks.list(...)```
+* Retrieve via ```client.webhooks.retrieve(...)```
+* Delete via ```client.webhooks.delete(...)```
+* Update via ```client.webhooks.update(...)```
+
+#### WebhookExtraHeader Client Methods
+* Create via ```client.webhooks.create_header(...)```
+* List via ```client.webhooks.list_headers(...)```
+* Retrieve via ```client.webhooks.retrieve_header(...)```
+* Delete via ```client.webhooks.delete_header(...)```
+* Update via ```client.webhooks.update_header(...)```
+
+#### WebhookEvent Client Methods
+* List via ```client.webhooks.list_events(...)```
+* Retrieve via ```client.webhooks.retrieve_event(...)```
+
+#### WebhookDelivery Client Methods
+* List via ```client.webhooks.list_deliveries(...)```
+* Retrieve via ```client.webhooks.retrieve_delivery(...)```
+
 ## Detailed Guide and Examples
 
 ### Bundles
 
 #### Creating Bundles with the BundleHelper
 
-When creating a Bundle via the API, you need to pass a lot of data in the 
-`bundle.create(...)` request. This library provides a `BundleHelper` class to ease the
-construction of that data. 
+When creating a Bundle via the API, you need to pass quite a bit of data in the
+`client.bundle.create(...)` request. To ease the construction of that data, this
+library provides a `BundleHelper` class.
 
 Below is an example of using `BundleHelper` to create a Bundle with 1 document,
 and 2 signers. In this example, the uploaded document is specified via a URL.
@@ -196,7 +312,7 @@ bh = BundleHelper(label="Test Bundle 01",
 bh.add_cc("bart.simpson@example.com")
 
 # Add a document to the Bundle by providing a publicly accessible URL where
-# Blueink can download the document to include in the Bundle
+# the Blueink platform can download the document to include in the Bundle
 doc_key = bh.add_document_by_url("https://www.irs.gov/pub/irs-pdf/fw9.pdf")
 
 signer1_key = bh.add_signer(
@@ -237,12 +353,24 @@ Using the `BundleHelper`, you can add files to a Bundle in multiple ways:
 ```python
 bh = BundleHelper(...)
 
-# Add a document using a path to the file in the local filesystem
-doc1_key = bh.add_document_by_path("/path/to/file/fw4.pdf", "application/pdf")
+# 0) Add a document using a URL to a web resource:
+doc0_key = bh.add_document_by_url("https://www.example.com/example.pdf")
 
-# Add a document that you have already read into a Python bytearray object
-pdf_bytearray = read_a_file_into_a_bytearray()
-doc2_key = bh.add_document_by_bytearray(pdf_bytearray, "fw4.pdf", "application/pdf")
+# 1) Add a document using a path to the file in the local filesystem
+doc1_key = bh.add_document_by_path("/path/to/file/example.pdf")
+
+# 2) Add a document using a UTF-8 encoded Base64 string:
+filename, pdf_b64 = read_a_file_into_b64_string()
+doc02_key = bh.add_document_by_b64(filename, pdf_b64)
+
+# 3) Add a document that you have already read into a Python bytearray object
+filename, pdf_bytearray = read_a_file_into_bytearray()
+doc03_key = bh.add_document_by_bytearray(pdf_bytearray, filename)
+
+# 4) Add a document as a File object. Make sure to use 'with' or suitably close the file
+#    after creating the document.
+with open("/path/to/file/example.pdf", 'rb') as file:
+    doc04_key = bh.add_document_by_file(file)
 ```
 
 
@@ -287,7 +415,6 @@ Creating a person is similar to a creating a Bundle. There is a PersonHelper to 
 create a person
 
 ```python
-import json
 from copy import deepcopy
 from requests.exceptions import HTTPError
 from pprint import pprint
@@ -410,7 +537,7 @@ except Exception as e:
 # Perform a partial update to change the name again
 third_name = {"name": "Third Name"}
 try:
-    result = client.persons.partial_update(result.data.id, third_name)
+    result = client.persons.update(result.data.id, third_name, True)
     pprint(f"Result Partial Update: {result.status}: {result.data}")
 except HTTPError as e:
     print(e)
@@ -450,8 +577,6 @@ except HTTPError as e:
 except Exception as e:
     print("Error:")
     print(e)
-
-
 ```
 
 ### Packets
@@ -487,4 +612,104 @@ for page in client.templates.paged_list():
 template_response = client.templates.retrieve(template_id)
 
 
+```
+### Webhooks
+
+Webhooks can be interacted with via several methods. Webhooks also have related objects, such as
+```WebhookExtraHeaders```, ```WebhookEvents```, and ```WebhookDeliveries``` which have their own
+methods to interact with.
+
+```python
+from copy import deepcopy
+
+from requests import HTTPError
+from src.blueink import Client
+from src.blueink.constants import EVENT_TYPE
+
+WEBHOOK_01 = {
+    "url": "https://www.example.com/01/",
+    "enabled": True,
+    "json": True,
+    "event_types": [
+        EVENT_TYPE.EVENT_BUNDLE_LAUNCHED,
+        EVENT_TYPE.EVENT_BUNDLE_COMPLETE,
+    ]
+}
+
+WEBHOOK_01_UPDATE = {
+    "enabled": False,
+    "event_types": [
+        EVENT_TYPE.EVENT_PACKET_VIEWED
+    ]
+}
+
+WEBHOOK_01_EXTRA_HEADER_A = {
+    "name": "Courage_The_Cowardly_Webhook",
+    "value": "Muriel Bagge",
+    "order": 0,
+}
+
+client = Client()
+
+# --------------
+# Attempt posting a new Webhook
+# --------------
+try:
+    create_resp = client.webhooks.create(data=WEBHOOK_01)
+    webhook = create_resp.data
+    print(f"Created webhook {webhook.id}")
+except HTTPError as e:
+    print("Error Creating Webhook: ")
+    print(e)
+
+# --------------
+# Update Webhook
+# --------------
+try:
+    update_resp = client.webhooks.update(webhook.id, WEBHOOK_01_UPDATE)
+    webhook = update_resp.data
+    print(f"Updated webhook {webhook.id}")
+except HTTPError as e:
+    print("Error Updating Webhook: ")
+    print(e)
+
+# --------------
+# Create and add an ExtraHeader to the above Webhook
+# --------------
+extra_header_data = deepcopy(WEBHOOK_01_EXTRA_HEADER_A)
+extra_header_data["webhook"] = webhook.id
+try:
+    header_create_resp = client.webhooks.create_header(data=extra_header_data)
+    header = header_create_resp.data
+    print(f"Added ExtraHeader {header} to {webhook.id}")
+except HTTPError as e:
+    print("Error Creating ExtraHeader: ")
+    print(e)
+
+
+# --------------
+# List Webhooks
+# --------------
+try:
+    list_resp = client.webhooks.list()
+    webhook_list = list_resp.data
+
+    print(f"Found {len(webhook_list)} Webhooks")
+    for wh in webhook_list:
+        print(f" - Webhook ID: {wh.id} to {wh.url}")
+
+
+except HTTPError as e:
+    print("Error Listing Webhooks: ")
+    print(e)
+
+# --------------
+# Delete webhook
+# --------------
+try:
+    delete_resp = client.webhooks.delete(webhook.id)
+    print(f"Deleted Webhook {webhook.id}")
+except HTTPError as e:
+    print(f"Error Deleting Webhooks {webhook.id}")
+    print(e)
 ```
