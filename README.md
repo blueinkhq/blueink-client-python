@@ -365,7 +365,7 @@ doc02_key = bh.add_document_by_b64(filename, pdf_b64)
 
 # 3) Add a document that you have already read into a Python bytearray object
 filename, pdf_bytearray = read_a_file_into_bytearray()
-doc03_key = bh.add_document_by_bytearray(pdf_bytearray, filename)
+doc03_key = bh.add_document_by_bytearray(filename, pdf_bytearray)
 
 # 4) Add a document as a File object. Make sure to use 'with' or suitably close the file
 #    after creating the document.
