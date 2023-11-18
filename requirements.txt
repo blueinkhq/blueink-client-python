@@ -1,5 +1,6 @@
 munch~=2.5
-requests~=2.27
+requests~=2.31.0
 pydantic~=1.9
 email-validator~=1.2
 pre-commit~=2.20
+certifi>=2023.7.22 # not directly required, pinned by Snyk to avoid a vulnerability
