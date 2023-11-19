@@ -3,3 +3,4 @@ requests~=2.27
 pydantic~=1.9
 email-validator~=1.2
 pre-commit~=2.20
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
