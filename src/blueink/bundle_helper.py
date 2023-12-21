@@ -128,7 +128,7 @@ class BundleHelper:
         return document.key
 
     def add_document_by_bytearray(
-        self, byte_array: bytearray, filename: str, **additional_data
+        self, filename: str, byte_array: bytearray, **additional_data
     ) -> str:
         """Add a file using a python bytearray object
 

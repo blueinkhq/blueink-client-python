@@ -1,6 +1,5 @@
 import requests
 from munch import munchify
-from requests import Request, Session
 
 from blueink.constants import BLUEINK_PAGINATION_HEADER
 
@@ -120,6 +119,5 @@ class RequestHelper:
         )
 
         if self._raise_exceptions:
-            # print(response.content)
             response.raise_for_status()
         return NormalizedResponse(response)
