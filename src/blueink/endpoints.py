@@ -36,6 +36,11 @@ class TEMPLATES:
     RETRIEVE = "/templates/${template_id}/"
 
 
+class ENVELOPE_TEMPLATES:
+    LIST = "/envelope-templates/"
+    RETRIEVE = "/envelope-templates/${envelope_template_id}/"
+
+
 class WEBHOOKS:
     CREATE = "/webhooks/"
     LIST = "/webhooks/"

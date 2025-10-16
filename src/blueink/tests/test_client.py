@@ -503,3 +503,29 @@ class TestClientWebhook(TestCase):
     # -----------------
     # Secret testing not implemented, will tamper with whoever runs this test suite
     # -----------------
+
+
+# -----------------
+# Envelope Template Subclient Tests
+# -----------------
+class TestClientEnvelopeTemplate(TestCase):
+    def test_envelope_template_listing(self):
+        client = Client(raise_exceptions=False)
+        resp = client.envelope_templates.list()
+        self.assert_equal(resp.status, 200)
+        self.assert_not_none(resp.data)
+
+    def test_envelope_template_retrieval(self):
+        client = Client(raise_exceptions=False)
+
+        # First get a list to find a valid template ID
+        resp_list = client.envelope_templates.list()
+        self.assert_equal(resp_list.status, 200)
+
+        # If there are templates, test retrieval
+        if len(resp_list.data) > 0:
+            template_id = resp_list.data[0]["id"]
+            resp = client.envelope_templates.retrieve(template_id)
+            self.assert_equal(resp.status, 200)
+            self.assert_not_none(resp.data)
+            self.assert_equal(resp.data["id"], template_id)
