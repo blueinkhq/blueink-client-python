@@ -62,4 +62,3 @@ class EnvelopeTemplateSubClient(SubClient):
             envelope_template_id=envelope_template_id,
         )
         return self._requests.get(url)
-
