@@ -1,5 +1,5 @@
 munch~=2.5
-requests~=2.27
+requests~=2.31
 pydantic~=1.9
 email-validator~=1.2
 pre-commit~=2.20

@@ -45,7 +45,7 @@ class PersonSubClient(SubClient):
 
         Typical Usage:
             for page in client.persons.paged_list():
-                page.body -> munch of json
+                page.data -> response data
 
         Args:
             page: start page (default 1)
