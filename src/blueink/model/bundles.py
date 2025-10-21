@@ -176,6 +176,43 @@ class TemplateRefFieldValue(BaseModel):
         return obj
 
 
+class EnvelopeTemplateFieldValue(BaseModel):
+    """Model for field values in envelope templates"""
+
+    key: str = ...
+    initial_value: str = ...
+
+    class Config:
+        extra = "allow"
+
+    @classmethod
+    def create(cls, key, initial_value, **kwargs):
+        obj = EnvelopeTemplateFieldValue(key=key, initial_value=initial_value, **kwargs)
+        return obj
+
+
+class EnvelopeTemplate(BaseModel):
+    """Model for envelope template reference"""
+
+    template_id: str = ...
+    field_values: Optional[List[EnvelopeTemplateFieldValue]]
+
+    class Config:
+        extra = "allow"
+
+    @classmethod
+    def create(cls, template_id, field_values=None, **kwargs):
+        obj = EnvelopeTemplate(
+            template_id=template_id, field_values=field_values, **kwargs
+        )
+        return obj
+
+    def add_field_value(self, field_value: EnvelopeTemplateFieldValue):
+        if self.field_values is None:
+            self.field_values = []
+        self.field_values.append(field_value)
+
+
 class TemplateRef(BaseModel):
     template_id: Optional[str]
     assignments: Optional[List[TemplateRefAssignment]]
