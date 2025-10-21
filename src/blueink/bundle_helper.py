@@ -4,6 +4,7 @@ from os.path import basename
 from typing import List
 
 from blueink.model.bundles import (
+    AutoPlacement,
     Bundle,
     Document,
     Field,
@@ -251,6 +252,72 @@ class BundleHelper:
 
         self._documents[document_key].add_field(field)
         return field.key
+
+    def add_auto_placement(
+        self,
+        document_key: str,
+        kind: str,
+        search: str,
+        w: int,
+        h: int,
+        offset_x: int = 0,
+        offset_y: int = 0,
+        editors: List[str] = None,
+        page: int = None,
+        **additional_data,
+    ):
+        """Add an auto-placement field to a document.
+
+        Auto-placement fields automatically search for text in the document and place
+        the field at the found location with optional offsets.
+
+        Args:
+            document_key: Key of the document to add the auto-placement to
+            kind: Field type (e.g., 'sig' for signature, 'inp' for input, 'ini' for initials)
+            search: Text to search for in the document
+            w: Width of the field
+            h: Height of the field
+            offset_x: Horizontal offset from the search text (default: 0)
+            offset_y: Vertical offset from the search text (default: 0)
+            editors: List of signer keys who can edit this field
+            page: Optional page number to limit search to
+            additional_data: Optional additional kwargs to append to the auto-placement
+
+        Returns:
+            None (auto-placements don't have keys like regular fields)
+
+        Example:
+            # Add a signature field that searches for "Signature" text
+            bh.add_auto_placement(
+                document_key=doc_key,
+                kind='sig',
+                search='Signature',
+                w=20,
+                h=5,
+                offset_x=-5,
+                offset_y=2,
+                editors=['signer-1']
+            )
+        """
+        if document_key not in self._documents:
+            raise RuntimeError(f"No document found with key {document_key}!")
+
+        auto_placement = AutoPlacement.create(
+            kind=kind,
+            search=search,
+            w=w,
+            h=h,
+            offset_x=offset_x,
+            offset_y=offset_y,
+            page=page,
+            **additional_data,
+        )
+
+        if editors:
+            for editor_key in editors:
+                auto_placement.add_editor(editor_key)
+
+        self._documents[document_key].add_auto_placement(auto_placement)
 
     def add_signer(
         self,

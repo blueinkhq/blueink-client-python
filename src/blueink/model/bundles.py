@@ -17,6 +17,70 @@ def generate_key(type, length=5):
     return f"{type}_{slug}"
 
 
+class AutoPlacement(BaseModel):
+    """Model for auto-placement fields that automatically find and place fields on documents"""
+
+    kind: str = ...
+    search: str = ...
+    w: int = ...
+    h: int = ...
+    offset_x: Optional[int] = 0
+    offset_y: Optional[int] = 0
+    editors: Optional[List[str]]
+    page: Optional[int]
+
+    class Config:
+        extra = "allow"
+
+    @classmethod
+    def create(
+        cls,
+        kind: str,
+        search: str,
+        w: int,
+        h: int,
+        offset_x: int = 0,
+        offset_y: int = 0,
+        **kwargs,
+    ):
+        """Create an AutoPlacement instance
+
+        Args:
+            kind: Field type (e.g., 'sig', 'inp', 'ini', etc.)
+            search: Text to search for in the document
+            w: Width of the field
+            h: Height of the field
+            offset_x: Horizontal offset from the search text (default: 0)
+            offset_y: Vertical offset from the search text (default: 0)
+            **kwargs: Additional parameters like editors, page, etc.
+
+        Returns:
+            AutoPlacement instance
+        """
+        obj = AutoPlacement(
+            kind=kind,
+            search=search,
+            w=w,
+            h=h,
+            offset_x=offset_x,
+            offset_y=offset_y,
+            **kwargs,
+        )
+        return obj
+
+    @validator("kind")
+    def kind_is_allowed(cls, v):
+        assert (
+            v in FIELD_KIND.values()
+        ), f"AutoPlacement Kind '{v}' not allowed. Must be one of {FIELD_KIND.values()}"
+        return v
+
+    def add_editor(self, editor: str):
+        if self.editors is None:
+            self.editors = []
+        self.editors.append(editor)
+
+
 class Field(BaseModel):
     kind: str = ...
     key: str = ...
@@ -147,6 +211,7 @@ class Document(BaseModel):
     file_b64: Optional[str]
     file_index: Optional[int]
     fields: Optional[List[Field]]
+    auto_placements: Optional[List[AutoPlacement]]
 
     class Config:
         extra = "allow"
@@ -162,6 +227,16 @@ class Document(BaseModel):
         if self.fields is None:
             self.fields = []
         self.fields.append(field)
+
+    def add_auto_placement(self, auto_placement: AutoPlacement):
+        """Add an auto-placement to this document
+
+        Args:
+            auto_placement: AutoPlacement instance to add
+        """
+        if self.auto_placements is None:
+            self.auto_placements = []
+        self.auto_placements.append(auto_placement)
 
     def add_assignment(self, assignment: TemplateRefAssignment):
         if self.assignments is None:
