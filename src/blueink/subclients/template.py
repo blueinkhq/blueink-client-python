@@ -5,6 +5,9 @@ from blueink.subclients.subclient import SubClient
 
 
 class TemplateSubClient(SubClient):
+    def __init__(self, base_url, private_api_key):
+        super().__init__(base_url, private_api_key)
+
     def paged_list(
         self, page: int = 1, per_page: int = 50, **query_params
     ) -> PaginatedIterator:

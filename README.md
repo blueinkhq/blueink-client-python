@@ -424,8 +424,6 @@ response = client.bundles.create_from_bundle_helper(bh)
 - Automatically adjusts to text position in the document
 - Can be combined with regular manually-positioned fields
 
-For more details and examples, see the [Auto-Placement Documentation](docs/AUTO_PLACEMENT.md).
-
 #### Retrieval
 
 Getting a single bundle is fairly easy. They can be accessed with a single call. To get

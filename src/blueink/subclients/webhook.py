@@ -4,6 +4,9 @@ from blueink.subclients.subclient import SubClient
 
 
 class WebhookSubClient(SubClient):
+    def __init__(self, base_url, private_api_key):
+        super().__init__(base_url, private_api_key)
+
     # ----------
     # Webhooks
     # ----------
