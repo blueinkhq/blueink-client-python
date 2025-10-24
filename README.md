@@ -373,6 +373,56 @@ with open("/path/to/file/example.pdf", 'rb') as file:
     doc04_key = bh.add_document_by_file(file)
 ```
 
+#### Auto-Placement Fields
+
+Auto-placement fields allow you to automatically search for text in documents and place
+signature/input fields at those locations with optional offsets. This eliminates the need
+to manually specify exact coordinates for fields.
+
+```python
+from blueink import BundleHelper, Client
+
+bh = BundleHelper(
+    label="Auto-Placement Example",
+    email_subject="Please sign",
+    is_test=True,
+)
+
+signer_key = bh.add_signer(name="John Doe", email="john@example.com")
+doc_key = bh.add_document_by_url("https://www.irs.gov/pub/irs-pdf/fw9.pdf")
+
+# Add auto-placement field that searches for "Signature" text
+bh.add_auto_placement(
+    document_key=doc_key,
+    kind="sig",              # Field type: signature
+    search="Signature",      # Text to search for
+    w=20,                    # Width
+    h=5,                     # Height
+    offset_x=-5,             # Move 5 units left from found text
+    offset_y=2,              # Move 2 units down from found text
+    editors=[signer_key],
+)
+
+# Add auto-placement for an input field
+bh.add_auto_placement(
+    document_key=doc_key,
+    kind="inp",              # Field type: input
+    search="Address",        # Text to search for
+    w=20,
+    h=2,
+    offset_x=8,              # Move 8 units right from found text
+    editors=[signer_key],
+)
+
+client = Client()
+response = client.bundles.create_from_bundle_helper(bh)
+```
+
+**Key benefits of auto-placement:**
+- No need to manually find exact coordinates
+- Works with template documents that have consistent text labels
+- Automatically adjusts to text position in the document
+- Can be combined with regular manually-positioned fields
 
 #### Retrieval
 

@@ -4,8 +4,11 @@ from os.path import basename
 from typing import List
 
 from blueink.model.bundles import (
+    AutoPlacement,
     Bundle,
     Document,
+    EnvelopeTemplate,
+    EnvelopeTemplateFieldValue,
     Field,
     Packet,
     TemplateRef,
@@ -49,6 +52,7 @@ class BundleHelper:
         self._packets = {}
         self._custom_key = custom_key
         self._team = team
+        self._envelope_template = None
 
         # for file uploads, index should match those in the document "file_index" field
         self.file_names = []
@@ -252,6 +256,72 @@ class BundleHelper:
         self._documents[document_key].add_field(field)
         return field.key
 
+    def add_auto_placement(
+        self,
+        document_key: str,
+        kind: str,
+        search: str,
+        w: int,
+        h: int,
+        offset_x: int = 0,
+        offset_y: int = 0,
+        editors: List[str] = None,
+        page: int = None,
+        **additional_data,
+    ):
+        """Add an auto-placement field to a document.
+
+        Auto-placement fields automatically search for text in the document and place
+        the field at the found location with optional offsets.
+
+        Args:
+            document_key: Key of the document to add the auto-placement to
+            kind: Field type (e.g., 'sig' for signature, 'inp' for input, 'ini' for initials)
+            search: Text to search for in the document
+            w: Width of the field
+            h: Height of the field
+            offset_x: Horizontal offset from the search text (default: 0)
+            offset_y: Vertical offset from the search text (default: 0)
+            editors: List of signer keys who can edit this field
+            page: Optional page number to limit search to
+            additional_data: Optional additional kwargs to append to the auto-placement
+
+        Returns:
+            None (auto-placements don't have keys like regular fields)
+
+        Example:
+            # Add a signature field that searches for "Signature" text
+            bh.add_auto_placement(
+                document_key=doc_key,
+                kind='sig',
+                search='Signature',
+                w=20,
+                h=5,
+                offset_x=-5,
+                offset_y=2,
+                editors=['signer-1']
+            )
+        """
+        if document_key not in self._documents:
+            raise RuntimeError(f"No document found with key {document_key}!")
+
+        auto_placement = AutoPlacement.create(
+            kind=kind,
+            search=search,
+            w=w,
+            h=h,
+            offset_x=offset_x,
+            offset_y=offset_y,
+            page=page,
+            **additional_data,
+        )
+
+        if editors:
+            for editor_key in editors:
+                auto_placement.add_editor(editor_key)
+
+        self._documents[document_key].add_auto_placement(auto_placement)
+
     def add_signer(
         self,
         name: str,
@@ -347,6 +417,64 @@ class BundleHelper:
         field_val = TemplateRefFieldValue.create(key, value, **additional_data)
         self._documents[document_key].field_values.append(field_val)
 
+    def set_envelope_template(
+        self, template_id: str, field_values: dict = None, **additional_data
+    ):
+        """Set the envelope template for this bundle.
+
+        When using an envelope template, the template contains the complete envelope
+        configuration including documents, signers, and field assignments.
+
+        Args:
+            template_id: Envelope template ID (format: T-xxxxxxxxxxx)
+            field_values: Optional dict mapping field keys to initial values
+            additional_data: Optional additional kwargs to append to the envelope template
+
+        Example:
+            bh = BundleHelper(label="Contract", is_test=True)
+            bh.add_signer(name="John Doe", email="john@example.com", key="signer-1")
+            bh.set_envelope_template(
+                template_id="T-abc123",
+                field_values={"company_name": "ACME Corp"}
+            )
+        """
+        vals = []
+        if field_values:
+            for field_key, init_val in field_values.items():
+                fieldval = EnvelopeTemplateFieldValue.create(
+                    key=field_key, initial_value=init_val
+                )
+                vals.append(fieldval)
+
+        self._envelope_template = EnvelopeTemplate.create(
+            template_id=template_id,
+            field_values=vals if vals else None,
+            **additional_data,
+        )
+
+    def add_envelope_template_field_value(
+        self, key: str, initial_value: str, **additional_data
+    ):
+        """Add a field value to the envelope template.
+
+        Args:
+            key: Field key in the envelope template
+            initial_value: Initial value for the field
+            additional_data: Optional additional kwargs
+
+        Raises:
+            RuntimeError: If no envelope template has been set
+        """
+        if self._envelope_template is None:
+            raise RuntimeError(
+                "No envelope template set. Call set_envelope_template() first."
+            )
+
+        field_val = EnvelopeTemplateFieldValue.create(
+            key=key, initial_value=initial_value, **additional_data
+        )
+        self._envelope_template.add_field_value(field_val)
+
     def _compile_bundle(self, **additional_data) -> Bundle:
         """
         Builds a Bundle object complete with all the packets (signers) and documents added through the course
@@ -383,6 +511,61 @@ class BundleHelper:
         """
         bundle = self._compile_bundle(**additional_data)
         return bundle.dict(exclude_unset=True, exclude_none=True)
+
+    def as_data_for_envelope_template(self, **additional_data):
+        """Return data for creating a bundle from an envelope template.
+
+        This method is used when creating a bundle from an envelope template.
+        It returns a dictionary with packets and envelope_template fields.
+
+        Args:
+            additional_data: extra data to append to the request, as a dict
+
+        Returns:
+            Dictionary suitable for create_from_envelope_template endpoint
+
+        Raises:
+            RuntimeError: If no envelope template has been set
+
+        Example:
+            bh = BundleHelper(label="Contract", is_test=True)
+            bh.add_signer(name="John Doe", email="john@example.com", key="signer-1")
+            bh.set_envelope_template("T-abc123", {"company_name": "ACME"})
+            data = bh.as_data_for_envelope_template()
+        """
+        if self._envelope_template is None:
+            raise RuntimeError(
+                "No envelope template set. Call set_envelope_template() first."
+            )
+
+        packets = list(self._packets.values())
+        result = {
+            "packets": [p.dict(exclude_unset=True, exclude_none=True) for p in packets],
+            "envelope_template": self._envelope_template.dict(
+                exclude_unset=True, exclude_none=True
+            ),
+        }
+
+        # Add optional bundle fields
+        if self._label:
+            result["label"] = self._label
+        if self._is_test is not None:
+            result["is_test"] = self._is_test
+        if self._email_subj:
+            result["email_subject"] = self._email_subj
+        if self._email_msg:
+            result["email_message"] = self._email_msg
+        if self._cc_emails:
+            result["cc_emails"] = self._cc_emails
+        if self._custom_key:
+            result["custom_key"] = self._custom_key
+        if self._team:
+            result["team"] = self._team
+
+        # Add any additional data
+        result.update(additional_data)
+
+        return result
 
     def as_json(self, **additional_data):
         """Return a Bundle as a json

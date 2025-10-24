@@ -103,6 +103,78 @@ class BundleSubClient(SubClient):
         files = bdl_helper.files
         return self.create(data=data, files=files)
 
+    def create_from_envelope_template(self, data: dict) -> NormalizedResponse:
+        """Create a Bundle from an envelope template.
+
+        This method creates a bundle using a pre-configured envelope template.
+        The envelope template contains complete envelope configurations including
+        documents, signers, and field assignments.
+
+        Args:
+            data: raw data for Bundle creation from envelope template, expressed as a python dict.
+                  Must include:
+                  - packets: list of signer information with keys matching template packet keys
+                  - envelope_template: dict with template_id and optional field_values
+                  Optional fields:
+                  - label: envelope label
+                  - is_test: whether this is a test envelope (default: False)
+
+        Returns:
+            NormalizedResponse object
+
+        Example:
+            data = {
+                "label": "Contract from Envelope Template",
+                "is_test": True,
+                "packets": [
+                    {
+                        "key": "signer-1",
+                        "name": "John Doe",
+                        "email": "john@example.com"
+                    }
+                ],
+                "envelope_template": {
+                    "template_id": "T-xxxxxxxxxxx",
+                    "field_values": [
+                        {
+                            "key": "company_name",
+                            "initial_value": "ACME Corporation"
+                        }
+                    ]
+                }
+            }
+            response = client.bundles.create_from_envelope_template(data)
+        """
+        if not data:
+            raise ValueError("data is required")
+
+        url = self.build_url(endpoints.BUNDLES.CREATE_FROM_ENVELOPE_TEMPLATE)
+        response = self._requests.post(url, json=data)
+
+        return response
+
+    def create_from_envelope_template_helper(
+        self, bdl_helper: BundleHelper
+    ) -> NormalizedResponse:
+        """Create a Bundle from an envelope template using BundleHelper.
+
+        Provided as a convenience to simplify creating a Bundle from an envelope template.
+
+        Args:
+            bdl_helper: BundleHelper that has been configured with envelope template.
+
+        Returns:
+            NormalizedResponse object
+
+        Example:
+            bh = BundleHelper(label="Contract", is_test=True)
+            bh.add_signer(name="John Doe", email="john@example.com", key="signer-1")
+            bh.set_envelope_template("T-abc123", {"company_name": "ACME"})
+            response = client.bundles.create_from_envelope_template_helper(bh)
+        """
+        data = bdl_helper.as_data_for_envelope_template()
+        return self.create_from_envelope_template(data=data)
+
     def paged_list(
         self,
         page: int = 1,

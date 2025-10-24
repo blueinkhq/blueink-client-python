@@ -186,3 +186,133 @@ class TestBundleHelper(TestCase):
             self.assert_equal(compiled_bundle["packets"][0][k], v)
         for k, v in signer02_data.items():
             self.assert_equal(compiled_bundle["packets"][1][k], v)
+
+    def test_adding_auto_placements(self):
+        """Test adding auto-placement fields to a document"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        url01 = self.DOCUMENT_01_URL
+        signer01_data = copy.deepcopy(self.SIGNER_01_DATA)
+
+        bh = BundleHelper(**input_data)
+        doc01_key = bh.add_document_by_url(url01)
+        signer01_key = bh.add_signer(**signer01_data)
+
+        # Add auto-placement for signature
+        bh.add_auto_placement(
+            document_key=doc01_key,
+            kind="sig",
+            search="Signature",
+            w=20,
+            h=5,
+            offset_x=-5,
+            offset_y=2,
+            editors=[signer01_key],
+        )
+
+        # Add auto-placement for input field
+        bh.add_auto_placement(
+            document_key=doc01_key,
+            kind="inp",
+            search="Address",
+            w=20,
+            h=2,
+            offset_x=8,
+            offset_y=0,
+            editors=[signer01_key],
+        )
+
+        compiled_bundle = bh.as_data()
+
+        # Verify document exists
+        self.assert_in("documents", compiled_bundle)
+        self.assert_len(compiled_bundle["documents"], 1)
+
+        # Verify auto_placements exist
+        self.assert_in("auto_placements", compiled_bundle["documents"][0])
+        self.assert_len(compiled_bundle["documents"][0]["auto_placements"], 2)
+
+        # Verify first auto-placement (signature)
+        auto_placement_1 = compiled_bundle["documents"][0]["auto_placements"][0]
+        self.assert_equal(auto_placement_1["kind"], "sig")
+        self.assert_equal(auto_placement_1["search"], "Signature")
+        self.assert_equal(auto_placement_1["w"], 20)
+        self.assert_equal(auto_placement_1["h"], 5)
+        self.assert_equal(auto_placement_1["offset_x"], -5)
+        self.assert_equal(auto_placement_1["offset_y"], 2)
+        self.assert_in(signer01_key, auto_placement_1["editors"])
+
+        # Verify second auto-placement (input)
+        auto_placement_2 = compiled_bundle["documents"][0]["auto_placements"][1]
+        self.assert_equal(auto_placement_2["kind"], "inp")
+        self.assert_equal(auto_placement_2["search"], "Address")
+        self.assert_equal(auto_placement_2["w"], 20)
+        self.assert_equal(auto_placement_2["h"], 2)
+        self.assert_equal(auto_placement_2["offset_x"], 8)
+        self.assert_equal(auto_placement_2["offset_y"], 0)
+        self.assert_in(signer01_key, auto_placement_2["editors"])
+
+    def test_auto_placements_with_regular_fields(self):
+        """Test that auto-placements and regular fields can coexist"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        url01 = self.DOCUMENT_01_URL
+        signer01_data = copy.deepcopy(self.SIGNER_01_DATA)
+        field01_data = copy.deepcopy(self.FIELD_01_DATA)
+
+        bh = BundleHelper(**input_data)
+        doc01_key = bh.add_document_by_url(url01)
+        signer01_key = bh.add_signer(**signer01_data)
+
+        # Add a regular field
+        field01_data["document_key"] = doc01_key
+        field01_data["editors"].append(signer01_key)
+        bh.add_field(**field01_data)
+
+        # Add an auto-placement
+        bh.add_auto_placement(
+            document_key=doc01_key,
+            kind="sig",
+            search="Sign Here",
+            w=25,
+            h=6,
+            offset_x=0,
+            offset_y=3,
+            editors=[signer01_key],
+        )
+
+        compiled_bundle = bh.as_data()
+
+        # Verify both fields and auto_placements exist
+        self.assert_in("documents", compiled_bundle)
+        doc = compiled_bundle["documents"][0]
+
+        self.assert_in("fields", doc)
+        self.assert_len(doc["fields"], 1)
+
+        self.assert_in("auto_placements", doc)
+        self.assert_len(doc["auto_placements"], 1)
+
+    def test_auto_placement_with_page_restriction(self):
+        """Test auto-placement with page number restriction"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        url01 = self.DOCUMENT_01_URL
+        signer01_data = copy.deepcopy(self.SIGNER_01_DATA)
+
+        bh = BundleHelper(**input_data)
+        doc01_key = bh.add_document_by_url(url01)
+        signer01_key = bh.add_signer(**signer01_data)
+
+        # Add auto-placement restricted to page 2
+        bh.add_auto_placement(
+            document_key=doc01_key,
+            kind="sig",
+            search="Page 2 Signature",
+            w=20,
+            h=5,
+            page=2,
+            editors=[signer01_key],
+        )
+
+        compiled_bundle = bh.as_data()
+        auto_placement = compiled_bundle["documents"][0]["auto_placements"][0]
+
+        self.assert_equal(auto_placement["page"], 2)
