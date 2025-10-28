@@ -7,6 +7,7 @@ from blueink.constants import (
 )
 from blueink.request_helper import RequestHelper
 from blueink.subclients.bundle import BundleSubClient
+from blueink.subclients.envelope_template import EnvelopeTemplateSubClient
 from blueink.subclients.packet import PacketSubClient
 from blueink.subclients.person import PersonSubClient
 from blueink.subclients.template import TemplateSubClient
@@ -69,4 +70,7 @@ class Client:
         self.persons = PersonSubClient(self._base_url, self._request_helper)
         self.packets = PacketSubClient(self._base_url, self._request_helper)
         self.templates = TemplateSubClient(self._base_url, self._request_helper)
+        self.envelope_templates = EnvelopeTemplateSubClient(
+            self._base_url, self._request_helper
+        )
         self.webhooks = WebhookSubClient(self._base_url, self._request_helper)

@@ -8,6 +8,7 @@ from string import Template
 
 class BUNDLES:
     CREATE = "/bundles/"
+    CREATE_FROM_ENVELOPE_TEMPLATE = "/bundles/create_from_envelope_template/"
     LIST = "/bundles/"
     RETRIEVE = "/bundles/${bundle_id}/"
     CANCEL = "/bundles/${bundle_id}/cancel/"
@@ -34,6 +35,11 @@ class PACKETS:
 class TEMPLATES:
     LIST = "/templates/"
     RETRIEVE = "/templates/${template_id}/"
+
+
+class ENVELOPE_TEMPLATES:
+    LIST = "/envelope-templates/"
+    RETRIEVE = "/envelope-templates/${envelope_template_id}/"
 
 
 class WEBHOOKS:
