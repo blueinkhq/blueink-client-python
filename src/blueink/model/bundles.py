@@ -28,6 +28,7 @@ class AutoPlacement(BaseModel):
     offset_y: Optional[int] = 0
     editors: Optional[List[str]]
     page: Optional[int]
+    v_attachment_types: Optional[List[str]]
 
     class Config:
         extra = "allow"
@@ -94,6 +95,7 @@ class Field(BaseModel):
     v_min: Optional[int]
     v_max: Optional[int]
     editors: Optional[List[str]]
+    v_attachment_types: Optional[List[str]]
 
     class Config:
         extra = "allow"
@@ -292,6 +294,7 @@ class Bundle(BaseModel):
     is_test: Optional[bool]
     custom_key: Optional[str]
     team: Optional[str]
+    signing_brand: Optional[str]
 
     class Config:
         extra = "allow"
