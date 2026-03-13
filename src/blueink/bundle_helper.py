@@ -28,6 +28,7 @@ class BundleHelper:
         is_test: bool = False,
         custom_key: str = None,
         team: str = None,
+        signing_brand: str = None,
     ):
         """Helper class to aid building a Bundle.
 
@@ -41,6 +42,7 @@ class BundleHelper:
             is_test:
             custom_key:
             team:
+            signing_brand:
         """
         self._label = label
         self._in_order = in_order
@@ -52,6 +54,7 @@ class BundleHelper:
         self._packets = {}
         self._custom_key = custom_key
         self._team = team
+        self._signing_brand = signing_brand
         self._envelope_template = None
 
         # for file uploads, index should match those in the document "file_index" field
@@ -209,6 +212,7 @@ class BundleHelper:
         v_pattern: str = None,
         v_min: int = None,
         v_max: int = None,
+        v_attachment_types: List[str] = None,
         key=None,
         **additional_data,
     ):
@@ -226,6 +230,7 @@ class BundleHelper:
             v_pattern: Optional
             v_min: Optional
             v_max: Optional
+            v_attachment_types: Optional list of allowed attachment file extensions (only for kind='att')
             editors: Optional
             key: Optional
             additional_data: Optional and will append any additional kwargs to the json of the field
@@ -247,6 +252,7 @@ class BundleHelper:
             v_pattern=v_pattern,
             v_min=v_min,
             v_max=v_max,
+            v_attachment_types=v_attachment_types,
             key=key,
             **additional_data,
         )
@@ -267,6 +273,7 @@ class BundleHelper:
         offset_y: int = 0,
         editors: List[str] = None,
         page: int = None,
+        v_attachment_types: List[str] = None,
         **additional_data,
     ):
         """Add an auto-placement field to a document.
@@ -284,6 +291,7 @@ class BundleHelper:
             offset_y: Vertical offset from the search text (default: 0)
             editors: List of signer keys who can edit this field
             page: Optional page number to limit search to
+            v_attachment_types: Optional list of allowed attachment file extensions (only for kind='att')
             additional_data: Optional additional kwargs to append to the auto-placement
 
         Returns:
@@ -313,6 +321,7 @@ class BundleHelper:
             offset_x=offset_x,
             offset_y=offset_y,
             page=page,
+            v_attachment_types=v_attachment_types,
             **additional_data,
         )
 
@@ -496,6 +505,7 @@ class BundleHelper:
             cc_emails=self._cc_emails,
             custom_key=self._custom_key,
             team=self._team,
+            signing_brand=self._signing_brand,
             **additional_data,
         )
         return bundle_out
@@ -561,6 +571,8 @@ class BundleHelper:
             result["custom_key"] = self._custom_key
         if self._team:
             result["team"] = self._team
+        if self._signing_brand:
+            result["signing_brand"] = self._signing_brand
 
         # Add any additional data
         result.update(additional_data)

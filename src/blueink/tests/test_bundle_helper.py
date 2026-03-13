@@ -316,3 +316,57 @@ class TestBundleHelper(TestCase):
         auto_placement = compiled_bundle["documents"][0]["auto_placements"][0]
 
         self.assert_equal(auto_placement["page"], 2)
+
+    def test_auto_placement_with_attachment_types(self):
+        """Test auto-placement with v_attachment_types restriction"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        url01 = self.DOCUMENT_01_URL
+        signer01_data = copy.deepcopy(self.SIGNER_01_DATA)
+
+        bh = BundleHelper(**input_data)
+        doc01_key = bh.add_document_by_url(url01)
+        signer01_key = bh.add_signer(**signer01_data)
+
+        bh.add_auto_placement(
+            document_key=doc01_key,
+            kind="att",
+            search="Upload your document",
+            w=20,
+            h=5,
+            v_attachment_types=["pdf", "png"],
+            editors=[signer01_key],
+        )
+
+        compiled_bundle = bh.as_data()
+        auto_placement = compiled_bundle["documents"][0]["auto_placements"][0]
+
+        self.assert_equal(auto_placement["kind"], "att")
+        self.assert_equal(auto_placement["v_attachment_types"], ["pdf", "png"])
+
+    def test_field_with_attachment_types(self):
+        """Test adding a field with v_attachment_types"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        url01 = self.DOCUMENT_01_URL
+        signer01_data = copy.deepcopy(self.SIGNER_01_DATA)
+
+        bh = BundleHelper(**input_data)
+        doc01_key = bh.add_document_by_url(url01)
+        signer01_key = bh.add_signer(**signer01_data)
+
+        bh.add_field(
+            document_key=doc01_key,
+            x=10,
+            y=20,
+            w=30,
+            h=10,
+            p=1,
+            kind="att",
+            editors=[signer01_key],
+            v_attachment_types=["pdf", "docx"],
+        )
+
+        compiled_bundle = bh.as_data()
+        field = compiled_bundle["documents"][0]["fields"][0]
+
+        self.assert_equal(field["kind"], "att")
+        self.assert_equal(field["v_attachment_types"], ["pdf", "docx"])
