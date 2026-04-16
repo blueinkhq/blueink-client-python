@@ -370,3 +370,78 @@ class TestBundleHelper(TestCase):
 
         self.assert_equal(field["kind"], "att")
         self.assert_equal(field["v_attachment_types"], ["pdf", "docx"])
+
+    def test_adding_document_via_html(self):
+        """Test adding a document using HTML content"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        html_content = "<html><body><p>Test document</p></body></html>"
+
+        bh = BundleHelper(**input_data)
+        doc_key = bh.add_document_by_html(html_content)
+
+        compiled_bundle = bh.as_data()
+
+        self.assert_in("documents", compiled_bundle)
+        self.assert_len(compiled_bundle["documents"], 1)
+
+        doc = compiled_bundle["documents"][0]
+        self.assert_in("file_html", doc)
+        self.assert_equal(doc["file_html"], html_content)
+        self.assert_equal(doc["key"], doc_key)
+
+    def test_adding_document_via_html_with_filename(self):
+        """Test adding an HTML document with a custom filename"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        html_content = "<html><body><p>Test document</p></body></html>"
+
+        bh = BundleHelper(**input_data)
+        bh.add_document_by_html(html_content, filename="my_doc.pdf")
+
+        compiled_bundle = bh.as_data()
+        doc = compiled_bundle["documents"][0]
+
+        self.assert_equal(doc["file_html"], html_content)
+        self.assert_equal(doc["filename"], "my_doc.pdf")
+
+    def test_adding_document_via_html_with_fields_mode(self):
+        """Test adding an HTML document with html_fields_mode"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        html_content = "<html><body><p>Test document</p></body></html>"
+
+        bh = BundleHelper(**input_data)
+        bh.add_document_by_html(html_content, html_fields_mode="blueink")
+
+        compiled_bundle = bh.as_data()
+        doc = compiled_bundle["documents"][0]
+
+        self.assert_equal(doc["file_html"], html_content)
+        self.assert_equal(doc["html_fields_mode"], "blueink")
+
+    def test_field_with_v_regex(self):
+        """Test adding a field with v_regex and v_regex_msg"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        url01 = self.DOCUMENT_01_URL
+        signer01_data = copy.deepcopy(self.SIGNER_01_DATA)
+
+        bh = BundleHelper(**input_data)
+        doc01_key = bh.add_document_by_url(url01)
+        signer01_key = bh.add_signer(**signer01_data)
+
+        bh.add_field(
+            document_key=doc01_key,
+            x=10,
+            y=20,
+            w=30,
+            h=10,
+            p=1,
+            kind="inp",
+            editors=[signer01_key],
+            v_regex="^[A-Z]+$",
+            v_regex_msg="Uppercase letters only",
+        )
+
+        compiled_bundle = bh.as_data()
+        field = compiled_bundle["documents"][0]["fields"][0]
+
+        self.assert_equal(field["v_regex"], "^[A-Z]+$")
+        self.assert_equal(field["v_regex_msg"], "Uppercase letters only")

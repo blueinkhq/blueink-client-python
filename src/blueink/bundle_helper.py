@@ -114,6 +114,20 @@ class BundleHelper:
 
         return self.add_document_by_b64(filename, b64str, **additional_data)
 
+    def add_document_by_html(self, html_content: str, **additional_data) -> str:
+        """Add a document using an HTML string for HTML-to-PDF conversion.
+
+        Args:
+            html_content: HTML content string
+            additional_data: Optional additional kwargs (e.g., filename, html_fields_mode)
+
+        Returns:
+            Document Key
+        """
+        document = Document.create(file_html=html_content, **additional_data)
+        self._documents[document.key] = document
+        return document.key
+
     def add_document_by_b64(self, filename: str, b64str: str, **additional_data):
         """Add a file using a b64 string; utf-8 encoded
 
@@ -212,6 +226,8 @@ class BundleHelper:
         v_pattern: str = None,
         v_min: int = None,
         v_max: int = None,
+        v_regex: str = None,
+        v_regex_msg: str = None,
         v_attachment_types: List[str] = None,
         key=None,
         **additional_data,
@@ -230,6 +246,8 @@ class BundleHelper:
             v_pattern: Optional
             v_min: Optional
             v_max: Optional
+            v_regex: Optional regular expression for field validation
+            v_regex_msg: Optional error message shown when v_regex validation fails
             v_attachment_types: Optional list of allowed attachment file extensions (only for kind='att')
             editors: Optional
             key: Optional
@@ -252,6 +270,8 @@ class BundleHelper:
             v_pattern=v_pattern,
             v_min=v_min,
             v_max=v_max,
+            v_regex=v_regex,
+            v_regex_msg=v_regex_msg,
             v_attachment_types=v_attachment_types,
             key=key,
             **additional_data,
