@@ -94,6 +94,8 @@ class Field(BaseModel):
     v_pattern: Optional[int]
     v_min: Optional[int]
     v_max: Optional[int]
+    v_regex: Optional[str]
+    v_regex_msg: Optional[str]
     editors: Optional[List[str]]
     v_attachment_types: Optional[List[str]]
 
@@ -248,9 +250,11 @@ class Document(BaseModel):
     file_url: Optional[str]
     filename: Optional[str]
     file_b64: Optional[str]
+    file_html: Optional[str]
     file_index: Optional[int]
     fields: Optional[List[Field]]
     auto_placements: Optional[List[AutoPlacement]]
+    html_fields_mode: Optional[str]
 
     class Config:
         extra = "allow"
