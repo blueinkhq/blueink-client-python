@@ -133,6 +133,8 @@ class Packet(BaseModel):
     deliver_via: Optional[str]
     person_id: Optional[str]
     order: Optional[str]
+    requires_witness: Optional[bool]
+    witness_nominated_by: Optional[str]
 
     class Config:
         extra = "allow"
