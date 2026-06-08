@@ -540,7 +540,7 @@ class BundleHelper:
             Bundle as dictionary
         """
         bundle = self._compile_bundle(**additional_data)
-        return bundle.dict(exclude_unset=True, exclude_none=True)
+        return bundle.model_dump(exclude_unset=True, exclude_none=True)
 
     def as_data_for_envelope_template(self, **additional_data):
         """Return data for creating a bundle from an envelope template.
@@ -570,8 +570,8 @@ class BundleHelper:
 
         packets = list(self._packets.values())
         result = {
-            "packets": [p.dict(exclude_unset=True, exclude_none=True) for p in packets],
-            "envelope_template": self._envelope_template.dict(
+            "packets": [p.model_dump(exclude_unset=True, exclude_none=True) for p in packets],
+            "envelope_template": self._envelope_template.model_dump(
                 exclude_unset=True, exclude_none=True
             ),
         }
@@ -609,4 +609,4 @@ class BundleHelper:
             Bundle as json
         """
         bundle = self._compile_bundle(**additional_data)
-        return bundle.json(exclude_unset=True, exclude_none=True)
+        return bundle.model_dump_json(exclude_unset=True, exclude_none=True)

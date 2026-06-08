@@ -139,7 +139,7 @@ class PersonHelper:
             metadata=self._metadata,
             channels=channels,
         )
-        out_dict = person_out.dict(
+        out_dict = person_out.model_dump(
             exclude_unset=True,
         )
 
