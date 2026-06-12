@@ -9,6 +9,7 @@ from string import Template
 class BUNDLES:
     CREATE = "/bundles/"
     CREATE_FROM_ENVELOPE_TEMPLATE = "/bundles/create_from_envelope_template/"
+    CREATE_PREPARATION_SESSION = "/bundles/create_preparation_session/"
     LIST = "/bundles/"
     RETRIEVE = "/bundles/${bundle_id}/"
     CANCEL = "/bundles/${bundle_id}/cancel/"
