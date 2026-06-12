@@ -6,6 +6,7 @@ from time import sleep
 from munch import Munch
 
 from blueink import BundleHelper, Client, PersonHelper
+from blueink import endpoints
 from blueink.constants import EVENT_TYPE
 from blueink.utils.testcase import TestCase
 
@@ -529,3 +530,34 @@ class TestClientEnvelopeTemplate(TestCase):
             self.assert_equal(resp.status, 200)
             self.assert_not_none(resp.data)
             self.assert_equal(resp.data["id"], template_id)
+
+
+# -----------------
+# Endpoint URL Construction Tests (CI-safe, no network)
+# -----------------
+class TestClientEndpoints(TestCase):
+    BASE_URL = "https://api.blueink.com/api/v2"
+
+    def _client(self) -> Client:
+        return Client(private_api_key="fake-key", base_url=self.BASE_URL)
+
+    def test_bundle_preparation_session_url(self):
+        client = self._client()
+        url = client.bundles.build_url(
+            endpoints.BUNDLES.CREATE_PREPARATION_SESSION
+        )
+        self.assert_equal(url, f"{self.BASE_URL}/bundles/preparation_session/")
+
+    def test_template_preparation_session_url(self):
+        client = self._client()
+        url = client.templates.build_url(
+            endpoints.TEMPLATES.CREATE_PREPARATION_SESSION
+        )
+        self.assert_equal(url, f"{self.BASE_URL}/templates/preparation_session/")
+
+    def test_template_update_url(self):
+        client = self._client()
+        url = client.templates.build_url(
+            endpoints.TEMPLATES.UPDATE, template_id="T-abc123"
+        )
+        self.assert_equal(url, f"{self.BASE_URL}/templates/T-abc123/")
