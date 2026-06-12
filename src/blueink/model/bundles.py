@@ -133,6 +133,8 @@ class Packet(BaseModel):
     deliver_via: Optional[str]
     person_id: Optional[str]
     order: Optional[str]
+    requires_witness: Optional[bool]
+    witness_nominated_by: Optional[str]
 
     class Config:
         extra = "allow"
@@ -287,6 +289,46 @@ class Document(BaseModel):
         self.assignments.append(assignment)
 
 
+class ImportedDocument(BaseModel):
+    """Model for documents in an imported bundle.
+
+    Each imported document must have exactly one of file_b64 or file_html.
+    Providing both or neither will raise a ValidationError.
+    """
+
+    key: Optional[str]
+    filename: Optional[str]
+    file_b64: Optional[str]
+    file_html: Optional[str]
+    file_url: Optional[str]
+    file_index: Optional[int]
+    fields: Optional[list]
+
+    class Config:
+        extra = "allow"
+
+    @validator("file_html", always=True)
+    def validate_file_source(cls, file_html, values):
+        file_b64 = values.get("file_b64")
+        has_b64 = bool(file_b64)
+        has_html = bool(file_html)
+
+        if has_b64 and has_html:
+            raise ValueError("Provide only one of 'file_b64' or 'file_html', not both")
+
+        if not has_b64 and not has_html:
+            raise ValueError("Each document must have either 'file_b64' or 'file_html'")
+
+        return file_html
+
+    @classmethod
+    def create(cls, key=None, **kwargs):
+        if not key:
+            key = generate_key("doc", 5)
+        obj = ImportedDocument(key=key, **kwargs)
+        return obj
+
+
 class Bundle(BaseModel):
     packets: List[Packet] = ...
     documents: List[Document] = ...
@@ -299,6 +341,7 @@ class Bundle(BaseModel):
     custom_key: Optional[str]
     team: Optional[str]
     signing_brand: Optional[str]
+    expires: Optional[str]
 
     class Config:
         extra = "allow"

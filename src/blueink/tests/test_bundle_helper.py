@@ -1,8 +1,11 @@
 import copy
+from datetime import datetime, timezone, timedelta
 
+import pytest
 from munch import Munch
 
 from blueink.bundle_helper import BundleHelper
+from blueink.model.bundles import ImportedDocument
 from blueink.utils.testcase import TestCase
 
 
@@ -371,6 +374,63 @@ class TestBundleHelper(TestCase):
         self.assert_equal(field["kind"], "att")
         self.assert_equal(field["v_attachment_types"], ["pdf", "docx"])
 
+    def test_bundle_with_expires_iso_format(self):
+        """Test that expires field is passed through in ISO format"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        future_datetime = (datetime.now(tz=timezone.utc) + timedelta(days=30)).replace(
+            hour=23, minute=59, second=59, microsecond=0
+        )
+        expires_iso = future_datetime.isoformat()
+
+        bh = BundleHelper(**input_data, expires=expires_iso)
+        compiled_bundle = bh.as_data()
+
+        self.assert_in("expires", compiled_bundle)
+        self.assert_equal(compiled_bundle["expires"], expires_iso)
+
+    def test_bundle_without_expires(self):
+        """Test that expires field is absent when not set"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        bh = BundleHelper(**input_data)
+        compiled_bundle = bh.as_data()
+
+        self.assert_not_in("expires", compiled_bundle)
+
+    def test_add_signer_with_witness_fields(self):
+        """Test that requires_witness and witness_nominated_by pass through to the packet"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        signer01_data = copy.deepcopy(self.SIGNER_01_DATA)
+
+        bh = BundleHelper(**input_data)
+        signer01_key = bh.add_signer(
+            **signer01_data,
+            requires_witness=True,
+            witness_nominated_by="signer",
+        )
+        compiled_bundle = bh.as_data()
+
+        self.assert_len(compiled_bundle["packets"], 1)
+        packet = compiled_bundle["packets"][0]
+        self.assert_equal(packet["key"], signer01_key)
+        self.assert_in("requires_witness", packet)
+        self.assert_equal(packet["requires_witness"], True)
+        self.assert_in("witness_nominated_by", packet)
+        self.assert_equal(packet["witness_nominated_by"], "signer")
+
+    def test_add_signer_without_witness_fields(self):
+        """Test that witness fields are absent on the packet when not set"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        signer01_data = copy.deepcopy(self.SIGNER_01_DATA)
+
+        bh = BundleHelper(**input_data)
+        bh.add_signer(**signer01_data)
+        compiled_bundle = bh.as_data()
+
+        self.assert_len(compiled_bundle["packets"], 1)
+        packet = compiled_bundle["packets"][0]
+        self.assert_not_in("requires_witness", packet)
+        self.assert_not_in("witness_nominated_by", packet)
+
     def test_adding_document_via_html(self):
         """Test adding a document using HTML content"""
         input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
@@ -445,3 +505,58 @@ class TestBundleHelper(TestCase):
 
         self.assert_equal(field["v_regex"], "^[A-Z]+$")
         self.assert_equal(field["v_regex_msg"], "Uppercase letters only")
+
+
+class TestImportedDocument(TestCase):
+    def test_create_with_file_b64(self):
+        """Test creating an ImportedDocument with file_b64"""
+        doc = ImportedDocument.create(file_b64="dGVzdA==", filename="test.pdf")
+        self.assert_not_none(doc.key)
+        self.assert_equal(doc.file_b64, "dGVzdA==")
+        self.assert_equal(doc.filename, "test.pdf")
+        self.assert_none(doc.file_html)
+
+    def test_create_with_file_html(self):
+        """Test creating an ImportedDocument with file_html"""
+        html = "<html><body><p>Test</p></body></html>"
+        doc = ImportedDocument.create(file_html=html)
+        self.assert_not_none(doc.key)
+        self.assert_equal(doc.file_html, html)
+        self.assert_none(doc.file_b64)
+
+    def test_create_with_custom_key(self):
+        """Test creating an ImportedDocument with a custom key"""
+        doc = ImportedDocument.create(key="my-doc", file_b64="dGVzdA==")
+        self.assert_equal(doc.key, "my-doc")
+
+    def test_create_with_file_url_and_file_b64(self):
+        """Test creating an ImportedDocument with file_url and file_b64"""
+        doc = ImportedDocument.create(
+            file_b64="dGVzdA==",
+            file_url="https://example.com/test.pdf",
+            filename="test.pdf",
+        )
+        self.assert_equal(doc.file_b64, "dGVzdA==")
+        self.assert_equal(doc.file_url, "https://example.com/test.pdf")
+
+    def test_validation_error_both_file_b64_and_file_html(self):
+        """Test that providing both file_b64 and file_html raises a ValidationError"""
+        with pytest.raises(Exception) as exc_info:
+            ImportedDocument.create(
+                file_b64="dGVzdA==",
+                file_html="<html><body></body></html>",
+            )
+        self.assert_in("file_b64", str(exc_info.value))
+        self.assert_in("file_html", str(exc_info.value))
+
+    def test_validation_error_neither_file_b64_nor_file_html(self):
+        """Test that providing neither file_b64 nor file_html raises a ValidationError"""
+        with pytest.raises(Exception) as exc_info:
+            ImportedDocument.create()
+        self.assert_in("file_b64", str(exc_info.value))
+        self.assert_in("file_html", str(exc_info.value))
+
+    def test_validation_error_file_url_only(self):
+        """Test that providing only file_url raises a ValidationError"""
+        with pytest.raises(Exception):
+            ImportedDocument.create(file_url="https://example.com/test.pdf")

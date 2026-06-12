@@ -320,3 +320,32 @@ class BundleSubClient(SubClient):
         """
         url = self.build_url(endpoints.BUNDLES.LIST_DATA, bundle_id=bundle_id)
         return self._requests.get(url)
+
+    def create_preparation_session(self, data: dict) -> NormalizedResponse:
+        """Create an embedded document preparation session.
+
+        Creates a secure, time-limited URL that can be embedded in an iframe to allow
+        end users to prepare documents for signing through your application.
+
+        At least one document source must be enabled: either upload_pdf=True or
+        template_ids/folder_ids must be provided.
+
+        Args:
+            data: configuration for the preparation session. Supported keys:
+                - upload_pdf (bool): whether to allow PDF uploads (default True)
+                - draft_bundle (str, optional): slug of an existing draft bundle
+                - template_ids (list, optional): list of template UUIDs to restrict to
+                - folder_ids (list, optional): list of folder BUIDs to restrict to
+                - redirect_url (str, optional): URL to redirect to after preparation
+                - allow_search_signers (bool, optional): whether to allow signer search
+
+        Returns:
+            NormalizedResponse object with keys:
+                - url: the preparation session URL to embed in an iframe
+                - expires: ISO 8601 timestamp when the session URL expires
+        """
+        if not data:
+            raise ValueError("data is required")
+
+        url = self.build_url(endpoints.BUNDLES.CREATE_PREPARATION_SESSION)
+        return self._requests.post(url, json=data)

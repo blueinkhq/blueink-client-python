@@ -10,6 +10,7 @@ from blueink.model.bundles import (
     EnvelopeTemplate,
     EnvelopeTemplateFieldValue,
     Field,
+    ImportedDocument,
     Packet,
     TemplateRef,
     TemplateRefAssignment,
@@ -29,6 +30,7 @@ class BundleHelper:
         custom_key: str = None,
         team: str = None,
         signing_brand: str = None,
+        expires: str = None,
     ):
         """Helper class to aid building a Bundle.
 
@@ -43,6 +45,7 @@ class BundleHelper:
             custom_key:
             team:
             signing_brand:
+            expires:
         """
         self._label = label
         self._in_order = in_order
@@ -55,6 +58,7 @@ class BundleHelper:
         self._custom_key = custom_key
         self._team = team
         self._signing_brand = signing_brand
+        self._expires = expires
         self._envelope_template = None
 
         # for file uploads, index should match those in the document "file_index" field
@@ -363,6 +367,8 @@ class BundleHelper:
         auth_id: bool = False,
         order: int = None,
         key=None,
+        requires_witness: bool = None,
+        witness_nominated_by: str = None,
         **additional_data,
     ):
         """Create and add a signer. With at least an email xor phone number.
@@ -378,6 +384,8 @@ class BundleHelper:
             auth_id: Optional
             deliver_via: Optional
             order: Optional
+            requires_witness: Optional
+            witness_nominated_by: Optional
             additional_data: Optional and will append any additional kwargs to the json of the signer
 
         Returns:
@@ -397,6 +405,8 @@ class BundleHelper:
             deliver_via=deliver_via,
             order=order,
             key=key,
+            requires_witness=requires_witness,
+            witness_nominated_by=witness_nominated_by,
             **additional_data,
         )
         self._packets[packet.key] = packet
@@ -526,6 +536,7 @@ class BundleHelper:
             custom_key=self._custom_key,
             team=self._team,
             signing_brand=self._signing_brand,
+            expires=self._expires,
             **additional_data,
         )
         return bundle_out
