@@ -506,6 +506,78 @@ class TestBundleHelper(TestCase):
         self.assert_equal(field["v_regex"], "^[A-Z]+$")
         self.assert_equal(field["v_regex_msg"], "Uppercase letters only")
 
+    def test_field_with_data_flow_tag(self):
+        """Test adding a field with a data_flow_tag"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        url01 = self.DOCUMENT_01_URL
+        signer01_data = copy.deepcopy(self.SIGNER_01_DATA)
+
+        bh = BundleHelper(**input_data)
+        doc01_key = bh.add_document_by_url(url01)
+        signer01_key = bh.add_signer(**signer01_data)
+
+        bh.add_field(
+            document_key=doc01_key,
+            x=10,
+            y=20,
+            w=30,
+            h=10,
+            p=1,
+            kind="inp",
+            editors=[signer01_key],
+            data_flow_tag="customer_email",
+        )
+
+        compiled_bundle = bh.as_data()
+        field = compiled_bundle["documents"][0]["fields"][0]
+
+        self.assert_equal(field["data_flow_tag"], "customer_email")
+
+    def test_field_without_data_flow_tag(self):
+        """Test that data_flow_tag is absent on the field when not set"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        url01 = self.DOCUMENT_01_URL
+        signer01_data = copy.deepcopy(self.SIGNER_01_DATA)
+
+        bh = BundleHelper(**input_data)
+        doc01_key = bh.add_document_by_url(url01)
+        signer01_key = bh.add_signer(**signer01_data)
+
+        bh.add_field(
+            document_key=doc01_key,
+            x=10,
+            y=20,
+            w=30,
+            h=10,
+            p=1,
+            kind="inp",
+            editors=[signer01_key],
+        )
+
+        compiled_bundle = bh.as_data()
+        field = compiled_bundle["documents"][0]["fields"][0]
+
+        self.assert_not_in("data_flow_tag", field)
+
+    def test_bundle_with_tag_values(self):
+        """Test that tag_values pass through to the compiled bundle"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        tag_values = {"customer_email": "joe@example.com"}
+
+        bh = BundleHelper(**input_data, tag_values=tag_values)
+        compiled_bundle = bh.as_data()
+
+        self.assert_in("tag_values", compiled_bundle)
+        self.assert_equal(compiled_bundle["tag_values"], tag_values)
+
+    def test_bundle_without_tag_values(self):
+        """Test that tag_values are absent when not set"""
+        input_data = copy.deepcopy(self.BUNDLE_INIT_DATA)
+        bh = BundleHelper(**input_data)
+        compiled_bundle = bh.as_data()
+
+        self.assert_not_in("tag_values", compiled_bundle)
+
 
 class TestImportedDocument(TestCase):
     def test_create_with_file_b64(self):
