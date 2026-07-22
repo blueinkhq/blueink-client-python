@@ -98,6 +98,7 @@ class Field(BaseModel):
     v_regex_msg: Optional[str]
     editors: Optional[List[str]]
     v_attachment_types: Optional[List[str]]
+    data_flow_tag: Optional[str]
 
     class Config:
         extra = "allow"
@@ -342,6 +343,7 @@ class Bundle(BaseModel):
     team: Optional[str]
     signing_brand: Optional[str]
     expires: Optional[str]
+    tag_values: Optional[dict]
 
     class Config:
         extra = "allow"

@@ -9,7 +9,7 @@ from string import Template
 class BUNDLES:
     CREATE = "/bundles/"
     CREATE_FROM_ENVELOPE_TEMPLATE = "/bundles/create_from_envelope_template/"
-    CREATE_PREPARATION_SESSION = "/bundles/create_preparation_session/"
+    CREATE_PREPARATION_SESSION = "/bundles/preparation_session/"
     LIST = "/bundles/"
     RETRIEVE = "/bundles/${bundle_id}/"
     CANCEL = "/bundles/${bundle_id}/cancel/"
@@ -36,6 +36,8 @@ class PACKETS:
 class TEMPLATES:
     LIST = "/templates/"
     RETRIEVE = "/templates/${template_id}/"
+    UPDATE = "/templates/${template_id}/"
+    CREATE_PREPARATION_SESSION = "/templates/preparation_session/"
 
 
 class ENVELOPE_TEMPLATES:

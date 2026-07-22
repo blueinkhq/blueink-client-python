@@ -31,6 +31,7 @@ class BundleHelper:
         team: str = None,
         signing_brand: str = None,
         expires: str = None,
+        tag_values: dict = None,
     ):
         """Helper class to aid building a Bundle.
 
@@ -46,6 +47,7 @@ class BundleHelper:
             team:
             signing_brand:
             expires:
+            tag_values: Optional dict mapping data flow tags to pre-filled values
         """
         self._label = label
         self._in_order = in_order
@@ -59,6 +61,7 @@ class BundleHelper:
         self._team = team
         self._signing_brand = signing_brand
         self._expires = expires
+        self._tag_values = tag_values
         self._envelope_template = None
 
         # for file uploads, index should match those in the document "file_index" field
@@ -233,6 +236,7 @@ class BundleHelper:
         v_regex: str = None,
         v_regex_msg: str = None,
         v_attachment_types: List[str] = None,
+        data_flow_tag: str = None,
         key=None,
         **additional_data,
     ):
@@ -253,6 +257,7 @@ class BundleHelper:
             v_regex: Optional regular expression for field validation
             v_regex_msg: Optional error message shown when v_regex validation fails
             v_attachment_types: Optional list of allowed attachment file extensions (only for kind='att')
+            data_flow_tag: Optional data flow tag to associate with the field
             editors: Optional
             key: Optional
             additional_data: Optional and will append any additional kwargs to the json of the field
@@ -277,6 +282,7 @@ class BundleHelper:
             v_regex=v_regex,
             v_regex_msg=v_regex_msg,
             v_attachment_types=v_attachment_types,
+            data_flow_tag=data_flow_tag,
             key=key,
             **additional_data,
         )
@@ -537,6 +543,7 @@ class BundleHelper:
             team=self._team,
             signing_brand=self._signing_brand,
             expires=self._expires,
+            tag_values=self._tag_values,
             **additional_data,
         )
         return bundle_out

@@ -56,3 +56,44 @@ class TemplateSubClient(SubClient):
         """
         url = self.build_url(endpoints.TEMPLATES.RETRIEVE, template_id=template_id)
         return self._requests.get(url)
+
+    def update(self, template_id: str, data: dict) -> NormalizedResponse:
+        """Partially update a Template.
+
+        Typically used to write template metadata, e.g.
+        ``{"metadata": {"key": "value"}}``.
+
+        Args:
+            template_id:
+            data: dict of fields to update on the template
+
+        Returns:
+            NormalizedResponse object
+        """
+        if not data:
+            raise ValueError("data is required")
+
+        url = self.build_url(endpoints.TEMPLATES.UPDATE, template_id=template_id)
+        return self._requests.patch(url, json=data)
+
+    def create_preparation_session(self, data: dict) -> NormalizedResponse:
+        """Create an embedded template preparation session.
+
+        Creates a secure, time-limited URL that can be embedded in an iframe to allow
+        end users to prepare a template through your application.
+
+        Args:
+            data: configuration for the preparation session. Supported keys:
+                - template_id (str, optional): slug of an existing template to edit
+                - redirect_url (str, optional): URL to redirect to after preparation
+
+        Returns:
+            NormalizedResponse object with keys:
+                - url: the preparation session URL to embed in an iframe
+                - expires: ISO 8601 timestamp when the session URL expires
+        """
+        if not data:
+            raise ValueError("data is required")
+
+        url = self.build_url(endpoints.TEMPLATES.CREATE_PREPARATION_SESSION)
+        return self._requests.post(url, json=data)
