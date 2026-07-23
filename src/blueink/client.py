@@ -11,6 +11,7 @@ from blueink.subclients.envelope_template import EnvelopeTemplateSubClient
 from blueink.subclients.packet import PacketSubClient
 from blueink.subclients.person import PersonSubClient
 from blueink.subclients.template import TemplateSubClient
+from blueink.subclients.verify import VerifySubClient
 from blueink.subclients.webhook import WebhookSubClient
 
 
@@ -74,3 +75,4 @@ class Client:
             self._base_url, self._request_helper
         )
         self.webhooks = WebhookSubClient(self._base_url, self._request_helper)
+        self.verify = VerifySubClient(self._base_url, self._request_helper)

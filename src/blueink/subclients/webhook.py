@@ -15,9 +15,7 @@ class WebhookSubClient(SubClient):
     def list(self, **query_params) -> NormalizedResponse:
         url = self.build_url(endpoint=endpoints.WEBHOOKS.LIST)
 
-        return self._requests.get(
-            url, params=self.build_params(query_params=query_params)
-        )
+        return self._requests.get(url, params=self.build_params(**query_params))
 
     def retrieve(self, webhook_id: str) -> NormalizedResponse:
         url = self.build_url(
@@ -58,12 +56,12 @@ class WebhookSubClient(SubClient):
 
     def delete_header(self, header_id: str) -> NormalizedResponse:
         url = self.build_url(
-            endpoint=endpoints.WEBHOOKS.DELETE_HEADERE, webhook_header_id=header_id
+            endpoint=endpoints.WEBHOOKS.DELETE_HEADER, webhook_header_id=header_id
         )
 
         return self._requests.delete(url)
 
-    def update_header(self, header_id: str, **data) -> NormalizedResponse:
+    def update_header(self, header_id: str, data: dict) -> NormalizedResponse:
         url = self.build_url(
             endpoint=endpoints.WEBHOOKS.UPDATE_HEADER, webhook_header_id=header_id
         )
@@ -76,13 +74,11 @@ class WebhookSubClient(SubClient):
     def list_events(self, **query_params) -> NormalizedResponse:
         url = self.build_url(endpoint=endpoints.WEBHOOKS.LIST_EVENTS)
 
-        return self._requests.get(
-            url, params=self.build_params(query_params=query_params)
-        )
+        return self._requests.get(url, params=self.build_params(**query_params))
 
     def retrieve_event(self, event_id: str) -> NormalizedResponse:
         url = self.build_url(
-            endpoint=endpoints.WEBHOOKS.RETRIEVE_EVENT, wehook_event_id=event_id
+            endpoint=endpoints.WEBHOOKS.RETRIEVE_EVENT, webhook_event_id=event_id
         )
 
         return self._requests.get(url)
@@ -93,9 +89,7 @@ class WebhookSubClient(SubClient):
     def list_deliveries(self, **query_params) -> NormalizedResponse:
         url = self.build_url(endpoint=endpoints.WEBHOOKS.LIST_DELIVERIES)
 
-        return self._requests.get(
-            url, params=self.build_params(query_params=query_params)
-        )
+        return self._requests.get(url, params=self.build_params(**query_params))
 
     def retrieve_delivery(self, delivery_id: str) -> NormalizedResponse:
         url = self.build_url(

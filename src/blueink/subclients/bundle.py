@@ -283,7 +283,50 @@ class BundleSubClient(SubClient):
 
         """
         url = self.build_url(endpoints.BUNDLES.CANCEL, bundle_id=bundle_id)
-        return self._request.put(url)
+        return self._requests.put(url)
+
+    def update(self, bundle_id: str, data: dict) -> NormalizedResponse:
+        """Partially update a Bundle (PATCH).
+
+        Typically used to update fields such as ``signing_brand``, ``team``,
+        ``expires``, ``cc_emails`` and reminder settings on an existing bundle.
+
+        Args:
+            bundle_id: bundle slug
+            data: dict of fields to update on the bundle
+
+        Returns:
+            NormalizedResponse object
+        """
+        if not data:
+            raise ValueError("data is required")
+
+        url = self.build_url(endpoints.BUNDLES.UPDATE, bundle_id=bundle_id)
+        return self._requests.patch(url, json=data)
+
+    def send(self, bundle_id: str) -> NormalizedResponse:
+        """Send a draft Bundle (POST).
+
+        Args:
+            bundle_id: bundle slug
+
+        Returns:
+            NormalizedResponse object
+        """
+        url = self.build_url(endpoints.BUNDLES.SEND, bundle_id=bundle_id)
+        return self._requests.post(url)
+
+    def validate(self, bundle_id: str) -> NormalizedResponse:
+        """Validate a draft Bundle (PUT).
+
+        Args:
+            bundle_id: bundle slug
+
+        Returns:
+            NormalizedResponse object, with keys ``can_send``, ``msg``, ``n_docs``
+        """
+        url = self.build_url(endpoints.BUNDLES.VALIDATE, bundle_id=bundle_id)
+        return self._requests.put(url)
 
     def list_events(self, bundle_id: str) -> NormalizedResponse:
         """Return a list of events for the supplied bundle corresponding to the id

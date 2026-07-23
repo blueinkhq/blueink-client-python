@@ -54,4 +54,4 @@ class PacketSubClient(SubClient):
             A NormalizedResponse
         """
         url = self.build_url(endpoints.PACKETS.REMIND, packet_id=packet_id)
-        self._requests.put(url)
+        return self._requests.put(url)

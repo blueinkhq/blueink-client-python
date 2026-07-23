@@ -94,6 +94,8 @@ EVENT_TYPE = Munch(
     EVENT_BUNDLE_DOCS_READY="bundle_docs_ready",
     EVENT_BUNDLE_ERROR="bundle_error",
     EVENT_BUNDLE_CANCELLED="bundle_cancelled",
+    EVENT_BUNDLE_SIGNER_REASSIGNED="bundle_signer_reassigned",
     EVENT_PACKET_VIEWED="packet_viewed",
     EVENT_PACKET_COMPLETE="packet_complete",
+    EVENT_PACKET_DECLINED="packet_declined",
 )
