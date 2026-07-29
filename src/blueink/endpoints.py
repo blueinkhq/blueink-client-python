@@ -12,6 +12,9 @@ class BUNDLES:
     CREATE_PREPARATION_SESSION = "/bundles/preparation_session/"
     LIST = "/bundles/"
     RETRIEVE = "/bundles/${bundle_id}/"
+    UPDATE = "/bundles/${bundle_id}/"
+    SEND = "/bundles/${bundle_id}/send/"
+    VALIDATE = "/bundles/${bundle_id}/validate/"
     CANCEL = "/bundles/${bundle_id}/cancel/"
     LIST_EVENTS = "/bundles/${bundle_id}/events/"
     LIST_FILES = "/bundles/${bundle_id}/files/"
@@ -43,6 +46,10 @@ class TEMPLATES:
 class ENVELOPE_TEMPLATES:
     LIST = "/envelope-templates/"
     RETRIEVE = "/envelope-templates/${envelope_template_id}/"
+
+
+class VERIFY:
+    CREATE = "/verify/"
 
 
 class WEBHOOKS:

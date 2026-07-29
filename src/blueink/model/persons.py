@@ -1,20 +1,18 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 from typing import Optional, List
 
 
 class ContactChannelSchema(BaseModel):
-    email: Optional[EmailStr]
-    phone: Optional[str]
-    kind: Optional[str]
+    model_config = ConfigDict(extra="allow")
 
-    class Config:
-        extra = "allow"
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    kind: Optional[str] = None
 
 
 class PersonSchema(BaseModel):
-    name: Optional[str]
-    metadata: Optional[dict]
-    channels: Optional[List[ContactChannelSchema]]
+    model_config = ConfigDict(extra="allow")
 
-    class Config:
-        extra = "allow"
+    name: Optional[str] = None
+    metadata: Optional[dict] = None
+    channels: Optional[List[ContactChannelSchema]] = None

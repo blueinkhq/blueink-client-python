@@ -96,6 +96,7 @@ The supported "resources" are:
  * `persons`
  * `packets`
  * `templates`
+ * `envelope_templates`
  * `webhooks`
 
  The methods correspond to common REST operations:
@@ -238,6 +239,8 @@ as kwargs.
 
 ### Bundle Related
 * Create via ```client.bundles.create(...)``` or ```client.bundles.create_from_bundle_helper(...)```
+* Create from Envelope Template via ```client.bundles.create_from_envelope_template_helper(...)``` or ```client.bundles.create_from_envelope_template(...)```
+* Create Preparation Session via ```client.bundles.create_preparation_session(...)```
 * List via ```client.bundles.list(...)``` or ```client.bundles.paged_list(...)```
 * Retrieve via ```client.bundles.retrieve(...)```
 * Cancel via ```client.bundles.cancel(...)```
@@ -261,6 +264,12 @@ as kwargs.
 ### Template Related
 * List via ```client.templates.list(...)``` or ```client.templates.paged_list(...)```
 * Retrieve via ```client.templates.retrieve(...)```
+* Update via ```client.templates.update(...)```
+* Create Preparation Session via ```client.templates.create_preparation_session(...)```
+
+### Envelope Template Related
+* List via ```client.envelope_templates.list(...)``` or ```client.envelope_templates.paged_list(...)```
+* Retrieve via ```client.envelope_templates.retrieve(...)```
 
 ### Webhook Related
 
@@ -423,6 +432,19 @@ response = client.bundles.create_from_bundle_helper(bh)
 - Works with template documents that have consistent text labels
 - Automatically adjusts to text position in the document
 - Can be combined with regular manually-positioned fields
+
+#### Bundle Tag Values
+
+Bundle-level `tag_values` can be set on the `BundleHelper` constructor to attach
+arbitrary key/value metadata to a Bundle at creation time:
+
+```python
+bh = BundleHelper(
+    label="Tagged Agreement",
+    is_test=True,
+    tag_values={"contract_type": "nda"},
+)
+```
 
 #### Retrieval
 
@@ -660,9 +682,64 @@ for page in client.templates.paged_list():
     page.data  # templates in page
 # single
 template_response = client.templates.retrieve(template_id)
-
-
 ```
+
+Templates can also be partially updated (for example, to write template metadata):
+
+```python
+client.templates.update(template_id, {"metadata": {"key": "value"}})
+```
+
+#### Template Preparation Sessions
+
+A preparation session creates a secure, time-limited URL that can be embedded in an
+iframe to let an end user prepare a template through your application:
+
+```python
+response = client.templates.create_preparation_session({
+    "template_id": template_id,        # optional: slug of an existing template to edit
+    "redirect_url": "https://your-app.example.com/done",  # optional
+})
+prep_url = response.data.url           # URL to embed in an iframe
+expires = response.data.expires        # ISO 8601 timestamp when the URL expires
+```
+
+A similar session can be created for bundle/document preparation via
+`client.bundles.create_preparation_session(...)`.
+
+### Envelope Templates
+
+Envelope Templates are reusable document workflows that contain predefined documents,
+field layouts, signer roles, and configuration settings. They can be listed (non-paged),
+listed (paged) or retrieved singly:
+
+```python
+# non paged
+envelope_templates_response = client.envelope_templates.list()
+# paged
+for page in client.envelope_templates.paged_list():
+    page.data  # envelope templates in page
+# single
+envelope_template_response = client.envelope_templates.retrieve(envelope_template_id)
+```
+
+To create a Bundle from an envelope template, configure a `BundleHelper` with the
+template and its signers, then create the Bundle:
+
+```python
+from blueink import BundleHelper, Client
+
+bh = BundleHelper(label="Contract", is_test=True)
+bh.add_signer(name="John Doe", email="john@example.com", key="signer-1")
+bh.set_envelope_template(
+    template_id="T-abc123",
+    field_values={"company_name": "ACME Corp"},
+)
+
+client = Client()
+response = client.bundles.create_from_envelope_template_helper(bh)
+```
+
 ### Webhooks
 
 Webhooks can be interacted with via several methods. Webhooks also have related objects, such as
@@ -673,8 +750,8 @@ methods to interact with.
 from copy import deepcopy
 
 from requests import HTTPError
-from src.blueink import Client
-from src.blueink.constants import EVENT_TYPE
+from blueink import Client
+from blueink.constants import EVENT_TYPE
 
 WEBHOOK_01 = {
     "url": "https://www.example.com/01/",

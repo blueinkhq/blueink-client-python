@@ -1,8 +1,8 @@
 import random
 import string
-from typing import List, Optional
+from typing import List, Optional, Union
 
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator, model_validator
 
 from blueink.constants import DELIVER_VIA, FIELD_KIND
 
@@ -20,18 +20,17 @@ def generate_key(type, length=5):
 class AutoPlacement(BaseModel):
     """Model for auto-placement fields that automatically find and place fields on documents"""
 
-    kind: str = ...
-    search: str = ...
-    w: int = ...
-    h: int = ...
+    model_config = ConfigDict(extra="allow")
+
+    kind: str
+    search: str
+    w: int
+    h: int
     offset_x: Optional[int] = 0
     offset_y: Optional[int] = 0
-    editors: Optional[List[str]]
-    page: Optional[int]
-    v_attachment_types: Optional[List[str]]
-
-    class Config:
-        extra = "allow"
+    editors: Optional[List[str]] = None
+    page: Optional[int] = None
+    v_attachment_types: Optional[List[str]] = None
 
     @classmethod
     def create(
@@ -69,11 +68,13 @@ class AutoPlacement(BaseModel):
         )
         return obj
 
-    @validator("kind")
+    @field_validator("kind")
+    @classmethod
     def kind_is_allowed(cls, v):
-        assert (
-            v in FIELD_KIND.values()
-        ), f"AutoPlacement Kind '{v}' not allowed. Must be one of {FIELD_KIND.values()}"
+        if v not in FIELD_KIND.values():
+            raise ValueError(
+                f"AutoPlacement Kind '{v}' not allowed. Must be one of {FIELD_KIND.values()}"
+            )
         return v
 
     def add_editor(self, editor: str):
@@ -83,25 +84,24 @@ class AutoPlacement(BaseModel):
 
 
 class Field(BaseModel):
-    kind: str = ...
-    key: str = ...
-    x: int = ...
-    y: int = ...
-    w: int = ...
-    h: int = ...
-    label: Optional[str]
-    page: Optional[int]
-    v_pattern: Optional[int]
-    v_min: Optional[int]
-    v_max: Optional[int]
-    v_regex: Optional[str]
-    v_regex_msg: Optional[str]
-    editors: Optional[List[str]]
-    v_attachment_types: Optional[List[str]]
-    data_flow_tag: Optional[str]
+    model_config = ConfigDict(extra="allow")
 
-    class Config:
-        extra = "allow"
+    kind: str
+    key: str
+    x: int
+    y: int
+    w: int
+    h: int
+    label: Optional[str] = None
+    page: Optional[int] = None
+    v_pattern: Optional[int] = None
+    v_min: Optional[int] = None
+    v_max: Optional[int] = None
+    v_regex: Optional[str] = None
+    v_regex_msg: Optional[str] = None
+    editors: Optional[List[str]] = None
+    v_attachment_types: Optional[List[str]] = None
+    data_flow_tag: Optional[str] = None
 
     @classmethod
     def create(cls, x, y, w, h, page, kind, key=None, **kwargs):
@@ -110,11 +110,13 @@ class Field(BaseModel):
         obj = Field(key=key, x=x, y=y, w=w, h=h, page=page, kind=kind, **kwargs)
         return obj
 
-    @validator("kind")
+    @field_validator("kind")
+    @classmethod
     def kind_is_allowed(cls, v):
-        assert (
-            v in FIELD_KIND.values()
-        ), f"Field Kind '{v}' not allowed. Must be one of {FIELD_KIND.values()}"
+        if v not in FIELD_KIND.values():
+            raise ValueError(
+                f"Field Kind '{v}' not allowed. Must be one of {FIELD_KIND.values()}"
+            )
         return v
 
     def add_editor(self, editor: str):
@@ -124,26 +126,26 @@ class Field(BaseModel):
 
 
 class Packet(BaseModel):
-    key: str = ...
-    name: str = ...
-    email: Optional[EmailStr]
-    phone: Optional[str]
-    auth_sms: Optional[bool]
-    auth_selfie: Optional[bool]
-    auth_id: Optional[bool]
-    deliver_via: Optional[str]
-    person_id: Optional[str]
-    order: Optional[str]
-    requires_witness: Optional[bool]
-    witness_nominated_by: Optional[str]
+    model_config = ConfigDict(extra="allow")
 
-    class Config:
-        extra = "allow"
+    key: str
+    name: str
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    auth_sms: Optional[bool] = None
+    auth_selfie: Optional[bool] = None
+    auth_id: Optional[bool] = None
+    deliver_via: Optional[str] = None
+    person_id: Optional[str] = None
+    order: Optional[str] = None
+    requires_witness: Optional[bool] = None
+    witness_nominated_by: Optional[str] = None
 
-    @validator("deliver_via")
+    @field_validator("deliver_via")
+    @classmethod
     def deliver_via_is_allowed(cls, v):
-        if v is not None:
-            assert v in DELIVER_VIA.values(), (
+        if v is not None and v not in DELIVER_VIA.values():
+            raise ValueError(
                 f"deliver_via '{v}' not allowed. Must be None"
                 f" or one of {DELIVER_VIA.values()}"
             )
@@ -158,11 +160,10 @@ class Packet(BaseModel):
 
 
 class TemplateRefAssignment(BaseModel):
-    role: str = ...
-    signer: str = ...
+    model_config = ConfigDict(extra="allow")
 
-    class Config:
-        extra = "allow"
+    role: str
+    signer: str
 
     @classmethod
     def create(cls, role, signer, **kwargs):
@@ -171,11 +172,10 @@ class TemplateRefAssignment(BaseModel):
 
 
 class TemplateRefFieldValue(BaseModel):
-    key: str = ...
-    initial_value: str = ...
+    model_config = ConfigDict(extra="allow")
 
-    class Config:
-        extra = "allow"
+    key: str
+    initial_value: str
 
     @classmethod
     def create(cls, key, initial_value, **kwargs):
@@ -186,11 +186,10 @@ class TemplateRefFieldValue(BaseModel):
 class EnvelopeTemplateFieldValue(BaseModel):
     """Model for field values in envelope templates"""
 
-    key: str = ...
-    initial_value: str = ...
+    model_config = ConfigDict(extra="allow")
 
-    class Config:
-        extra = "allow"
+    key: str
+    initial_value: str
 
     @classmethod
     def create(cls, key, initial_value, **kwargs):
@@ -201,11 +200,10 @@ class EnvelopeTemplateFieldValue(BaseModel):
 class EnvelopeTemplate(BaseModel):
     """Model for envelope template reference"""
 
-    template_id: str = ...
-    field_values: Optional[List[EnvelopeTemplateFieldValue]]
+    model_config = ConfigDict(extra="allow")
 
-    class Config:
-        extra = "allow"
+    template_id: str
+    field_values: Optional[List[EnvelopeTemplateFieldValue]] = None
 
     @classmethod
     def create(cls, template_id, field_values=None, **kwargs):
@@ -221,12 +219,11 @@ class EnvelopeTemplate(BaseModel):
 
 
 class TemplateRef(BaseModel):
-    template_id: Optional[str]
-    assignments: Optional[List[TemplateRefAssignment]]
-    field_values: Optional[List[TemplateRefFieldValue]]
+    model_config = ConfigDict(extra="allow")
 
-    class Config:
-        extra = "allow"
+    template_id: Optional[str] = None
+    assignments: Optional[List[TemplateRefAssignment]] = None
+    field_values: Optional[List[TemplateRefFieldValue]] = None
 
     @classmethod
     def create(cls, key=None, **kwargs):
@@ -247,20 +244,19 @@ class TemplateRef(BaseModel):
 
 
 class Document(BaseModel):
-    key: str = ...
+    model_config = ConfigDict(extra="allow")
+
+    key: str
 
     # document related
-    file_url: Optional[str]
-    filename: Optional[str]
-    file_b64: Optional[str]
-    file_html: Optional[str]
-    file_index: Optional[int]
-    fields: Optional[List[Field]]
-    auto_placements: Optional[List[AutoPlacement]]
-    html_fields_mode: Optional[str]
-
-    class Config:
-        extra = "allow"
+    file_url: Optional[str] = None
+    filename: Optional[str] = None
+    file_b64: Optional[str] = None
+    file_html: Optional[str] = None
+    file_index: Optional[int] = None
+    fields: Optional[List[Field]] = None
+    auto_placements: Optional[List[AutoPlacement]] = None
+    html_fields_mode: Optional[str] = None
 
     @classmethod
     def create(cls, key=None, **kwargs):
@@ -297,22 +293,20 @@ class ImportedDocument(BaseModel):
     Providing both or neither will raise a ValidationError.
     """
 
-    key: Optional[str]
-    filename: Optional[str]
-    file_b64: Optional[str]
-    file_html: Optional[str]
-    file_url: Optional[str]
-    file_index: Optional[int]
-    fields: Optional[list]
+    model_config = ConfigDict(extra="allow")
 
-    class Config:
-        extra = "allow"
+    key: Optional[str] = None
+    filename: Optional[str] = None
+    file_b64: Optional[str] = None
+    file_html: Optional[str] = None
+    file_url: Optional[str] = None
+    file_index: Optional[int] = None
+    fields: Optional[list] = None
 
-    @validator("file_html", always=True)
-    def validate_file_source(cls, file_html, values):
-        file_b64 = values.get("file_b64")
-        has_b64 = bool(file_b64)
-        has_html = bool(file_html)
+    @model_validator(mode="after")
+    def validate_file_source(self):
+        has_b64 = bool(self.file_b64)
+        has_html = bool(self.file_html)
 
         if has_b64 and has_html:
             raise ValueError("Provide only one of 'file_b64' or 'file_html', not both")
@@ -320,7 +314,7 @@ class ImportedDocument(BaseModel):
         if not has_b64 and not has_html:
             raise ValueError("Each document must have either 'file_b64' or 'file_html'")
 
-        return file_html
+        return self
 
     @classmethod
     def create(cls, key=None, **kwargs):
@@ -331,25 +325,29 @@ class ImportedDocument(BaseModel):
 
 
 class Bundle(BaseModel):
-    packets: List[Packet] = ...
-    documents: List[Document] = ...
-    label: Optional[str]
-    in_order: Optional[bool]
-    email_subject: Optional[str]
-    email_message: Optional[str]
-    cc_emails: Optional[List[EmailStr]]
-    is_test: Optional[bool]
-    custom_key: Optional[str]
-    team: Optional[str]
-    signing_brand: Optional[str]
-    expires: Optional[str]
-    tag_values: Optional[dict]
+    model_config = ConfigDict(extra="allow")
 
-    class Config:
-        extra = "allow"
+    packets: List[Packet]
+    documents: List[Union[Document, TemplateRef]]
+    label: Optional[str] = None
+    in_order: Optional[bool] = None
+    email_subject: Optional[str] = None
+    email_message: Optional[str] = None
+    cc_emails: Optional[List[EmailStr]] = None
+    is_test: Optional[bool] = None
+    custom_key: Optional[str] = None
+    team: Optional[str] = None
+    signing_brand: Optional[str] = None
+    expires: Optional[str] = None
+    tag_values: Optional[dict] = None
 
     @classmethod
-    def create(cls, packets: List[Packet], documents: List[Document], **kwargs):
+    def create(
+        cls,
+        packets: List[Packet],
+        documents: List[Union[Document, TemplateRef]],
+        **kwargs,
+    ):
         obj = Bundle(packets=packets, documents=documents, **kwargs)
         return obj
 

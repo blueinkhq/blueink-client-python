@@ -543,16 +543,12 @@ class TestClientEndpoints(TestCase):
 
     def test_bundle_preparation_session_url(self):
         client = self._client()
-        url = client.bundles.build_url(
-            endpoints.BUNDLES.CREATE_PREPARATION_SESSION
-        )
+        url = client.bundles.build_url(endpoints.BUNDLES.CREATE_PREPARATION_SESSION)
         self.assert_equal(url, f"{self.BASE_URL}/bundles/preparation_session/")
 
     def test_template_preparation_session_url(self):
         client = self._client()
-        url = client.templates.build_url(
-            endpoints.TEMPLATES.CREATE_PREPARATION_SESSION
-        )
+        url = client.templates.build_url(endpoints.TEMPLATES.CREATE_PREPARATION_SESSION)
         self.assert_equal(url, f"{self.BASE_URL}/templates/preparation_session/")
 
     def test_template_update_url(self):
@@ -561,3 +557,27 @@ class TestClientEndpoints(TestCase):
             endpoints.TEMPLATES.UPDATE, template_id="T-abc123"
         )
         self.assert_equal(url, f"{self.BASE_URL}/templates/T-abc123/")
+
+    def test_bundle_update_url(self):
+        client = self._client()
+        url = client.bundles.build_url(endpoints.BUNDLES.UPDATE, bundle_id="B-abc123")
+        self.assert_equal(url, f"{self.BASE_URL}/bundles/B-abc123/")
+
+    def test_bundle_send_url(self):
+        client = self._client()
+        url = client.bundles.build_url(endpoints.BUNDLES.SEND, bundle_id="B-abc123")
+        self.assert_equal(url, f"{self.BASE_URL}/bundles/B-abc123/send/")
+
+    def test_bundle_validate_url(self):
+        client = self._client()
+        url = client.bundles.build_url(endpoints.BUNDLES.VALIDATE, bundle_id="B-abc123")
+        self.assert_equal(url, f"{self.BASE_URL}/bundles/B-abc123/validate/")
+
+    def test_verify_url(self):
+        client = self._client()
+        url = client.verify.build_url(endpoints.VERIFY.CREATE)
+        self.assert_equal(url, f"{self.BASE_URL}/verify/")
+
+    def test_verify_subclient_registered(self):
+        client = self._client()
+        self.assert_not_none(client.verify)
