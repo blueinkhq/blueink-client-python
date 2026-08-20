@@ -339,6 +339,8 @@ class Bundle(BaseModel):
     team: Optional[str] = None
     signing_brand: Optional[str] = None
     expires: Optional[str] = None
+    allow_signer_reassign: Optional[bool] = None
+    allow_chained_signer_reassign: Optional[bool] = None
     tag_values: Optional[dict] = None
 
     @classmethod

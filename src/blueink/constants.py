@@ -64,6 +64,7 @@ FIELD_KIND = Munch(
     CHECKBOX="chk",
     CHECKBOXES="cbx",
     ATTACHMENT="att",
+    STAMP="stp",
 )
 
 PACKET_STATUS = Munch(
@@ -75,6 +76,7 @@ PACKET_STATUS = Munch(
     EXPIRED="ex",
     COMPLETE="co",
     FAILED="fa",
+    REASSIGNED="ra",
 )
 
 V_PATTERN = Munch(
