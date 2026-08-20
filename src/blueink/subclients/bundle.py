@@ -289,7 +289,8 @@ class BundleSubClient(SubClient):
         """Partially update a Bundle (PATCH).
 
         Typically used to update fields such as ``signing_brand``, ``team``,
-        ``expires``, ``cc_emails`` and reminder settings on an existing bundle.
+        ``expires``, ``cc_emails``, reminder settings, ``allow_signer_reassign``,
+        and ``allow_chained_signer_reassign`` on an existing bundle.
 
         Args:
             bundle_id: bundle slug
