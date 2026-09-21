@@ -353,6 +353,21 @@ class BundleSubClient(SubClient):
         url = self.build_url(endpoints.BUNDLES.LIST_FILES, bundle_id=bundle_id)
         return self._requests.get(url)
 
+    def generate_files(self, bundle_id: str) -> NormalizedResponse:
+        """Enqueue unsigned filled-PDF generation for an incomplete Bundle.
+
+        Requires early file access (FEATURE.API_DATA_EARLY). Poll list_files
+        until ready (APIv2 2.19.0+).
+
+        Args:
+            bundle_id: which bundle to generate files for
+
+        Returns:
+            NormalizedResponse object (body includes the Bundle id)
+        """
+        url = self.build_url(endpoints.BUNDLES.LIST_FILES, bundle_id=bundle_id)
+        return self._requests.put(url)
+
     def list_data(self, bundle_id: str) -> NormalizedResponse:
         """Return a data for the supplied bundle corresponding to the id
 
