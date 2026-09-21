@@ -5,7 +5,7 @@ import pytest
 from munch import Munch
 
 from blueink.bundle_helper import BundleHelper
-from blueink.model.bundles import ImportedDocument
+from blueink.model.bundles import Bundle, Document, ImportedDocument
 from blueink.utils.testcase import TestCase
 
 
@@ -632,3 +632,30 @@ class TestImportedDocument(TestCase):
         """Test that providing only file_url raises a ValidationError"""
         with pytest.raises(Exception):
             ImportedDocument.create(file_url="https://example.com/test.pdf")
+
+
+class TestApiV219BundleModels(TestCase):
+    def test_bundle_model_accepts_owner_and_max_reminders(self):
+        bundle = Bundle(
+            packets=[],
+            documents=[],
+            max_reminders=3,
+            owner_name="Ada Lovelace",
+            owner_email="ada@example.com",
+        )
+        self.assert_equal(bundle.max_reminders, 3)
+        self.assert_equal(bundle.owner_name, "Ada Lovelace")
+        self.assert_equal(bundle.owner_email, "ada@example.com")
+
+    def test_bundle_model_accepts_null_max_reminders(self):
+        bundle = Bundle(packets=[], documents=[], max_reminders=None)
+        self.assert_equal(bundle.max_reminders, None)
+
+    def test_document_model_accepts_adobe_field_assignments(self):
+        doc = Document(
+            key="doc-1",
+            converted_adobe_fields_to="signer-1",
+            adobe_field_assignments={"Signature1": "signer-1"},
+        )
+        self.assert_equal(doc.converted_adobe_fields_to, "signer-1")
+        self.assert_equal(doc.adobe_field_assignments["Signature1"], "signer-1")

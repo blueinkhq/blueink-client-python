@@ -257,6 +257,8 @@ class Document(BaseModel):
     fields: Optional[List[Field]] = None
     auto_placements: Optional[List[AutoPlacement]] = None
     html_fields_mode: Optional[str] = None
+    converted_adobe_fields_to: Optional[str] = None
+    adobe_field_assignments: Optional[dict] = None
 
     @classmethod
     def create(cls, key=None, **kwargs):
@@ -341,6 +343,9 @@ class Bundle(BaseModel):
     expires: Optional[str] = None
     allow_signer_reassign: Optional[bool] = None
     allow_chained_signer_reassign: Optional[bool] = None
+    max_reminders: Optional[int] = None
+    owner_name: Optional[str] = None
+    owner_email: Optional[str] = None
     tag_values: Optional[dict] = None
 
     @classmethod
