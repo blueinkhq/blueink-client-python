@@ -40,6 +40,7 @@ class TEMPLATES:
     LIST = "/templates/"
     RETRIEVE = "/templates/${template_id}/"
     UPDATE = "/templates/${template_id}/"
+    DELETE = "/templates/${template_id}/"
     CREATE_PREPARATION_SESSION = "/templates/preparation_session/"
 
 

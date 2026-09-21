@@ -265,6 +265,7 @@ as kwargs.
 * List via ```client.templates.list(...)``` or ```client.templates.paged_list(...)```
 * Retrieve via ```client.templates.retrieve(...)```
 * Update via ```client.templates.update(...)```
+* Delete via ```client.templates.delete(...)```
 * Create Preparation Session via ```client.templates.create_preparation_session(...)```
 
 ### Envelope Template Related

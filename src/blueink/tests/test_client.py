@@ -558,6 +558,22 @@ class TestClientEndpoints(TestCase):
         )
         self.assert_equal(url, f"{self.BASE_URL}/templates/T-abc123/")
 
+    def test_template_delete_url(self):
+        client = self._client()
+        url = client.templates.build_url(
+            endpoints.TEMPLATES.DELETE, template_id="T-abc123"
+        )
+        self.assert_equal(url, f"{self.BASE_URL}/templates/T-abc123/")
+
+    def test_event_type_includes_doc_template_events(self):
+        values = EVENT_TYPE.values()
+        self.assert_equal(EVENT_TYPE.EVENT_DOC_TEMPLATE_CREATED, "doc_template_created")
+        self.assert_equal(EVENT_TYPE.EVENT_DOC_TEMPLATE_UPDATED, "doc_template_updated")
+        self.assert_equal(EVENT_TYPE.EVENT_DOC_TEMPLATE_DELETED, "doc_template_deleted")
+        self.assert_in("doc_template_created", values)
+        self.assert_in("doc_template_updated", values)
+        self.assert_in("doc_template_deleted", values)
+
     def test_bundle_update_url(self):
         client = self._client()
         url = client.bundles.build_url(endpoints.BUNDLES.UPDATE, bundle_id="B-abc123")
