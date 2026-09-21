@@ -76,6 +76,21 @@ class TemplateSubClient(SubClient):
         url = self.build_url(endpoints.TEMPLATES.UPDATE, template_id=template_id)
         return self._requests.patch(url, json=data)
 
+    def delete(self, template_id: str) -> NormalizedResponse:
+        """Soft-delete a Document Template.
+
+        The API disables the template and removes it from account libraries
+        (HTTP 204). Globally shared templates cannot be deleted (HTTP 403).
+
+        Args:
+            template_id:
+
+        Returns:
+            NormalizedResponse object
+        """
+        url = self.build_url(endpoints.TEMPLATES.DELETE, template_id=template_id)
+        return self._requests.delete(url)
+
     def create_preparation_session(self, data: dict) -> NormalizedResponse:
         """Create an embedded template preparation session.
 
@@ -86,6 +101,9 @@ class TemplateSubClient(SubClient):
             data: configuration for the preparation session. Supported keys:
                 - template_id (str, optional): slug of an existing template to edit
                 - redirect_url (str, optional): URL to redirect to after preparation
+                - allowed_data_flow_tags (list[str], optional): exact tag names or
+                  namespace-prefix patterns such as ``acme:*``. An empty list allows
+                  no tags; omit the field to leave the session unfiltered.
 
         Returns:
             NormalizedResponse object with keys:
