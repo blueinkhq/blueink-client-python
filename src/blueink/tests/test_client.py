@@ -574,6 +574,13 @@ class TestClientEndpoints(TestCase):
         self.assert_in("doc_template_updated", values)
         self.assert_in("doc_template_deleted", values)
 
+    def test_event_type_includes_packet_sent_and_bundle_expired(self):
+        values = EVENT_TYPE.values()
+        self.assert_equal(EVENT_TYPE.EVENT_PACKET_SENT, "packet_sent")
+        self.assert_equal(EVENT_TYPE.EVENT_BUNDLE_EXPIRED, "bundle_expired")
+        self.assert_in("packet_sent", values)
+        self.assert_in("bundle_expired", values)
+
     def test_bundle_update_url(self):
         client = self._client()
         url = client.bundles.build_url(endpoints.BUNDLES.UPDATE, bundle_id="B-abc123")
