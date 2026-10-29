@@ -290,7 +290,8 @@ class BundleSubClient(SubClient):
 
         Typically used to update fields such as ``signing_brand``, ``team``,
         ``expires``, ``cc_emails``, reminder settings, ``allow_signer_reassign``,
-        and ``allow_chained_signer_reassign`` on an existing bundle.
+        ``allow_chained_signer_reassign``, and ``allow_decline_to_sign`` on an
+        existing bundle.
 
         Args:
             bundle_id: bundle slug
@@ -397,6 +398,11 @@ class BundleSubClient(SubClient):
                 - folder_ids (list, optional): list of folder BUIDs to restrict to
                 - redirect_url (str, optional): URL to redirect to after preparation
                 - allow_search_signers (bool, optional): whether to allow signer search
+                - allow_add_signers (bool, optional): when false, hide Add Signer /
+                  Recipient and reject new top-level packets (default True; APIv2 2.22.0+)
+                - send_button (dict, optional): customize the embedded Send button
+                  with ``text`` (max 30), ``color``, and ``background_color``
+                  as ``#RRGGBB`` (APIv2 2.21.0+)
 
         Returns:
             NormalizedResponse object with keys:

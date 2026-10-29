@@ -343,6 +343,7 @@ class Bundle(BaseModel):
     expires: Optional[str] = None
     allow_signer_reassign: Optional[bool] = None
     allow_chained_signer_reassign: Optional[bool] = None
+    allow_decline_to_sign: Optional[bool] = None
     max_reminders: Optional[int] = None
     owner_name: Optional[str] = None
     owner_email: Optional[str] = None
